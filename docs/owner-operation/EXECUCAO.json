@@ -5719,7 +5719,7 @@
     "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/346f30f200e5cbd3d9efd26663a483c625d9c6e7/docs/financial-automation/publication-live-20261113.json"
   ],
   "source_specification": "input/ROADMAP_EXECUTAVEL_USO_PROPRIO_MLS.json",
-  "updated_at": "2026-11-17T19:02:36.578919+00:00",
+  "updated_at": "2026-11-17T19:30:13.113Z",
   "canonical_checkpoint": "docs/MLS_COMMERCE_OS_CHECKPOINT.json",
   "specification_initial_checkpoint_historical": {
     "fase_corrente": "U0",
@@ -5733,28 +5733,97 @@
   "operational_delivery": {
     "task": "SYSTEM_STABILITY_16_5",
     "branch": "fix/system-stability-20261116",
-    "source_commit": "1ac7b79c7ac38b6bd09ac8ed38d593ec40bad080",
+    "source_commit": "ed651fa7a5bd949519c37d287bcaab9c31cb464a",
     "source_parent": "f78b503f5580f5545b4edc19447da63a78925b5f",
     "base_main": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
     "release_candidate": "2026-11-16.5",
     "current_track": "owner_operation",
     "sale_track": "ADIADO_VENDA",
     "code": true,
-    "tested_locally": "36_RECOVERY_COMPACTION_PASS; 67_PYTHON_PASS; FULL_LOCAL_GATES_RUNNING",
-    "full_local_gates": "PENDING_FINAL_RESULT",
-    "exact_head_github_ci": "PENDING",
-    "published": false,
+    "tested_locally": "4593_NODE_AND_67_PYTHON_PASS",
+    "full_local_gates": "PASS",
+    "exact_head_github_ci": {
+      "id": 44154590335,
+      "head_sha": "ed651fa7a5bd949519c37d287bcaab9c31cb464a",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/44154590335",
+      "run_number": 661,
+      "node": {
+        "tests": 4593,
+        "pass": 4593,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      },
+      "python": {
+        "pass": 67,
+        "fail": 0
+      },
+      "compiled_hashes": {
+        "app": "3633dfb963aca8e5f10d90b9427cc482adedf0070eed631929886160b9e7631b",
+        "auth": "f37c53b904ab5d083abb11d84298970b0b62315f54ac12da560d29e145c48347",
+        "finance": "9b21fdf180e37a0bd0f4bb13929bafdcdad158c8de0ba0c66acd0f437bf6d83e"
+      },
+      "cloudflare_checks": [
+        {
+          "name": "Workers Builds: brazacommerce-finance",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 134292021267,
+          "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-finance/production/previews/fix-system-stability-20261116/builds/409b35a8-b541-4f7d-8456-84a90a249f0d"
+        },
+        {
+          "name": "Workers Builds: brazacommerce-app",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 134292013971,
+          "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-app/production/previews/fix-system-stability-20261116/builds/52eeab86-4829-4487-a0b5-2c1acbf1441b"
+        },
+        {
+          "name": "Workers Builds: brazacommerce-auth",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 134291980524,
+          "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-auth/production/previews/fix-system-stability-20261116/builds/fcceee7c-bd4f-47e7-9a60-80dd98c2b3e5"
+        }
+      ],
+      "workflow_preflight_step": "SKIPPED_BY_UNCHANGED_STACKED_PR_CONDITION; LOCAL_PREFLIGHT_OK"
+    },
+    "published": true,
     "operationally_accepted": false,
     "actual_financial_acceptance": false,
-    "real_data_mutations": 0,
     "receipt": "../system-audit/validation.json",
     "next_independent_task": "OP-014",
-    "status": "GATES_PENDING",
+    "status": "NATIVE_PUBLISHED_PUBLIC_AND_OPERATIONAL_VERIFICATION_BLOCKED_ENVIRONMENT",
     "compiled_hashes": {
       "app": "3633dfb963aca8e5f10d90b9427cc482adedf0070eed631929886160b9e7631b",
       "auth": "f37c53b904ab5d083abb11d84298970b0b62315f54ac12da560d29e145c48347",
       "finance": "9b21fdf180e37a0bd0f4bb13929bafdcdad158c8de0ba0c66acd0f437bf6d83e"
-    }
+    },
+    "prepared_source_commit": "1ac7b79c7ac38b6bd09ac8ed38d593ec40bad080",
+    "validation_head": "ed651fa7a5bd949519c37d287bcaab9c31cb464a",
+    "publication_source_commit": "ed651fa7a5bd949519c37d287bcaab9c31cb464a",
+    "release_id": "2026-11-16.5",
+    "native_verified": true,
+    "publication_receipt": "../system-audit/publication-live.json",
+    "blockers": "../system-audit/BLOCKERS.json",
+    "workers": {
+      "app": "556565ec-a630-42a7-9b43-a5f24867497c",
+      "auth": "63f8176d-47da-4371-adf8-f9c72733247e",
+      "finance": "cb1d47af-7683-4426-b56e-9b68a8604eee"
+    },
+    "pull_request": 128,
+    "git_integration": "DRAFT_OPEN_NO_MERGE_OR_AUTO_MERGE",
+    "manual_real_business_mutations_by_audit": false,
+    "natural_collector_progress": {
+      "status": "NOT_OBSERVED_AFTER_PUBLICATION",
+      "attempt": "Observer failed before process creation",
+      "provider_requests_by_observer": 0,
+      "source_start_step_reset_by_audit": 0,
+      "scope": "Natural cron may have progressed or written. No assertion of zero total D1 writes, full source recovery, catalogue completeness or financial closure."
+    },
+    "public_verification": "INCOMPLETE_BLOCKED_ENVIRONMENT"
   },
   "latest_owner_constraints": {
     "production_friday_13_brasilia": true,
@@ -5988,6 +6057,32 @@
       "publication_receipt": "validation/publication-shirt-cost-live-20261116.json",
       "release_id": "2026-11-16.4",
       "task": "OP-015_SHIRT_COST_EDITOR_PARTIAL"
+    },
+    {
+      "task": "SYSTEM_STABILITY_16_5",
+      "branch": "fix/system-stability-20261116",
+      "source_commit": "1ac7b79c7ac38b6bd09ac8ed38d593ec40bad080",
+      "source_parent": "f78b503f5580f5545b4edc19447da63a78925b5f",
+      "base_main": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
+      "release_candidate": "2026-11-16.5",
+      "current_track": "owner_operation",
+      "sale_track": "ADIADO_VENDA",
+      "code": true,
+      "tested_locally": "36_RECOVERY_COMPACTION_PASS; 67_PYTHON_PASS; FULL_LOCAL_GATES_RUNNING",
+      "full_local_gates": "PENDING_FINAL_RESULT",
+      "exact_head_github_ci": "PENDING",
+      "published": false,
+      "operationally_accepted": false,
+      "actual_financial_acceptance": false,
+      "real_data_mutations": 0,
+      "receipt": "../system-audit/validation.json",
+      "next_independent_task": "OP-014",
+      "status": "GATES_PENDING",
+      "compiled_hashes": {
+        "app": "3633dfb963aca8e5f10d90b9427cc482adedf0070eed631929886160b9e7631b",
+        "auth": "f37c53b904ab5d083abb11d84298970b0b62315f54ac12da560d29e145c48347",
+        "finance": "9b21fdf180e37a0bd0f4bb13929bafdcdad158c8de0ba0c66acd0f437bf6d83e"
+      }
     }
   ]
 }

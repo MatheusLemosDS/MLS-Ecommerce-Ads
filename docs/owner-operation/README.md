@@ -4,13 +4,15 @@ A trilha ativa é **owner_operation**. Cadastro de outros clientes, e-mail comer
 
 [Checkpoint canônico](../MLS_COMMERCE_OS_CHECKPOINT.json) · [36 tarefas e dependências técnicas](EXECUCAO.json) · [21 contratos visuais e famílias preservadas](CATALOGO_GRAFICOS.json) · [inspeção atual](validation/reconciliation.json) · [validação do incremento](validation/owner-dtf-batches.json).
 
-## Estabilidade16.5 — candidato em validação
+## Estabilidade16.5 — publicada, conferência final bloqueada
 
-Implementado localmente, com gates finais pendentes e sem publicação desta versão. A Live verificada segue16.4. [Validação e hashes](../system-audit/validation.json) · [falhas reproduzidas e limites](../system-audit/README.md).
+App/Auth/Finance foram publicados e verificados nativamente em100%, com bytes iguais aos da CI. [Recibo](../system-audit/publication-live.json) · [validação](../system-audit/validation.json) · [bloqueios](../system-audit/BLOCKERS.json). O executor desconectou durante a conferência pública; catálogo/histórico e aceite owner ainda precisam de leitura real.
 
-Após publicação técnica comprovada, abra Pedidos com receitas DTF já confirmadas e confira os diagnósticos de catálogo/histórico antes de repetir uma operação. Erros de autenticação ou permissão continuam bloqueantes; ausência de fonte não vira zero nem fechamento completo. Prévia/exportação DTF não confirma fabricação física. Preserve as confirmações e auditoria aplicáveis.
+1. Em **Pedidos**, confira um pedido com receita DTF confirmada. No montador, confira PNGs, proporções, DPI e prévia automática antes de reservar/exportar. Isso não confirma fabricação física.
+2. Em **Produtos → Custos e regras**, edite os custos futuros comprovados e use **Salvar custos de produção**. Regras independentes mantêm sua precedência; lotes, CMV e fechamentos históricos não são reescritos.
+3. Após reconectar o mesmo ambiente, observe diagnóstico e recuperação pelo cron existente, preservando filtros, cooldown e auditoria. Ausência não é zero; fila executada não basta para COMPLETE ou lucro real.
 
-Custos futuros seguem a versão de custos salva explicitamente; fatos, CMV e fechamentos históricos não são reescritos por esta correção. Aceite com PNGs, medidas e custos reais permanece separado dos testes de código. Próximo desenvolvimento independente: OP-014.
+Nenhum custo real, pagamento ou fabricação foi alterado para teste. Gráficos, seis agentes, sexta13h/Brasília, permissões, confirmações e não duplicação preservados. OP-014 segue independente; venda ADIADO_VENDA.
 
 ## Editar camisetas — publicada 2026-11-16.4
 

@@ -1,6 +1,6 @@
 # Varredura de estabilidade — operação própria
 
-**Candidato16.5: implementado, GATES_PENDING, não publicado e sem PR.** Fonte `1ac7b79c7ac38b6bd09ac8ed38d593ec40bad080`, branch `fix/system-stability-20261116`. [Resultados e hashes](validation.json); a Live verificada permanece16.4 até recibo próprio de publicação.
+**Estabilidade16.5 publicada e verificada nativamente; conferência final bloqueada pelo executor.** [Recibo](publication-live.json), [validação](validation.json) e [bloqueios](BLOCKERS.json). CI661,4593 Node/67 Python e três Builds aprovados no código publicado. O smoke público não terminou; recuperação real de fontes e aceite operacional não foram comprovados.
 
 Base de código preservada: `f78b503`, PR127, Live16.4. Main reconfirmada pelo conector GitHub em `346f30f`. A CI660 da própria base terminou aprovada; falhas de rodadas anteriores não são tratadas como falhas atuais sem reprodução. [Base e escopo](BASELINE.json).
 

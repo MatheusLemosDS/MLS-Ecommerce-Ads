@@ -2,7 +2,7 @@
   "schema": "mls_commerce_os_checkpoint_v1",
   "canonical_roadmap": "docs/ROADMAP_MLS_COMMERCE_OS.md",
   "legacy_roadmap": "docs/ROADMAP_BRAZACOMMERCE.md",
-  "updated_at": "2026-11-17T19:02:36.578919+00:00",
+  "updated_at": "2026-11-17T19:30:13.113Z",
   "product": {
     "name": "MLS Commerce OS",
     "supervisor": "MLS Hermes",
@@ -31,7 +31,7 @@
   },
   "current_phase": "OWNER_OPERATION_SYSTEM_STABILITY_16_5",
   "working_branch": "fix/system-stability-20261116",
-  "current_status": "SYSTEM_STABILITY_16_5_IMPLEMENTED_GATES_PENDING_NOT_PUBLISHED",
+  "current_status": "NATIVE_PUBLISHED_PUBLIC_AND_OPERATIONAL_VERIFICATION_BLOCKED_ENVIRONMENT",
   "completed_this_phase": [
     "Conciliação de liberações por pedido com estados VERIFIED, LOCATED_UNVERIFIED, AMBIGUOUS e NOT_LOCATED",
     "Repasse-base, ajuste, repasse após ajuste e liberação exibidos sem dupla dedução",
@@ -120,11 +120,10 @@
     }
   },
   "next_actions": [
-    "Concluir os gates locais e a CI do SHA candidato exato; conferir Builds externos separadamente e registrar qualquer403 de configuração/logs sem inferir sucesso.",
-    "Antes da publicação autorizada, executar preflight, snapshots/backup e conferência nativa do candidato. Publicar somente pelos scripts controlados e registrar versões, tráfego e hashes; nenhum deploy desta16.5 está comprovado neste checkpoint.",
-    "Após publicação técnica, conferir Pedidos com receitas DTF confirmadas e os diagnósticos de catálogo/histórico. Aceite físico, custos reais, fechamento e M2/M2.2 exigem fontes e confirmação próprias.",
-    "Continuar OP-014 e demais dependências de produção/custos/pagamentos/devoluções; fontes ausentes são UNKNOWN, nunca zero. Sexta13h/Brasília, não duplicação, auditoria, RBAC/CSRF, seis cartões e gráficos permanecem ativos.",
-    "Venda permanece ADIADO_VENDA. Bloqueios exclusivamente comerciais não impedem tarefas independentes da operação própria."
+    "Recuperar o executor do MESMO ambiente existente; preservar worktrees e backup privado. GitHub contém registro posterior ao commit localed651fa; reconciliar por fast-forward antes de alterar arquivos.",
+    "Concluir apenas os probes públicos/rotas/assets faltantes e o observador readonly de catálogo/histórico na Live16.5. Não repetir manualmente a suíte completa sem mudança relevante; gates automáticos seguem ativos.",
+    "Diagnosticar a falha real do catálogo pelo código finito persistido e observar recuperação histórica legítima; não pular filtros/cooldown nem marcar COMPLETE sem fonte.",
+    "Continuar OP-014 e tarefas independentes de produção/custos/pagamentos/devoluções. UNKNOWN, corte sexta13h/Brasília, não duplicação, confirmações/auditoria, autenticação, seis agentes e gráficos preservados; venda ADIADO_VENDA."
   ],
   "m0_followup": [
     "Conferir visual autenticado em desktop e celular durante M1; corrigir apenas branding/layout sem renomear infraestrutura"
@@ -134,29 +133,139 @@
   ],
   "latest_increment": {
     "task": "SYSTEM_STABILITY_16_5",
-    "source_commit": "1ac7b79c7ac38b6bd09ac8ed38d593ec40bad080",
+    "source_commit": "ed651fa7a5bd949519c37d287bcaab9c31cb464a",
     "source_parent": "f78b503f5580f5545b4edc19447da63a78925b5f",
     "base_main": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
     "release_candidate": "2026-11-16.5",
     "implementation": true,
-    "local_validation": "36_RECOVERY_COMPACTION_PASS; 67_PYTHON_PASS; FULL_LOCAL_GATES_RUNNING",
-    "full_local_gates": "PENDING_FINAL_RESULT",
-    "exact_head_github_ci": "PENDING",
-    "external_cloudflare_builds": "PENDING_CURRENT_CANDIDATE",
-    "published": false,
+    "local_validation": "4593_NODE_AND_67_PYTHON_PASS; EXACT_HEAD_CI661_PASS",
+    "full_local_gates": "PASS",
+    "exact_head_github_ci": {
+      "id": 44154590335,
+      "head_sha": "ed651fa7a5bd949519c37d287bcaab9c31cb464a",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/44154590335",
+      "run_number": 661,
+      "node": {
+        "tests": 4593,
+        "pass": 4593,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      },
+      "python": {
+        "pass": 67,
+        "fail": 0
+      },
+      "compiled_hashes": {
+        "app": "3633dfb963aca8e5f10d90b9427cc482adedf0070eed631929886160b9e7631b",
+        "auth": "f37c53b904ab5d083abb11d84298970b0b62315f54ac12da560d29e145c48347",
+        "finance": "9b21fdf180e37a0bd0f4bb13929bafdcdad158c8de0ba0c66acd0f437bf6d83e"
+      },
+      "cloudflare_checks": [
+        {
+          "name": "Workers Builds: brazacommerce-finance",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 134292021267,
+          "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-finance/production/previews/fix-system-stability-20261116/builds/409b35a8-b541-4f7d-8456-84a90a249f0d"
+        },
+        {
+          "name": "Workers Builds: brazacommerce-app",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 134292013971,
+          "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-app/production/previews/fix-system-stability-20261116/builds/52eeab86-4829-4487-a0b5-2c1acbf1441b"
+        },
+        {
+          "name": "Workers Builds: brazacommerce-auth",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 134291980524,
+          "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-auth/production/previews/fix-system-stability-20261116/builds/fcceee7c-bd4f-47e7-9a60-80dd98c2b3e5"
+        }
+      ],
+      "workflow_preflight_step": "SKIPPED_BY_UNCHANGED_STACKED_PR_CONDITION; LOCAL_PREFLIGHT_OK"
+    },
+    "external_cloudflare_builds": [
+      {
+        "name": "Workers Builds: brazacommerce-finance",
+        "status": "completed",
+        "conclusion": "success",
+        "id": 134292021267,
+        "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-finance/production/previews/fix-system-stability-20261116/builds/409b35a8-b541-4f7d-8456-84a90a249f0d"
+      },
+      {
+        "name": "Workers Builds: brazacommerce-app",
+        "status": "completed",
+        "conclusion": "success",
+        "id": 134292013971,
+        "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-app/production/previews/fix-system-stability-20261116/builds/52eeab86-4829-4487-a0b5-2c1acbf1441b"
+      },
+      {
+        "name": "Workers Builds: brazacommerce-auth",
+        "status": "completed",
+        "conclusion": "success",
+        "id": 134291980524,
+        "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-auth/production/previews/fix-system-stability-20261116/builds/fcceee7c-bd4f-47e7-9a60-80dd98c2b3e5"
+      }
+    ],
+    "published": true,
     "validated_operationally": false,
     "actual_financial_acceptance": false,
-    "real_data_mutations": 0,
     "receipt": "docs/system-audit/validation.json",
     "previous_published_receipt": "docs/owner-operation/validation/publication-shirt-cost-live-20261116.json",
-    "status": "GATES_PENDING",
-    "pull_request": null,
-    "git_integration": "LOCAL_BRANCH_NO_PR_NO_MERGE_NO_AUTO_MERGE",
+    "status": "NATIVE_PUBLISHED_PUBLIC_AND_OPERATIONAL_VERIFICATION_BLOCKED_ENVIRONMENT",
+    "pull_request": 128,
+    "git_integration": "DRAFT_OPEN_NO_MERGE_OR_AUTO_MERGE",
     "compiled_hashes": {
       "app": "3633dfb963aca8e5f10d90b9427cc482adedf0070eed631929886160b9e7631b",
       "auth": "f37c53b904ab5d083abb11d84298970b0b62315f54ac12da560d29e145c48347",
       "finance": "9b21fdf180e37a0bd0f4bb13929bafdcdad158c8de0ba0c66acd0f437bf6d83e"
-    }
+    },
+    "implementation_commit": "1ac7b79c7ac38b6bd09ac8ed38d593ec40bad080",
+    "validation_head": "ed651fa7a5bd949519c37d287bcaab9c31cb464a",
+    "publication_source_commit": "ed651fa7a5bd949519c37d287bcaab9c31cb464a",
+    "publication_receipt": "docs/system-audit/publication-live.json",
+    "workers": {
+      "app": "556565ec-a630-42a7-9b43-a5f24867497c",
+      "auth": "63f8176d-47da-4371-adf8-f9c72733247e",
+      "finance": "cb1d47af-7683-4426-b56e-9b68a8604eee"
+    },
+    "public_verification": {
+      "status": "INCOMPLETE_BLOCKED",
+      "complete": false,
+      "first_attempt": {
+        "path": "/account/help",
+        "status": 503,
+        "response_sha256": "33fbc61ad080ef68dd7a6479f8c53f1bf864dba2930567dbbc4ceb47490a1909",
+        "classification": "KNOWN_ENVIRONMENT_ENVOY_TRANSPORT_RESET; NOT_ESTABLISHED_AS_APPLICATION_FAILURE",
+        "final_assertion": "PUBLIC_STATUS_MISMATCH; gate not waived"
+      },
+      "retry": {
+        "status": "DID_NOT_START",
+        "cause": "exec-server transport disconnected; recovery timed out after45s; later no usable execution environment"
+      },
+      "alternate_public_web_reader": {
+        "paths": [
+          "/account/help",
+          "/health",
+          "/login"
+        ],
+        "status": "TOOL_REPORTED_URL_NOT_ACCESSIBLE; DOES_NOT_ESTABLISH_SITE_HEALTH"
+      },
+      "routing_assets_final_verification": "PENDING",
+      "authenticated_owner_live_qa": "NOT_PERFORMED"
+    },
+    "natural_collector_progress": {
+      "status": "NOT_OBSERVED_AFTER_PUBLICATION",
+      "attempt": "Observer failed before process creation",
+      "provider_requests_by_observer": 0,
+      "source_start_step_reset_by_audit": 0,
+      "scope": "Natural cron may have progressed or written. No assertion of zero total D1 writes, full source recovery, catalogue completeness or financial closure."
+    },
+    "manual_real_business_mutations_by_audit": false
   },
   "incident": {
     "id": "INCIDENT_2026_10_27_PANEL_AGENT_REGRESSION",
@@ -3517,29 +3626,31 @@
     }
   },
   "last_verified_live_release": {
-    "status": "PUBLISHED_VERIFIED_TECHNICAL_PUBLIC_ONLY",
-    "verification_scope": "TECHNICAL_PUBLIC_ONLY",
-    "release_id": "2026-11-16.4",
-    "release": "2026-11-16.4",
-    "source_commit": "c39c57217f059f2aed62cd694cd556d06a12617a",
-    "prepared_source_commit": "ae9190cd25a466635f24b315bb65d689b2e3a359",
-    "ci_run": 44110296190,
-    "node_tests_pass": 4500,
-    "python_tests_pass": 67,
-    "receipt": "docs/owner-operation/validation/publication-shirt-cost-live-20261116.json",
-    "verified_at": "2026-11-17T15:22:35.648886+00:00",
+    "status": "NATIVE_PUBLISHED_PUBLIC_AND_OPERATIONAL_VERIFICATION_BLOCKED_ENVIRONMENT",
+    "release_id": "2026-11-16.5",
+    "release": "2026-11-16.5",
+    "source_commit": "ed651fa7a5bd949519c37d287bcaab9c31cb464a",
+    "prepared_source_commit": "1ac7b79c7ac38b6bd09ac8ed38d593ec40bad080",
+    "receipt": "docs/system-audit/publication-live.json",
+    "verified_at": "2026-11-17T19:22:56.685625+00:00",
     "published": true,
-    "pull_request": 127,
-    "owner_live_qa": "NOT_PERFORMED",
-    "account_financial_acceptance": false,
-    "m2_closed": false,
-    "m22_closed": false,
+    "native_verified": true,
+    "public_smoke_complete": false,
+    "verification_scope": "NATIVE_ONLY; FINAL_PUBLIC_AND_OPERATIONAL_VERIFICATION_BLOCKED_ENVIRONMENT",
+    "ci_run": 44154590335,
+    "node_tests_pass": 4593,
+    "python_tests_pass": 67,
     "workers": {
-      "finance": "50b31451-c6cf-4456-bd09-be5d1956e0da",
-      "auth": "17ccc9d6-df7d-45e8-b3f1-75e065fa19bc",
-      "app": "5931a32e-5726-445f-9bae-11a194f5049a"
+      "app": "556565ec-a630-42a7-9b43-a5f24867497c",
+      "auth": "63f8176d-47da-4371-adf8-f9c72733247e",
+      "finance": "cb1d47af-7683-4426-b56e-9b68a8604eee"
     },
-    "git_integration": "DRAFT_OPEN_NO_MERGE_OR_AUTO_MERGE"
+    "pull_request": 128,
+    "git_integration": "DRAFT_OPEN_NO_MERGE_OR_AUTO_MERGE",
+    "account_financial_acceptance": false,
+    "owner_live_qa": "NOT_PERFORMED",
+    "m2_closed": false,
+    "m22_closed": false
   },
   "previous_next_actions_before_simplified_operations": [
     "Conferir os itens salvos do pedido e da solicitação em MLS Returns; manter unidades comerciais separadas das peças físicas, preservar UNKNOWN e validar a origem antes de integrar reaproveitamento ao lucro.",
@@ -7826,10 +7937,63 @@
   },
   "system_audit_20261117": {
     "task": "SYSTEM_STABILITY_16_5",
-    "receipt": "docs/system-audit/validation.json",
-    "source_commit": "1ac7b79c7ac38b6bd09ac8ed38d593ec40bad080",
-    "phase_status": "IMPLEMENTED_GATES_PENDING",
+    "receipt": "docs/system-audit/publication-live.json",
+    "source_commit": "ed651fa7a5bd949519c37d287bcaab9c31cb464a",
+    "phase_status": "NATIVE_PUBLISHED_PUBLIC_AND_OPERATIONAL_VERIFICATION_BLOCKED_ENVIRONMENT",
     "prior_delivery_archive": "docs/system-audit/history/continuity-before-16-5.json",
-    "roadmap_scope": "Only reproduced defects in this increment; incomplete owner-operation tasks remain partial/open."
+    "roadmap_scope": "Only reproduced defects in this increment; incomplete owner-operation tasks remain partial/open.",
+    "blockers": "docs/system-audit/BLOCKERS.json",
+    "all_errors_resolved": false
+  },
+  "previous_last_verified_live_release_before_system_stability_16_5": {
+    "status": "PUBLISHED_VERIFIED_TECHNICAL_PUBLIC_ONLY",
+    "verification_scope": "TECHNICAL_PUBLIC_ONLY",
+    "release_id": "2026-11-16.4",
+    "release": "2026-11-16.4",
+    "source_commit": "c39c57217f059f2aed62cd694cd556d06a12617a",
+    "prepared_source_commit": "ae9190cd25a466635f24b315bb65d689b2e3a359",
+    "ci_run": 44110296190,
+    "node_tests_pass": 4500,
+    "python_tests_pass": 67,
+    "receipt": "docs/owner-operation/validation/publication-shirt-cost-live-20261116.json",
+    "verified_at": "2026-11-17T15:22:35.648886+00:00",
+    "published": true,
+    "pull_request": 127,
+    "owner_live_qa": "NOT_PERFORMED",
+    "account_financial_acceptance": false,
+    "m2_closed": false,
+    "m22_closed": false,
+    "workers": {
+      "finance": "50b31451-c6cf-4456-bd09-be5d1956e0da",
+      "auth": "17ccc9d6-df7d-45e8-b3f1-75e065fa19bc",
+      "app": "5931a32e-5726-445f-9bae-11a194f5049a"
+    },
+    "git_integration": "DRAFT_OPEN_NO_MERGE_OR_AUTO_MERGE"
+  },
+  "previous_increment_before_system_stability_16_5_publication": {
+    "task": "SYSTEM_STABILITY_16_5",
+    "source_commit": "1ac7b79c7ac38b6bd09ac8ed38d593ec40bad080",
+    "source_parent": "f78b503f5580f5545b4edc19447da63a78925b5f",
+    "base_main": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
+    "release_candidate": "2026-11-16.5",
+    "implementation": true,
+    "local_validation": "36_RECOVERY_COMPACTION_PASS; 67_PYTHON_PASS; FULL_LOCAL_GATES_RUNNING",
+    "full_local_gates": "PENDING_FINAL_RESULT",
+    "exact_head_github_ci": "PENDING",
+    "external_cloudflare_builds": "PENDING_CURRENT_CANDIDATE",
+    "published": false,
+    "validated_operationally": false,
+    "actual_financial_acceptance": false,
+    "real_data_mutations": 0,
+    "receipt": "docs/system-audit/validation.json",
+    "previous_published_receipt": "docs/owner-operation/validation/publication-shirt-cost-live-20261116.json",
+    "status": "GATES_PENDING",
+    "pull_request": null,
+    "git_integration": "LOCAL_BRANCH_NO_PR_NO_MERGE_NO_AUTO_MERGE",
+    "compiled_hashes": {
+      "app": "3633dfb963aca8e5f10d90b9427cc482adedf0070eed631929886160b9e7631b",
+      "auth": "f37c53b904ab5d083abb11d84298970b0b62315f54ac12da560d29e145c48347",
+      "finance": "9b21fdf180e37a0bd0f4bb13929bafdcdad158c8de0ba0c66acd0f437bf6d83e"
+    }
   }
 }

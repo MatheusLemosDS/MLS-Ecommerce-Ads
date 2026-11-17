@@ -1,0 +1,74 @@
+{
+  "schema": "mls_system_stability_concrete_blockers_v1",
+  "recorded_at": "2026-11-17T19:30:13.113Z",
+  "source_commit": "ed651fa7a5bd949519c37d287bcaab9c31cb464a",
+  "all_errors_resolved": false,
+  "blockers": [
+    {
+      "id": "EXECUTOR_UNAVAILABLE",
+      "status": "BLOCKED_ACCESS",
+      "evidence": "Environment declared unavailable; exec failed with transport disconnected/recovery timed out45s and then No usable execution environment. Control-plane running/connected status did not restore executor access.",
+      "required_action": "Reconnect/open the SAME existing Codex environment/desktop if offered, then verify a harmless read. Preserve all worktrees, local commits, private backup and gates. Do not create/reset another workspace or change credentials.",
+      "next_executable": "Reconcile GitHub documentation commit into the existing branch by fast-forward; recover private proofs; repeat only missing public/routing/assets and natural collector reads."
+    },
+    {
+      "id": "PUBLIC_POST_DEPLOY_SMOKE",
+      "status": "PENDING_VERIFICATION",
+      "evidence": {
+        "status": "INCOMPLETE_BLOCKED",
+        "complete": false,
+        "first_attempt": {
+          "path": "/account/help",
+          "status": 503,
+          "response_sha256": "33fbc61ad080ef68dd7a6479f8c53f1bf864dba2930567dbbc4ceb47490a1909",
+          "classification": "KNOWN_ENVIRONMENT_ENVOY_TRANSPORT_RESET; NOT_ESTABLISHED_AS_APPLICATION_FAILURE",
+          "final_assertion": "PUBLIC_STATUS_MISMATCH; gate not waived"
+        },
+        "retry": {
+          "status": "DID_NOT_START",
+          "cause": "exec-server transport disconnected; recovery timed out after45s; later no usable execution environment"
+        },
+        "alternate_public_web_reader": {
+          "paths": [
+            "/account/help",
+            "/health",
+            "/login"
+          ],
+          "status": "TOOL_REPORTED_URL_NOT_ACCESSIBLE; DOES_NOT_ESTABLISH_SITE_HEALTH"
+        },
+        "routing_assets_final_verification": "PENDING",
+        "authenticated_owner_live_qa": "NOT_PERFORMED"
+      },
+      "required_action": "Finish existing verify-public.py with unchanged URLs, CA, proxy, credentials and strict statuses/hashes. Preserve failed-attempt logs. No source change or rollback is justified solely by this environment transport failure."
+    },
+    {
+      "id": "CATALOG_SOURCE",
+      "status": "UNRESOLVED_CAUSE_PENDING_LIVE_DIAGNOSTIC",
+      "evidence": "Prepublication registry retrying BANNED at offset0 with failure_count751 and generic SOURCE_UNAVAILABLE. Finite diagnostic retention is now implemented, tested and natively published. Postpublication diagnostic has not been read.",
+      "required_action": "Read product_registry_source_diagnostics and state after an eligible natural cron turn. Do not skip BANNED, force retries, infer permission failure, or normalize missing arrays into zero without evidence.",
+      "research": "TypeScript SDK treats response fields as optional while Go treats them as required; raw schema lacks required metadata. This disagreement does not establish that an omitted item array proves an empty status.",
+      "sources": [
+        "https://github.com/congminh1254/shopee-sdk/blob/main/src/schemas/product.ts",
+        "https://open.shopee.com/documents/v2/v2.product.get_item_list?module=89&type=1"
+      ]
+    },
+    {
+      "id": "HISTORICAL_SOURCE_RECOVERY",
+      "status": "NATIVELY_PUBLISHED_AWAITING_REAL_PROGRESS",
+      "evidence": "Three historical Finance references were absent before publication. New typed404/intention/same-period CAS recovery and fair scheduling passed real SQLite/generated Worker tests. Natural recovery has not been observed on16.5.",
+      "required_action": "Observe exact same-period source existence and recovery audit counts with readonly queries; preserve cooldown/leases and old publications. COMPLETE requires actual source coverage, not a test or queue execution."
+    },
+    {
+      "id": "BUILDS_CONFIGURATION_READ",
+      "status": "READ_ACCESS_403;_CURRENT_HEAD_BUILDS_ALL_SUCCESS",
+      "evidence": "All3 external Cloudflare check-runs succeeded on sourceed651fa. Configuration/trigger reads previously returned403 code10000 and build log reads403 code12004; full external configuration remains unverified.",
+      "required_action": "Reuse current successful check evidence. Read configuration/logs only through already supported authorized access when available; do not widen grants or treat production/builds URL as deployment proof."
+    },
+    {
+      "id": "OWNER_FINANCIAL_ACCEPTANCE",
+      "status": "PENDING_REAL_SOURCES_AND_OPERATOR_CONFIRMATION",
+      "evidence": "Native publication, synthetic Chrome and4593 tests do not prove physical fabrication, historical costs, complete returns, bank/payout coverage or actual profit. Existing PARTIAL/UNKNOWN and external dependencies remain in the owner matrix.",
+      "required_action": "Owner confirms applicable physical/source/cost facts and audited reconciliations. Sale-only matters remain ADIADO_VENDA; continue independent OP-014 work after access recovery."
+    }
+  ]
+}
