@@ -215,3 +215,66 @@ for(const minify of [false,true])test(`the generated App cron runs previous-mont
  assert.deepEqual(currentRow(f),before);assert.equal(counts(f).finance,calls.finance+1);assert.equal(counts(f).ads,calls.ads);
  assert.deepEqual(f.options,[{timeoutMs:45000,includeVariants:true}]);
 });
+
+function busyCurrent(f){
+ const row=currentRow(f),summary=JSON.parse(row.summary);summary.status='RUNNING';summary.net_estimate_cents=null;
+ f.env.ADMIN_DB.db.prepare("UPDATE business_sync_state SET status='RUNNING',summary=?,next_run_at=0 WHERE id=1").run(JSON.stringify(summary));
+}
+function historyLease(f){
+ const token=crypto.randomUUID(),stamp=Math.floor(f.now()/1000);
+ return f.env.ADMIN_DB.db.prepare("UPDATE background_collection_lane_state SET revision=revision+1,next_lane='AUXILIARY',auxiliary_index=0,lease_token=?,lease_until=? WHERE id=1 RETURNING revision").get(token,stamp+300) ? {token,revision:f.env.ADMIN_DB.db.prepare('SELECT revision FROM background_collection_lane_state WHERE id=1').get().revision}:null;
+}
+const reservedHistory=(f,lease)=>runBusinessHistorySync(f.env,f.services,{now:f.now,backgroundLease:lease});
+
+test('reserved historical turns progress while current Finance stays RUNNING, alternating existing auxiliary work without resetting either source',async t=>{
+ const f=await fixture(t);busyCurrent(f);const before=currentRow(f),called=counts(f);
+ let lease=historyLease(f),value=await reservedHistory(f,lease);assert.equal(value.status,'RUNNING');assert.equal(value.finance_steps,1);assert.deepEqual(currentRow(f),before);assert.equal(counts(f).finance,called.finance+1);
+ const source=JSON.parse(f.env.ADMIN_DB.db.prepare('SELECT payload FROM business_month_runs WHERE month=?').get(previousMonth).payload),firstRevision=f.env.ADMIN_DB.db.prepare('SELECT revision FROM business_month_runs WHERE month=?').get(previousMonth).revision;
+ assert.equal((await reservedHistory(f,lease)).status,'LEASED','a completed background token cannot perform a second provider step');
+ f.clock.time+=61000;lease=historyLease(f);value=await reservedHistory(f,lease);assert.equal(value.status,'DEFERRED');assert.equal(value.finance_steps,0);assert.equal(counts(f).finance,called.finance+1,'the following HISTORY slot is left to its existing cost/audit ring');
+ f.clock.time+=61000;lease=historyLease(f);value=await reservedHistory(f,lease);assert.equal(value.status,'RUNNING');assert.equal(value.finance_steps,1);
+ const next=f.env.ADMIN_DB.db.prepare('SELECT revision,payload FROM business_month_runs WHERE month=?').get(previousMonth);assert.ok(next.revision>firstRevision);const after=JSON.parse(next.payload);assert.deepEqual(after.slots.map(s=>s.start_date),source.slots.map(s=>s.start_date));assert.deepEqual(currentRow(f),before);
+ assert.equal((await readBusinessSyncState(f.env)).status,'RUNNING');assert.equal(f.env.ADMIN_DB.db.prepare('SELECT next_work FROM business_history_sync_fairness').get().next_work,'AUXILIARY');
+});
+
+test('reserved monthly work respects missing source, foreign/expired background leases, current leases and pause before any source call',async t=>{
+ const f=await fixture(t);busyCurrent(f);const called=counts(f),lease=historyLease(f);
+ assert.equal((await runBusinessHistorySync(f.env,{}, {now:f.now,backgroundLease:lease})).status,'DEFERRED');
+ assert.equal((await reservedHistory(f,{...lease,token:crypto.randomUUID()})).status,'LEASED');
+ f.env.ADMIN_DB.db.prepare('UPDATE background_collection_lane_state SET lease_until=?').run(Math.floor(f.now()/1000));assert.equal((await reservedHistory(f,lease)).status,'LEASED');
+ f.env.ADMIN_DB.db.prepare('UPDATE background_collection_lane_state SET lease_until=?').run(Math.floor(f.now()/1000)+300);
+ f.env.ADMIN_DB.db.prepare('UPDATE business_sync_state SET lease_token=?,lease_expires_at=?').run(crypto.randomUUID(),Math.floor(f.now()/1000)+120);assert.equal((await reservedHistory(f,lease)).status,'LEASED');
+ f.env.ADMIN_DB.db.prepare('UPDATE business_sync_state SET lease_token=NULL,lease_expires_at=NULL').run();const state=await readBusinessSyncState(f.env);await saveBusinessSyncPolicy(f.env,{revision:state.revision,enabled:false},'synthetic-owner',{now:f.now});assert.equal((await reservedHistory(f,lease)).status,'PAUSED');assert.deepEqual(counts(f),called);
+});
+
+test('reserved history failure backs off yet yields the next auxiliary turn, and concurrent attempts share the current collector lease',async t=>{
+ const f=await fixture(t);busyCurrent(f);const source=await read(f),provider=f.services.getFinanceBusinessPeriod;let entered,release;const start=new Promise(resolve=>entered=resolve),hold=new Promise(resolve=>release=resolve),lease=historyLease(f);
+ f.services.getFinanceBusinessPeriod=async()=>{entered();await hold;throw Error('PRIVATE_RESERVED_SOURCE_TIMEOUT');};
+ const work=reservedHistory(f,lease);await start;assert.equal((await reservedHistory(f,lease)).status,'LEASED');assert.equal((await runBusinessSync(f.env,f.services,{now:f.now})).status,'LEASED');release();assert.equal((await work).status,'ERROR');assert.equal(historyRow(f).failure_count,1);assert.equal(historyRow(f).next_run_at,Math.floor(f.now()/1000)+300);assert.deepEqual((await read(f)).audit_scope,source.audit_scope);assert.doesNotMatch(JSON.stringify(historyRow(f)),/PRIVATE/);
+ let next=historyLease(f);assert.equal((await reservedHistory(f,next)).status,'DEFERRED');next=historyLease(f);assert.equal((await reservedHistory(f,next)).status,'NOT_DUE');f.clock.time+=301000;f.services.getFinanceBusinessPeriod=provider;next=historyLease(f);assert.equal((await reservedHistory(f,next)).status,'RUNNING');assert.equal(historyRow(f).failure_count,0);
+});
+
+for(const interruption of ['pause','replacement','expiry'])test('reserved monthly response cannot advance App state after '+interruption+' of its background lease',async t=>{
+ const f=await fixture(t);busyCurrent(f);const before=await read(f),provider=f.services.getFinanceBusinessPeriod,lease=historyLease(f);
+ f.services.getFinanceBusinessPeriod=async(...args)=>{const result=await provider(...args);if(interruption==='pause'){const state=await readBusinessSyncState(f.env);await saveBusinessSyncPolicy(f.env,{revision:state.revision,enabled:false},'synthetic-owner',{now:f.now});}else if(interruption==='expiry')f.clock.time+=301000;else historyLease(f);return result;};
+ const value=await reservedHistory(f,lease);assert.equal(value.finance_steps,1);assert.ok(['PAUSED','LEASED','DEFERRED'].includes(value.status));assert.equal(historyRow(f),null);assert.deepEqual((await read(f)).audit_scope,before.audit_scope);
+});
+
+for(const minify of [false,true])test(`generated App ordinary HISTORY reserves one monthly step while current Finance is RUNNING (minify=${minify})`,async t=>{
+ const source=await readFile(new URL('../../../dist/app-worker.mjs',import.meta.url),'utf8'),compiled=await build({stdin:{contents:source+'\nexport {brazaAdmin as historyReservedSmoke};',loader:'js'},bundle:true,write:false,format:'esm',platform:'browser',target:'es2022',minify}),{historyReservedSmoke}=await import('data:text/javascript;base64,'+Buffer.from(compiled.outputFiles[0].text).toString('base64'));
+ const f=await fixture(t),schedule=historyReservedSmoke.scheduledWork;assert.equal((await schedule(f.env,f.services,f.now)).collection,'MAINTENANCE');await currentReturnsReservation(f,schedule);await firstCoverageReservation(f,schedule);busyCurrent(f);
+ const stamp=Math.floor(f.now()/1000);f.env.ADMIN_DB.db.prepare("UPDATE background_collection_lane_state SET next_lane='AUXILIARY',auxiliary_index=0").run();f.env.ADMIN_DB.db.prepare('UPDATE background_history_fairness_state SET finance_since_audit=4,last_auxiliary_at=?').run(stamp-301);
+ const before=currentRow(f),called=counts(f),value=await schedule(f.env,f.services,f.now);assert.equal(value.lane,'HISTORY');assert.equal(value.history_collection,'RUNNING');assert.equal(value.history,'DEFERRED');assert.equal(counts(f).finance,called.finance+1);assert.equal(counts(f).ads,called.ads);assert.deepEqual(currentRow(f),before);assert.equal(f.env.ADMIN_DB.db.prepare('SELECT next_lane FROM background_collection_lane_state').get().next_lane,'FINANCE','the next regular lane returns to current Finance');
+});
+
+test('a rate-limited reserved historical page retains its cursor/publication and retry deadline without stealing the next auxiliary opportunity',async t=>{
+ const f=await fixture(t);busyCurrent(f);const provider=f.services.getFinanceBusinessPeriod,before=await read(f);f.services.getFinanceBusinessPeriod=async(...args)=>({...await provider(...args),diagnostic:'BUSINESS_PERIOD_RATE_LIMIT'});
+ let value=await reservedHistory(f,historyLease(f));assert.equal(value.status,'ERROR');assert.equal(value.finance_steps,1);const retry=historyRow(f),called=counts(f);assert.equal(retry.last_error,'BUSINESS_HISTORY_COLLECTION_UNAVAILABLE');assert.ok(retry.next_run_at>Math.floor(f.now()/1000));assert.deepEqual((await read(f)).audit_scope,before.audit_scope);
+ value=await reservedHistory(f,historyLease(f));assert.equal(value.status,'DEFERRED','rate limiting still yields the following HISTORY turn to existing auxiliary work');value=await reservedHistory(f,historyLease(f));assert.equal(value.status,'NOT_DUE');assert.deepEqual(counts(f),called);
+ f.clock.time=retry.next_run_at*1000+1000;f.services.getFinanceBusinessPeriod=provider;value=await reservedHistory(f,historyLease(f));assert.equal(value.status,'RUNNING');assert.equal(value.finance_steps,1);assert.equal(historyRow(f).failure_count,0);
+});
+
+test('simultaneous copies of one reserved background turn claim at most one historical source step',async t=>{
+ const f=await fixture(t);busyCurrent(f);const batch=f.env.ADMIN_DB.batch.bind(f.env.ADMIN_DB);let tail=Promise.resolve();f.env.ADMIN_DB.batch=statements=>{const result=tail.then(()=>batch(statements));tail=result.catch(()=>{});return result;};
+ const called=counts(f),lease=historyLease(f),results=await Promise.all([reservedHistory(f,lease),reservedHistory(f,lease)]);assert.equal(results.reduce((sum,value)=>sum+value.finance_steps,0),1);assert.equal(counts(f).finance,called.finance+1);assert.deepEqual(results.map(value=>value.status).sort(),['LEASED','RUNNING']);assert.equal(f.env.ADMIN_DB.db.prepare('SELECT last_background_revision FROM business_history_sync_fairness').get().last_background_revision,lease.revision);
+});

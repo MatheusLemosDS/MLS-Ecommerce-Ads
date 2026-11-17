@@ -329,6 +329,11 @@ async function scheduledWork(env,services,now=()=>Date.now()){
     if(output.collection==='NOT_DUE')output.history_collection=(await runBusinessHistorySync(env,services,{now,currentStatus:output.collection})).status;
    }catch{if(output.collection==='NOT_DUE')output.history_collection='ERROR';else output.collection='ERROR';}
   }else if(lease.lane==='HISTORY'){
+   if(!lease.reserved_returns&&!lease.coverage_bootstrap&&!lease.pending_income_recovery&&!lease.pending_income_scan){
+    try{const monthly=await runBusinessHistorySync(env,services,{now,backgroundLease:{token:lease.token,revision:lease.revision}});output.history_collection=monthly.status;
+     if(monthly.finance_steps||['LEASED','PAUSED','ERROR'].includes(monthly.status))return output;
+    }catch{output.history_collection='ERROR';return output;}
+   }
    try{const history=await runBackgroundHistoryWork(env,services,{month,lease},{now,previousMonthReturns:typeof services?.getFinanceReconciliation==='function'});
     output.history=history.history;output.reconciliation=history.reconciliation;output.releases=history.releases;output.income=history.income;output.income_detail=history.income_detail;output.release_coverage=history.release_coverage;
     repeatHistory=history.repeatHistory;auditSourceReads=history.audit_source_reads;historyNextWork=history.historyNextWork;
