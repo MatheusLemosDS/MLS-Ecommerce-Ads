@@ -1,0 +1,857 @@
+{
+  "schema": "mls_catalog_diagnostic_controlled_publication_v1",
+  "status": "PUBLISHED_VERIFIED_TECHNICAL_PUBLIC_ONLY",
+  "release": "2026-11-17.1",
+  "source_commit": "e26357dd23b7c488b803481099b2da0af66eb6b6",
+  "implementation_commit": "a2d7943e517cab181d39ffe9729346bd51168e8c",
+  "prepared_source_commit": "2c1764b607ab719f5109688b9ad6559e69ce979c",
+  "local_validated_commit": "f1b01f02bb8daf538d8c481c200d38d91e2cf8c9",
+  "source_tree": "fc7be331680f6724281c49110d9ade9b96a8b986",
+  "git_reconciliation": {
+    "local_original": "f1b01f02bb8daf538d8c481c200d38d91e2cf8c9",
+    "archive_branch": "archive/system-stability-native-pre-connector-20261117",
+    "remote_head": "e26357dd23b7c488b803481099b2da0af66eb6b6",
+    "same_working_tree_and_index": true,
+    "tree": "fc7be331680f6724281c49110d9ade9b96a8b986",
+    "source_files_modified_during_reconciliation": false,
+    "method": "SUPPORTED_GITHUB_GITDATA_UPLOAD_THEN_NATIVE_READ_ONLY_FETCH; ARCHIVE_AND_REF_RECONCILIATION_WITH_IDENTICAL_TREES",
+    "force_push": false
+  },
+  "base_main": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
+  "branch": "fix/system-stability-20261116",
+  "pull_request": 128,
+  "pull_request_base": "fix/owner-shirt-cost-editing-20261116",
+  "pull_request_url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/128",
+  "git_integration": "DRAFT_OPEN_NO_MERGE_OR_AUTO_MERGE",
+  "recorded_at_utc": "2026-11-17T20:20:27.302813+00:00",
+  "native_verified_at": "2026-11-17T20:19:33.202389+00:00",
+  "public_verified_at": "2026-11-17T20:19:35.191279+00:00",
+  "implemented": true,
+  "published": true,
+  "native_verified": true,
+  "verification_scope": "EXACT_NATIVE_SOURCE_CONFIGURATION_100_PERCENT_TRAFFIC_PUBLIC_TLS_HTTP_ROUTING_AND_EXACT_ASSETS; OWNER_ACCEPTANCE_PENDING",
+  "ci": {
+    "id": 44164656045,
+    "run_number": 663,
+    "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/44164656045",
+    "status": "completed",
+    "conclusion": "success",
+    "head_sha": "e26357dd23b7c488b803481099b2da0af66eb6b6",
+    "node": {
+      "tests": 4631,
+      "pass": 4631,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0
+    },
+    "python": {
+      "pass": 67,
+      "fail": 0
+    },
+    "compiled_hashes": {
+      "app": "db0c20e75d6237de140cbacd3e256104336cc348e1af93cf6ce192b7e81d4239",
+      "auth": "e48e0dee32ee2d68c1523a716cd752e1df189f59d54e5f16c7899e45ae08b8a0",
+      "finance": "522cd735b73157eee92f1859d87959f5e66a7b8070afb4b2c26cb92006a44bf0"
+    },
+    "workflow_preflight_step": "SKIPPED_BY_EXISTING_STACKED_PR_CONDITION; LOCAL_PREFLIGHT_PASS",
+    "cloudflare_checks": [
+      {
+        "name": "Workers Builds: brazacommerce-app",
+        "status": "completed",
+        "conclusion": "success",
+        "id": 134328116832,
+        "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-app/production/previews/fix-system-stability-20261116/builds/2c406e8b-1f2e-479f-9cf0-ec69409d409a"
+      },
+      {
+        "name": "Workers Builds: brazacommerce-finance",
+        "status": "completed",
+        "conclusion": "success",
+        "id": 134328038598,
+        "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-finance/production/previews/fix-system-stability-20261116/builds/36ccef33-22d8-4914-8238-a74db2579c32"
+      },
+      {
+        "name": "Workers Builds: brazacommerce-auth",
+        "status": "completed",
+        "conclusion": "success",
+        "id": 134328001622,
+        "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-auth/production/previews/fix-system-stability-20261116/builds/084cc3bf-8482-42c8-ac6a-24964e329e24"
+      }
+    ]
+  },
+  "local_full_node": {
+    "tests": 4631,
+    "pass": 4631,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0,
+    "duration_ms": 744542.353108,
+    "log_sha256": "c86004665e6716e2367958f3703575bb996e2f7949d5c674278032a43e1c0e64",
+    "source_commit_at_execution": "f1b01f02bb8daf538d8c481c200d38d91e2cf8c9",
+    "source_tree": "fc7be331680f6724281c49110d9ade9b96a8b986",
+    "scope": "LOCAL_F1_TREE_IDENTICAL_TO_EXACT_REMOTE_E263_CI_CANDIDATE"
+  },
+  "local_python": {
+    "pass": 67,
+    "fail": 0
+  },
+  "targeted": {
+    "pass": 75,
+    "fail": 0,
+    "skipped": 0
+  },
+  "compiled_hashes": {
+    "app": "db0c20e75d6237de140cbacd3e256104336cc348e1af93cf6ce192b7e81d4239",
+    "auth": "e48e0dee32ee2d68c1523a716cd752e1df189f59d54e5f16c7899e45ae08b8a0",
+    "finance": "522cd735b73157eee92f1859d87959f5e66a7b8070afb4b2c26cb92006a44bf0"
+  },
+  "workers": {
+    "finance": {
+      "active_version_id": "60259fca-980a-4255-8157-fb74b43023cf",
+      "latest_version_id": "60259fca-980a-4255-8157-fb74b43023cf",
+      "active_percentage": 100,
+      "retrieved_raw_sha256": "522cd735b73157eee92f1859d87959f5e66a7b8070afb4b2c26cb92006a44bf0",
+      "raw_bytes": 895222,
+      "effective_config_sha256": "1e5de4eba866ec7c8ca85fc37c7969d61dc513a26336879e2753e506c6711ab2",
+      "action": "UPDATED",
+      "source_matches_expected": true
+    },
+    "auth": {
+      "active_version_id": "5848d2d1-944f-4633-84ce-78886a701dc2",
+      "latest_version_id": "5848d2d1-944f-4633-84ce-78886a701dc2",
+      "active_percentage": 100,
+      "retrieved_raw_sha256": "e48e0dee32ee2d68c1523a716cd752e1df189f59d54e5f16c7899e45ae08b8a0",
+      "raw_bytes": 579502,
+      "effective_config_sha256": "304c9c4615acdfc3a8222e00449e5bceabcf2dd9bd574587538183a935003361",
+      "action": "UPDATED",
+      "source_matches_expected": true
+    },
+    "app": {
+      "active_version_id": "078e9f9e-d6b3-4dee-8d4c-33a821d43288",
+      "latest_version_id": "078e9f9e-d6b3-4dee-8d4c-33a821d43288",
+      "active_percentage": 100,
+      "retrieved_raw_sha256": "db0c20e75d6237de140cbacd3e256104336cc348e1af93cf6ce192b7e81d4239",
+      "raw_bytes": 3753165,
+      "effective_config_sha256": "72c1ffdf88e61e4d2b1b7d78545c3d8d9a5b903cc32cf4ed83ee87d5c19a32b9",
+      "action": "UPDATED",
+      "source_matches_expected": true
+    }
+  },
+  "native_verification": {
+    "schema": "owner_artwork_controlled_stage_verification_v1",
+    "recorded_at": "2026-11-17T20:19:33.202389+00:00",
+    "updated_workers": [
+      "app",
+      "auth",
+      "finance"
+    ],
+    "workers": {
+      "finance": {
+        "active_version_id": "60259fca-980a-4255-8157-fb74b43023cf",
+        "latest_version_id": "60259fca-980a-4255-8157-fb74b43023cf",
+        "active_percentage": 100,
+        "retrieved_raw_sha256": "522cd735b73157eee92f1859d87959f5e66a7b8070afb4b2c26cb92006a44bf0",
+        "raw_bytes": 895222,
+        "effective_config_sha256": "1e5de4eba866ec7c8ca85fc37c7969d61dc513a26336879e2753e506c6711ab2",
+        "action": "UPDATED",
+        "source_matches_expected": true
+      },
+      "auth": {
+        "active_version_id": "5848d2d1-944f-4633-84ce-78886a701dc2",
+        "latest_version_id": "5848d2d1-944f-4633-84ce-78886a701dc2",
+        "active_percentage": 100,
+        "retrieved_raw_sha256": "e48e0dee32ee2d68c1523a716cd752e1df189f59d54e5f16c7899e45ae08b8a0",
+        "raw_bytes": 579502,
+        "effective_config_sha256": "304c9c4615acdfc3a8222e00449e5bceabcf2dd9bd574587538183a935003361",
+        "action": "UPDATED",
+        "source_matches_expected": true
+      },
+      "app": {
+        "active_version_id": "078e9f9e-d6b3-4dee-8d4c-33a821d43288",
+        "latest_version_id": "078e9f9e-d6b3-4dee-8d4c-33a821d43288",
+        "active_percentage": 100,
+        "retrieved_raw_sha256": "db0c20e75d6237de140cbacd3e256104336cc348e1af93cf6ce192b7e81d4239",
+        "raw_bytes": 3753165,
+        "effective_config_sha256": "72c1ffdf88e61e4d2b1b7d78545c3d8d9a5b903cc32cf4ed83ee87d5c19a32b9",
+        "action": "UPDATED",
+        "source_matches_expected": true
+      }
+    },
+    "all_configs_preserved": true,
+    "owner_flags_preserved": true,
+    "all_source_bytes_exact": true,
+    "all_active_latest_100": true
+  },
+  "public_verification": {
+    "schema": "owner_public_routing_verification_v1",
+    "recorded_at": "2026-11-17T20:19:35.191279+00:00",
+    "release": "2026-11-17.1",
+    "routes_subdomains_schedules": {
+      "app": {
+        "workers_dev": true,
+        "previews_enabled": false,
+        "crons": [
+          "* * * * *"
+        ],
+        "domains": [
+          "app.brazacommerce.com.br"
+        ],
+        "matches_reviewed_config": true
+      },
+      "auth": {
+        "workers_dev": true,
+        "previews_enabled": false,
+        "crons": [],
+        "domains": [
+          "auth.brazacommerce.com.br"
+        ],
+        "matches_reviewed_config": true
+      },
+      "finance": {
+        "workers_dev": false,
+        "previews_enabled": false,
+        "crons": [],
+        "domains": [],
+        "matches_reviewed_config": true
+      }
+    },
+    "public_http": [
+      {
+        "path": "/login",
+        "status": 200,
+        "release_header": "2026-11-17.1",
+        "final_path": "/login",
+        "response_sha256": "c5e3f4284100bcd8a91e5a1a54c84201f5cc7231252a7b10286b03c86f430695"
+      },
+      {
+        "path": "/account/login",
+        "status": 200,
+        "release_header": null,
+        "final_path": "/account/login",
+        "response_sha256": "c709cee96d72270135afe0d51cb10066af2728c3f364f9fa219f1ce549c0605d"
+      },
+      {
+        "path": "/account/help",
+        "status": 200,
+        "release_header": null,
+        "final_path": "/account/login",
+        "response_sha256": "c709cee96d72270135afe0d51cb10066af2728c3f364f9fa219f1ce549c0605d"
+      },
+      {
+        "path": "/admin?tab=production",
+        "status": 200,
+        "release_header": "2026-11-17.1",
+        "final_path": "/login",
+        "response_sha256": "c5e3f4284100bcd8a91e5a1a54c84201f5cc7231252a7b10286b03c86f430695"
+      },
+      {
+        "path": "/health",
+        "status": 200,
+        "release_header": null,
+        "final_path": "/health",
+        "response_sha256": "7cb8471af656cf3d62d5942ac9ea92be09c9f3951fb3fd057ea44b7d761af6c2"
+      },
+      {
+        "path": "/api/admin/bootstrap",
+        "status": 401,
+        "release_header": "2026-11-17.1",
+        "final_path": "/api/admin/bootstrap",
+        "response_sha256": "a1d55d2c2c14a6a8d1c08977059aa62ea671af14dbb076c3ecb00d1f31e74389"
+      },
+      {
+        "path": "/api/admin/production/batches?status=OPEN",
+        "status": 401,
+        "release_header": "2026-11-17.1",
+        "final_path": "/api/admin/production/batches",
+        "response_sha256": "a1d55d2c2c14a6a8d1c08977059aa62ea671af14dbb076c3ecb00d1f31e74389"
+      },
+      {
+        "path": "/api/admin/production/batch?id=00000000-0000-4000-8000-000000000001",
+        "status": 401,
+        "release_header": "2026-11-17.1",
+        "final_path": "/api/admin/production/batch",
+        "response_sha256": "a1d55d2c2c14a6a8d1c08977059aa62ea671af14dbb076c3ecb00d1f31e74389"
+      }
+    ],
+    "assets": [
+      {
+        "path": "/assets/mls/0d6250f5888258fa29664eac45b2cd821d3872b1c96ac47dda46bd7fd10e6a0c.js",
+        "sha256": "0d6250f5888258fa29664eac45b2cd821d3872b1c96ac47dda46bd7fd10e6a0c",
+        "bytes": 38035,
+        "status": 200
+      },
+      {
+        "path": "/assets/mls/1f0ca4ce395126c895b9e79afff57f1ca0ed74c3df31c6b7b0a1ac6dd0673026.js",
+        "sha256": "1f0ca4ce395126c895b9e79afff57f1ca0ed74c3df31c6b7b0a1ac6dd0673026",
+        "bytes": 53814,
+        "status": 200
+      },
+      {
+        "path": "/assets/mls/5203d255416bacb97cd44ddef29a2fc76b1432f0a1ea731fabacc4bb071fcd07.js",
+        "sha256": "5203d255416bacb97cd44ddef29a2fc76b1432f0a1ea731fabacc4bb071fcd07",
+        "bytes": 704817,
+        "status": 200
+      },
+      {
+        "path": "/assets/mls/ec6397070416275d880f293d4abe8d7f531215af369d7e9a275c10f019a8c3c8.js",
+        "sha256": "ec6397070416275d880f293d4abe8d7f531215af369d7e9a275c10f019a8c3c8",
+        "bytes": 21282,
+        "status": 200
+      },
+      {
+        "path": "/assets/mls/549c2b0f6ae183249bed2472af894cf5211d4a6853fc33c0ce6c127aa3ebf034.js",
+        "sha256": "549c2b0f6ae183249bed2472af894cf5211d4a6853fc33c0ce6c127aa3ebf034",
+        "bytes": 165982,
+        "status": 200
+      },
+      {
+        "path": "/assets/mls/04ae3166780be18f31754212640b0887abe9e20830ac4309a6e31109398e4eeb.js",
+        "sha256": "04ae3166780be18f31754212640b0887abe9e20830ac4309a6e31109398e4eeb",
+        "bytes": 54280,
+        "status": 200
+      },
+      {
+        "path": "/assets/mls/ecce6528e87fe80bda1198235b2b76010e83293361afcd0d4a50a46919be97e1.js",
+        "sha256": "ecce6528e87fe80bda1198235b2b76010e83293361afcd0d4a50a46919be97e1",
+        "bytes": 492279,
+        "status": 200
+      },
+      {
+        "path": "/assets/mls/63e4da3d9e8e272f882026d3d500180b98988792133e4b66c77788192ebdcc63.js",
+        "sha256": "63e4da3d9e8e272f882026d3d500180b98988792133e4b66c77788192ebdcc63",
+        "bytes": 49778,
+        "status": 200
+      }
+    ],
+    "all_exact": true,
+    "release_header_contract": "Version checked where the original response provides it; account-page HTML has no release header in the baseline or candidate. No application header was changed to satisfy this probe.",
+    "authenticated_owner_live_qa": "NOT_PERFORMED",
+    "scope": "PUBLIC_TLS_HTTP_ROUTING_ASSETS_AND_ANONYMOUS_AUTHORIZATION_ONLY",
+    "remote_data_mutations": 0,
+    "transport_warnings": [],
+    "transport_revalidation": "Same canonical URL, credentials/CA/proxy unchanged; bounded retries only for exact known98-byte Envoy reset error; no application503 ignored."
+  },
+  "backup_and_local_restore": {
+    "capture": {
+      "at": "2026-11-17T20:15:04.862047+00:00",
+      "snapshot_sha256": "5414c3764a9c875b7a4f22c45afc7a64d11c7bdcb6a9cf2a9819303a9d43263c",
+      "bytes": 3934376,
+      "tables": 44,
+      "rows": 4237,
+      "rows_written": 0,
+      "app_atomic_select": true,
+      "cross_database_atomicity": false,
+      "bookmarks_read": 6,
+      "export_started": false,
+      "restored_live": false
+    },
+    "restore": {
+      "schema": "mls_private_isolated_restore_proof_v1",
+      "at": "2026-11-17T20:15:38.319641+00:00",
+      "snapshot_sha256": "5414c3764a9c875b7a4f22c45afc7a64d11c7bdcb6a9cf2a9819303a9d43263c",
+      "snapshot_tables": 44,
+      "restored_rows": 4237,
+      "integrity_check": "ok",
+      "existing_schema_identical": true,
+      "existing_rows_identical": true,
+      "new_control_tables": [
+        "business_history_sync_fairness",
+        "business_month_source_recoveries",
+        "product_registry_source_diagnostics"
+      ],
+      "new_ddl_sha256": {
+        "business_history_sync_fairness": "b725e92e86e0419c13fe2e94166f3b0712cff4025f2e4a18cc86b45413aff4db",
+        "product_registry_source_diagnostics": "da1ed5edab0d7d6b2290f703a047dfae64c3a827e6cfd5047b9bec8a85451271",
+        "business_month_source_recoveries": "471034df8cb531f15fd039c8aa50a696f8451d85496dfbf439aae239f4383a6b"
+      },
+      "candidate_ddl_source_sha256": {
+        "web/cloudflare/src/business-history-sync.mjs": "7ed00071046e9c4ee0235f00cfef98e732c073321b73c601e5cdf56da970145f",
+        "web/cloudflare/src/product-registry.mjs": "e4bbba3d659a605188507798bb1fdd12393fc82b14bc56b83a548936b872d80f",
+        "web/cloudflare/src/business-month-source-recovery.mjs": "dbd5520e290cb9527c52bfe0560758f18a0804c8e23209e7dcda83e812bdd4dc"
+      },
+      "app_old_append_only_history": "NOT_COPIED_BY_DEFAULT; TIME_TRAVEL_BOOKMARKS_ONLY",
+      "auth_finance": "SCHEMA_AND_BOOKMARKS_ONLY; NO_ROWS_RESTORED_OR_DDL_APPLIED",
+      "remote_writes": 0,
+      "remote_restores": 0,
+      "provider_requests": 0,
+      "financial_coverage_complete": false,
+      "candidate_head": "e26357dd23b7c488b803481099b2da0af66eb6b6"
+    },
+    "scope": "SCOPED_ATOMIC_APP_SNAPSHOT_AND_ISOLATED_LOCAL_RESTORE; NOT_FULL_DB_BACKUP; AUTH_FINANCE_SCHEMA_AND_BOOKMARKS_ONLY; NO_LIVE_RESTORE"
+  },
+  "previous_publication_receipt": "publication-live.json",
+  "catalog_scope": "FINITE_STRUCTURAL_DIAGNOSTICS_ONLY; STRICT_HTTP 502_AND_EXISTING_BACKOFF_CURSOR_FILTERS_PRESERVED",
+  "actual_catalog_problem_resolved": false,
+  "root_cause_proven": false,
+  "natural_collector_progress": {
+    "status": "NOT_YET_OBSERVED_ON_RELEASE_17_1",
+    "scope": "Observe the next eligible natural catalog attempt. No manual start/step/reset/force-run; natural collector writes are not declared zero."
+  },
+  "manual_real_business_mutations_by_audit": false,
+  "manual_external_financial_writes": false,
+  "operationally_accepted": false,
+  "actual_financial_acceptance": false,
+  "m2_closed": false,
+  "m22_closed": false,
+  "sale_track": "ADIADO_VENDA",
+  "evidence_file_digests": [
+    {
+      "name": "ci-current.json",
+      "sha256": "ba1e95e53c54f57282869d0b240c654e94e2822a0e503d1e48094d40b03630e3"
+    },
+    {
+      "name": "full-node.log",
+      "sha256": "c86004665e6716e2367958f3703575bb996e2f7949d5c674278032a43e1c0e64"
+    },
+    {
+      "name": "python.log",
+      "sha256": "1cc8544b0384220504350ecc633761e43ead7d5110d965f4595b649056e531e9"
+    },
+    {
+      "name": "stage-app-auth-finance.json",
+      "sha256": "21cfe5e79f0481396f4f8d0303c029afca74e90c61e3be1158c5e986434f576a"
+    },
+    {
+      "name": "public-after.json",
+      "sha256": "cc31baba823afae32375e806b044058d2835d64167dff567251a413de597f12b"
+    },
+    {
+      "name": "backup-public.json",
+      "sha256": "0fb504c64b3c44f4343019348f0722a4283c908156275420ea222a7c453ba02f"
+    },
+    {
+      "name": "git-reconciliation.json",
+      "sha256": "bcac7422eeb53b58101208bf9d147f38677f55e1659508a3da67266b904397d1"
+    }
+  ],
+  "preserved_before_publication": {
+    "canonical_current_status": "CATALOG_DIAGNOSTICS_17_1_IMPLEMENTED_FULL_GATES_PENDING",
+    "canonical_updated_at": "2026-11-17T19:54:15.723217+00:00",
+    "canonical_latest": {
+      "task": "CATALOG_RESPONSE_DIAGNOSTICS_17_1",
+      "source_commit": "2c1764b607ab719f5109688b9ad6559e69ce979c",
+      "release_candidate": "2026-11-17.1",
+      "implemented": true,
+      "local_validation": "75_TARGETED_PASS_FULL_LOCAL_NODE_RUNNING",
+      "exact_head_github_ci": "PENDING",
+      "published": false,
+      "validated_operationally": false,
+      "actual_catalog_problem_resolved": false,
+      "receipt": "docs/system-audit/catalog-diagnostics-20261117.json",
+      "previous_published_receipt": "docs/system-audit/publication-live.json",
+      "pull_request": 128,
+      "git_integration": "LOCAL_CANDIDATE_SAME_DRAFT_PR_NO_MERGE_NO_AUTO_MERGE",
+      "compiled_hashes": {
+        "app": "db0c20e75d6237de140cbacd3e256104336cc348e1af93cf6ce192b7e81d4239",
+        "auth": "e48e0dee32ee2d68c1523a716cd752e1df189f59d54e5f16c7899e45ae08b8a0",
+        "finance": "522cd735b73157eee92f1859d87959f5e66a7b8070afb4b2c26cb92006a44bf0"
+      }
+    },
+    "canonical_live": {
+      "status": "PUBLISHED_VERIFIED_TECHNICAL_PUBLIC_ONLY",
+      "release_id": "2026-11-16.5",
+      "release": "2026-11-16.5",
+      "source_commit": "ed651fa7a5bd949519c37d287bcaab9c31cb464a",
+      "prepared_source_commit": "1ac7b79c7ac38b6bd09ac8ed38d593ec40bad080",
+      "receipt": "docs/system-audit/publication-live.json",
+      "verified_at": "2026-11-17T19:47:28.393452+00:00",
+      "published": true,
+      "native_verified": true,
+      "public_smoke_complete": true,
+      "verification_scope": "EXACT_NATIVE_SOURCE_CONFIGURATION_100_PERCENT_TRAFFIC_PUBLIC_TLS_HTTP_ROUTING_AND_EXACT_ASSETS; OWNER_OPERATIONAL_ACCEPTANCE_PENDING",
+      "ci_run": 44154590335,
+      "node_tests_pass": 4593,
+      "python_tests_pass": 67,
+      "workers": {
+        "app": "556565ec-a630-42a7-9b43-a5f24867497c",
+        "auth": "63f8176d-47da-4371-adf8-f9c72733247e",
+        "finance": "cb1d47af-7683-4426-b56e-9b68a8604eee"
+      },
+      "pull_request": 128,
+      "git_integration": "DRAFT_OPEN_NO_MERGE_OR_AUTO_MERGE",
+      "account_financial_acceptance": false,
+      "owner_live_qa": "NOT_PERFORMED",
+      "m2_closed": false,
+      "m22_closed": false,
+      "documentary_ci": {
+        "head_sha": "0315e454ea42a4ee477f7aed7deeeb7edd8845fd",
+        "id": 44159400083,
+        "run_number": 662,
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/44159400083",
+        "checks": [
+          {
+            "name": "Workers Builds: brazacommerce-finance",
+            "id": 134309598385,
+            "head_sha": "0315e454ea42a4ee477f7aed7deeeb7edd8845fd",
+            "status": "completed",
+            "conclusion": "success",
+            "completed_at": "2026-11-17T19:32:13Z",
+            "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/runs/134309598385"
+          },
+          {
+            "name": "Workers Builds: brazacommerce-auth",
+            "id": 134309522330,
+            "head_sha": "0315e454ea42a4ee477f7aed7deeeb7edd8845fd",
+            "status": "completed",
+            "conclusion": "success",
+            "completed_at": "2026-11-17T19:32:05Z",
+            "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/runs/134309522330"
+          },
+          {
+            "name": "Workers Builds: brazacommerce-app",
+            "id": 134309280508,
+            "head_sha": "0315e454ea42a4ee477f7aed7deeeb7edd8845fd",
+            "status": "completed",
+            "conclusion": "success",
+            "completed_at": "2026-11-17T19:31:43Z",
+            "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/runs/134309280508"
+          },
+          {
+            "name": "validate",
+            "id": 134308826489,
+            "head_sha": "0315e454ea42a4ee477f7aed7deeeb7edd8845fd",
+            "status": "completed",
+            "conclusion": "success",
+            "completed_at": "2026-11-17T19:41:48Z",
+            "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/44159400083/job/134308826489"
+          }
+        ],
+        "scope": "FOLLOWUP_DOCUMENTATION_ONLY; SOURCE_PUBLICATION_CI_REMAINS661_ED651FA",
+        "node": {
+          "tests": 4593,
+          "pass": 4593,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0
+        },
+        "python": {
+          "pass": 67,
+          "fail": 0
+        },
+        "compiled_hashes": {
+          "app": "3633dfb963aca8e5f10d90b9427cc482adedf0070eed631929886160b9e7631b",
+          "auth": "f37c53b904ab5d083abb11d84298970b0b62315f54ac12da560d29e145c48347",
+          "finance": "9b21fdf180e37a0bd0f4bb13929bafdcdad158c8de0ba0c66acd0f437bf6d83e"
+        }
+      }
+    },
+    "canonical_next_actions": [
+      "Concluir gates17.1/CI do head exato antes da publicação controlada.",
+      "Observar diagnóstico estrutural do catálogo e recuperação histórica pelo cron existente; não forçar/pular filtros/cooldown nem inferir zero.",
+      "Aceite owner em sessão autorizada: Pedidos/receitas DTF, PNGs/medidas, custos e fatos de fabricação. Exportação/prévia não confirma fabricação física.",
+      "Continuar OP-014 e tarefas independentes da matriz; corte sexta13h/Brasília, não duplicação, confirmações/auditoria, autenticação/permissões, seis agentes e gráficos preservados. Venda ADIADO_VENDA."
+    ],
+    "mirror_current_fields": {
+      "current_status": "SEE_CANONICAL_CHECKPOINT_CATALOG_DIAGNOSTICS_17_1_CANDIDATE",
+      "updated_at": "2026-11-17T19:54:15.723217+00:00",
+      "next_actions": [
+        "Observar catálogo e recuperação histórica pelo cron existente e registrar os códigos/fontes reais. Não forçar retries, pular BANNED/cooldown ou promover PARTIAL/UNKNOWN a COMPLETE.",
+        "Aceite owner em sessão autorizada: Pedidos/receitas DTF, PNGs/medidas, custos e fatos de fabricação. Exportação/prévia não confirma fabricação física.",
+        "Continuar OP-014 e tarefas independentes da matriz; corte sexta13h/Brasília, não duplicação, confirmações/auditoria, autenticação/permissões, seis agentes e gráficos preservados. Venda ADIADO_VENDA."
+      ],
+      "current_release": {
+        "status": "PUBLISHED_VERIFIED_TECHNICAL_PUBLIC_ONLY",
+        "release_id": "2026-11-16.5",
+        "release": "2026-11-16.5",
+        "source_commit": "ed651fa7a5bd949519c37d287bcaab9c31cb464a",
+        "prepared_source_commit": "1ac7b79c7ac38b6bd09ac8ed38d593ec40bad080",
+        "receipt": "docs/system-audit/publication-live.json",
+        "verified_at": "2026-11-17T19:47:28.393452+00:00",
+        "published": true,
+        "native_verified": true,
+        "public_smoke_complete": true,
+        "verification_scope": "EXACT_NATIVE_SOURCE_CONFIGURATION_100_PERCENT_TRAFFIC_PUBLIC_TLS_HTTP_ROUTING_AND_EXACT_ASSETS; OWNER_OPERATIONAL_ACCEPTANCE_PENDING",
+        "ci_run": 44154590335,
+        "node_tests_pass": 4593,
+        "python_tests_pass": 67,
+        "workers": {
+          "app": "556565ec-a630-42a7-9b43-a5f24867497c",
+          "auth": "63f8176d-47da-4371-adf8-f9c72733247e",
+          "finance": "cb1d47af-7683-4426-b56e-9b68a8604eee"
+        },
+        "pull_request": 128,
+        "git_integration": "DRAFT_OPEN_NO_MERGE_OR_AUTO_MERGE",
+        "account_financial_acceptance": false,
+        "owner_live_qa": "NOT_PERFORMED",
+        "m2_closed": false,
+        "m22_closed": false,
+        "documentary_ci": {
+          "head_sha": "0315e454ea42a4ee477f7aed7deeeb7edd8845fd",
+          "id": 44159400083,
+          "run_number": 662,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/44159400083",
+          "checks": [
+            {
+              "name": "Workers Builds: brazacommerce-finance",
+              "id": 134309598385,
+              "head_sha": "0315e454ea42a4ee477f7aed7deeeb7edd8845fd",
+              "status": "completed",
+              "conclusion": "success",
+              "completed_at": "2026-11-17T19:32:13Z",
+              "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/runs/134309598385"
+            },
+            {
+              "name": "Workers Builds: brazacommerce-auth",
+              "id": 134309522330,
+              "head_sha": "0315e454ea42a4ee477f7aed7deeeb7edd8845fd",
+              "status": "completed",
+              "conclusion": "success",
+              "completed_at": "2026-11-17T19:32:05Z",
+              "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/runs/134309522330"
+            },
+            {
+              "name": "Workers Builds: brazacommerce-app",
+              "id": 134309280508,
+              "head_sha": "0315e454ea42a4ee477f7aed7deeeb7edd8845fd",
+              "status": "completed",
+              "conclusion": "success",
+              "completed_at": "2026-11-17T19:31:43Z",
+              "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/runs/134309280508"
+            },
+            {
+              "name": "validate",
+              "id": 134308826489,
+              "head_sha": "0315e454ea42a4ee477f7aed7deeeb7edd8845fd",
+              "status": "completed",
+              "conclusion": "success",
+              "completed_at": "2026-11-17T19:41:48Z",
+              "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/44159400083/job/134308826489"
+            }
+          ],
+          "scope": "FOLLOWUP_DOCUMENTATION_ONLY; SOURCE_PUBLICATION_CI_REMAINS661_ED651FA",
+          "node": {
+            "tests": 4593,
+            "pass": 4593,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0
+          },
+          "python": {
+            "pass": 67,
+            "fail": 0
+          },
+          "compiled_hashes": {
+            "app": "3633dfb963aca8e5f10d90b9427cc482adedf0070eed631929886160b9e7631b",
+            "auth": "f37c53b904ab5d083abb11d84298970b0b62315f54ac12da560d29e145c48347",
+            "finance": "9b21fdf180e37a0bd0f4bb13929bafdcdad158c8de0ba0c66acd0f437bf6d83e"
+          }
+        },
+        "canonical_checkpoint": "docs/MLS_COMMERCE_OS_CHECKPOINT.json"
+      },
+      "live_release": {
+        "status": "PUBLISHED_VERIFIED_TECHNICAL_PUBLIC_ONLY",
+        "release_id": "2026-11-16.5",
+        "release": "2026-11-16.5",
+        "source_commit": "ed651fa7a5bd949519c37d287bcaab9c31cb464a",
+        "prepared_source_commit": "1ac7b79c7ac38b6bd09ac8ed38d593ec40bad080",
+        "receipt": "docs/system-audit/publication-live.json",
+        "verified_at": "2026-11-17T19:47:28.393452+00:00",
+        "published": true,
+        "native_verified": true,
+        "public_smoke_complete": true,
+        "verification_scope": "EXACT_NATIVE_SOURCE_CONFIGURATION_100_PERCENT_TRAFFIC_PUBLIC_TLS_HTTP_ROUTING_AND_EXACT_ASSETS; OWNER_OPERATIONAL_ACCEPTANCE_PENDING",
+        "ci_run": 44154590335,
+        "node_tests_pass": 4593,
+        "python_tests_pass": 67,
+        "workers": {
+          "app": "556565ec-a630-42a7-9b43-a5f24867497c",
+          "auth": "63f8176d-47da-4371-adf8-f9c72733247e",
+          "finance": "cb1d47af-7683-4426-b56e-9b68a8604eee"
+        },
+        "pull_request": 128,
+        "git_integration": "DRAFT_OPEN_NO_MERGE_OR_AUTO_MERGE",
+        "account_financial_acceptance": false,
+        "owner_live_qa": "NOT_PERFORMED",
+        "m2_closed": false,
+        "m22_closed": false,
+        "documentary_ci": {
+          "head_sha": "0315e454ea42a4ee477f7aed7deeeb7edd8845fd",
+          "id": 44159400083,
+          "run_number": 662,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/44159400083",
+          "checks": [
+            {
+              "name": "Workers Builds: brazacommerce-finance",
+              "id": 134309598385,
+              "head_sha": "0315e454ea42a4ee477f7aed7deeeb7edd8845fd",
+              "status": "completed",
+              "conclusion": "success",
+              "completed_at": "2026-11-17T19:32:13Z",
+              "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/runs/134309598385"
+            },
+            {
+              "name": "Workers Builds: brazacommerce-auth",
+              "id": 134309522330,
+              "head_sha": "0315e454ea42a4ee477f7aed7deeeb7edd8845fd",
+              "status": "completed",
+              "conclusion": "success",
+              "completed_at": "2026-11-17T19:32:05Z",
+              "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/runs/134309522330"
+            },
+            {
+              "name": "Workers Builds: brazacommerce-app",
+              "id": 134309280508,
+              "head_sha": "0315e454ea42a4ee477f7aed7deeeb7edd8845fd",
+              "status": "completed",
+              "conclusion": "success",
+              "completed_at": "2026-11-17T19:31:43Z",
+              "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/runs/134309280508"
+            },
+            {
+              "name": "validate",
+              "id": 134308826489,
+              "head_sha": "0315e454ea42a4ee477f7aed7deeeb7edd8845fd",
+              "status": "completed",
+              "conclusion": "success",
+              "completed_at": "2026-11-17T19:41:48Z",
+              "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/44159400083/job/134308826489"
+            }
+          ],
+          "scope": "FOLLOWUP_DOCUMENTATION_ONLY; SOURCE_PUBLICATION_CI_REMAINS661_ED651FA",
+          "node": {
+            "tests": 4593,
+            "pass": 4593,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0
+          },
+          "python": {
+            "pass": 67,
+            "fail": 0
+          },
+          "compiled_hashes": {
+            "app": "3633dfb963aca8e5f10d90b9427cc482adedf0070eed631929886160b9e7631b",
+            "auth": "f37c53b904ab5d083abb11d84298970b0b62315f54ac12da560d29e145c48347",
+            "finance": "9b21fdf180e37a0bd0f4bb13929bafdcdad158c8de0ba0c66acd0f437bf6d83e"
+          }
+        },
+        "canonical_checkpoint": "docs/MLS_COMMERCE_OS_CHECKPOINT.json"
+      },
+      "latest_increment": {
+        "task": "CATALOG_RESPONSE_DIAGNOSTICS_17_1",
+        "source_commit": "2c1764b607ab719f5109688b9ad6559e69ce979c",
+        "published": false,
+        "canonical_checkpoint": "docs/MLS_COMMERCE_OS_CHECKPOINT.json",
+        "receipt": "docs/system-audit/catalog-diagnostics-20261117.json"
+      },
+      "current_owner_publication": {
+        "canonical_checkpoint": "docs/MLS_COMMERCE_OS_CHECKPOINT.json",
+        "receipt": "docs/system-audit/publication-live.json",
+        "source_commit": "ed651fa7a5bd949519c37d287bcaab9c31cb464a",
+        "release": "2026-11-16.5",
+        "published": true,
+        "native_verified": true,
+        "public_smoke": "VERIFIED_HTTP_ROUTING_AND_EXACT_ASSETS",
+        "operationally_accepted": false,
+        "documentary_ci": {
+          "head_sha": "0315e454ea42a4ee477f7aed7deeeb7edd8845fd",
+          "id": 44159400083,
+          "run_number": 662,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/44159400083",
+          "checks": [
+            {
+              "name": "Workers Builds: brazacommerce-finance",
+              "id": 134309598385,
+              "head_sha": "0315e454ea42a4ee477f7aed7deeeb7edd8845fd",
+              "status": "completed",
+              "conclusion": "success",
+              "completed_at": "2026-11-17T19:32:13Z",
+              "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/runs/134309598385"
+            },
+            {
+              "name": "Workers Builds: brazacommerce-auth",
+              "id": 134309522330,
+              "head_sha": "0315e454ea42a4ee477f7aed7deeeb7edd8845fd",
+              "status": "completed",
+              "conclusion": "success",
+              "completed_at": "2026-11-17T19:32:05Z",
+              "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/runs/134309522330"
+            },
+            {
+              "name": "Workers Builds: brazacommerce-app",
+              "id": 134309280508,
+              "head_sha": "0315e454ea42a4ee477f7aed7deeeb7edd8845fd",
+              "status": "completed",
+              "conclusion": "success",
+              "completed_at": "2026-11-17T19:31:43Z",
+              "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/runs/134309280508"
+            },
+            {
+              "name": "validate",
+              "id": 134308826489,
+              "head_sha": "0315e454ea42a4ee477f7aed7deeeb7edd8845fd",
+              "status": "completed",
+              "conclusion": "success",
+              "completed_at": "2026-11-17T19:41:48Z",
+              "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/44159400083/job/134308826489"
+            }
+          ],
+          "scope": "FOLLOWUP_DOCUMENTATION_ONLY; SOURCE_PUBLICATION_CI_REMAINS661_ED651FA",
+          "node": {
+            "tests": 4593,
+            "pass": 4593,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0
+          },
+          "python": {
+            "pass": 67,
+            "fail": 0
+          },
+          "compiled_hashes": {
+            "app": "3633dfb963aca8e5f10d90b9427cc482adedf0070eed631929886160b9e7631b",
+            "auth": "f37c53b904ab5d083abb11d84298970b0b62315f54ac12da560d29e145c48347",
+            "finance": "9b21fdf180e37a0bd0f4bb13929bafdcdad158c8de0ba0c66acd0f437bf6d83e"
+          }
+        }
+      },
+      "current_checkpoint_pointer": {
+        "path": "docs/MLS_COMMERCE_OS_CHECKPOINT.json",
+        "receipt": "docs/system-audit/catalog-diagnostics-20261117.json",
+        "published": false
+      }
+    },
+    "matrix_delivery": {
+      "task": "CATALOG_RESPONSE_DIAGNOSTICS_17_1",
+      "branch": "fix/system-stability-20261116",
+      "source_commit": "2c1764b607ab719f5109688b9ad6559e69ce979c",
+      "release_candidate": "2026-11-17.1",
+      "base_main": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
+      "code": true,
+      "tested_locally": "75_TARGETED_PASS_FULL_LOCAL_NODE_RUNNING",
+      "exact_head_github_ci": "PENDING",
+      "published": false,
+      "operationally_accepted": false,
+      "actual_catalog_problem_resolved": false,
+      "receipt": "../system-audit/catalog-diagnostics-20261117.json",
+      "previous_published_receipt": "../system-audit/publication-live.json",
+      "pull_request": 128,
+      "sale_track": "ADIADO_VENDA",
+      "next_independent_task": "OP-014"
+    },
+    "handoff_current_prefixes": {
+      "README.md": "<!-- OWNER_OPERATION_CURRENT -->\n**Estabilidade16.5 publicada e verificada tecnicamente, incluindo conferência pública completa.** [Recibo](docs/system-audit/publication-live.json) · [limites pendentes](docs/system-audit/BLOCKERS.json) · [checkpoint](docs/MLS_COMMERCE_OS_CHECKPOINT.json) · [uso](docs/owner-operation/README.md).\n\nCódigo publicado `ed651fa`, CI661:4593 Node e67 Python aprovados, três Builds Cloudflare aprovados. O registro documental `0315e454` tem CI662 e três Builds aprovados separadamente, com os mesmos hashes. App/Auth/Finance seguem nas mesmas versões, bytes/configurações e100% de tráfego. Em17/11/2026 às19:42UTC foram conferidos oito endpoints públicos, oito assets e rotas/cron; autenticação anônima continua recusada com401 nas APIs protegidas.\n\nO mesmo ambiente foi recuperado e reconciliado por fast-forward; o503 Envoy e a interrupção anteriores permanecem no histórico do recibo. Não houve redeploy ou alteração de código/configuração nesta retomada. PR #128 continua rascunho sobre16.4; main346f30f intacta, sem merge/auto-merge.\n\nCatálogo, recuperação real de fontes e aceite owner/financeiro mantêm bloqueios próprios; não declarar todos os erros resolvidos. Corte sexta13h/Brasília, UNKNOWN para fonte/custo ausente, não duplicação, confirmações/auditoria, autenticação/permissões, seis agentes e gráficos ativos. [Regras financeiras](docs/financial-automation/README.md) · [matriz](docs/owner-operation/EXECUCAO.json). OP-014 segue independente; venda ADIADO_VENDA.\n<!-- END_OWNER_OPERATION_CURRENT -->",
+      "NEXT_CHAT_HANDOFF.txt": "<!-- OWNER_OPERATION_CURRENT -->\n**Estabilidade16.5 publicada e verificada tecnicamente, incluindo conferência pública completa.** [Recibo](docs/system-audit/publication-live.json) · [limites pendentes](docs/system-audit/BLOCKERS.json) · [checkpoint](docs/MLS_COMMERCE_OS_CHECKPOINT.json) · [uso](docs/owner-operation/README.md).\n\nCódigo publicado `ed651fa`, CI661:4593 Node e67 Python aprovados, três Builds Cloudflare aprovados. O registro documental `0315e454` tem CI662 e três Builds aprovados separadamente, com os mesmos hashes. App/Auth/Finance seguem nas mesmas versões, bytes/configurações e100% de tráfego. Em17/11/2026 às19:42UTC foram conferidos oito endpoints públicos, oito assets e rotas/cron; autenticação anônima continua recusada com401 nas APIs protegidas.\n\nO mesmo ambiente foi recuperado e reconciliado por fast-forward; o503 Envoy e a interrupção anteriores permanecem no histórico do recibo. Não houve redeploy ou alteração de código/configuração nesta retomada. PR #128 continua rascunho sobre16.4; main346f30f intacta, sem merge/auto-merge.\n\nCatálogo, recuperação real de fontes e aceite owner/financeiro mantêm bloqueios próprios; não declarar todos os erros resolvidos. Corte sexta13h/Brasília, UNKNOWN para fonte/custo ausente, não duplicação, confirmações/auditoria, autenticação/permissões, seis agentes e gráficos ativos. [Regras financeiras](docs/financial-automation/README.md) · [matriz](docs/owner-operation/EXECUCAO.json). OP-014 segue independente; venda ADIADO_VENDA.\n<!-- END_OWNER_OPERATION_CURRENT -->",
+      "docs/RETOMADA.md": "<!-- OWNER_OPERATION_CURRENT -->\n**Estabilidade16.5 publicada e verificada tecnicamente, incluindo conferência pública completa.** [Recibo](system-audit/publication-live.json) · [limites pendentes](system-audit/BLOCKERS.json) · [checkpoint](MLS_COMMERCE_OS_CHECKPOINT.json) · [uso](owner-operation/README.md).\n\nCódigo publicado `ed651fa`, CI661:4593 Node e67 Python aprovados, três Builds Cloudflare aprovados. O registro documental `0315e454` tem CI662 e três Builds aprovados separadamente, com os mesmos hashes. App/Auth/Finance seguem nas mesmas versões, bytes/configurações e100% de tráfego. Em17/11/2026 às19:42UTC foram conferidos oito endpoints públicos, oito assets e rotas/cron; autenticação anônima continua recusada com401 nas APIs protegidas.\n\nO mesmo ambiente foi recuperado e reconciliado por fast-forward; o503 Envoy e a interrupção anteriores permanecem no histórico do recibo. Não houve redeploy ou alteração de código/configuração nesta retomada. PR #128 continua rascunho sobre16.4; main346f30f intacta, sem merge/auto-merge.\n\nCatálogo, recuperação real de fontes e aceite owner/financeiro mantêm bloqueios próprios; não declarar todos os erros resolvidos. Corte sexta13h/Brasília, UNKNOWN para fonte/custo ausente, não duplicação, confirmações/auditoria, autenticação/permissões, seis agentes e gráficos ativos. [Regras financeiras](financial-automation/README.md) · [matriz](owner-operation/EXECUCAO.json). OP-014 segue independente; venda ADIADO_VENDA.\n<!-- END_OWNER_OPERATION_CURRENT -->",
+      "docs/ROADMAP_MLS_COMMERCE_OS.md": "<!-- OWNER_OPERATION_CURRENT -->\n**Estabilidade16.5 publicada e verificada tecnicamente, incluindo conferência pública completa.** [Recibo](system-audit/publication-live.json) · [limites pendentes](system-audit/BLOCKERS.json) · [checkpoint](MLS_COMMERCE_OS_CHECKPOINT.json) · [uso](owner-operation/README.md).\n\nCódigo publicado `ed651fa`, CI661:4593 Node e67 Python aprovados, três Builds Cloudflare aprovados. O registro documental `0315e454` tem CI662 e três Builds aprovados separadamente, com os mesmos hashes. App/Auth/Finance seguem nas mesmas versões, bytes/configurações e100% de tráfego. Em17/11/2026 às19:42UTC foram conferidos oito endpoints públicos, oito assets e rotas/cron; autenticação anônima continua recusada com401 nas APIs protegidas.\n\nO mesmo ambiente foi recuperado e reconciliado por fast-forward; o503 Envoy e a interrupção anteriores permanecem no histórico do recibo. Não houve redeploy ou alteração de código/configuração nesta retomada. PR #128 continua rascunho sobre16.4; main346f30f intacta, sem merge/auto-merge.\n\nCatálogo, recuperação real de fontes e aceite owner/financeiro mantêm bloqueios próprios; não declarar todos os erros resolvidos. Corte sexta13h/Brasília, UNKNOWN para fonte/custo ausente, não duplicação, confirmações/auditoria, autenticação/permissões, seis agentes e gráficos ativos. [Regras financeiras](financial-automation/README.md) · [matriz](owner-operation/EXECUCAO.json). OP-014 segue independente; venda ADIADO_VENDA.\n<!-- END_OWNER_OPERATION_CURRENT -->",
+      "docs/MLS_CODEX_HANDOFF_2026_10_28.md": "<!-- OWNER_OPERATION_CURRENT -->\n**Estabilidade16.5 publicada e verificada tecnicamente, incluindo conferência pública completa.** [Recibo](system-audit/publication-live.json) · [limites pendentes](system-audit/BLOCKERS.json) · [checkpoint](MLS_COMMERCE_OS_CHECKPOINT.json) · [uso](owner-operation/README.md).\n\nCódigo publicado `ed651fa`, CI661:4593 Node e67 Python aprovados, três Builds Cloudflare aprovados. O registro documental `0315e454` tem CI662 e três Builds aprovados separadamente, com os mesmos hashes. App/Auth/Finance seguem nas mesmas versões, bytes/configurações e100% de tráfego. Em17/11/2026 às19:42UTC foram conferidos oito endpoints públicos, oito assets e rotas/cron; autenticação anônima continua recusada com401 nas APIs protegidas.\n\nO mesmo ambiente foi recuperado e reconciliado por fast-forward; o503 Envoy e a interrupção anteriores permanecem no histórico do recibo. Não houve redeploy ou alteração de código/configuração nesta retomada. PR #128 continua rascunho sobre16.4; main346f30f intacta, sem merge/auto-merge.\n\nCatálogo, recuperação real de fontes e aceite owner/financeiro mantêm bloqueios próprios; não declarar todos os erros resolvidos. Corte sexta13h/Brasília, UNKNOWN para fonte/custo ausente, não duplicação, confirmações/auditoria, autenticação/permissões, seis agentes e gráficos ativos. [Regras financeiras](financial-automation/README.md) · [matriz](owner-operation/EXECUCAO.json). OP-014 segue independente; venda ADIADO_VENDA.\n<!-- END_OWNER_OPERATION_CURRENT -->"
+    }
+  },
+  "preserved_historical_suffix_sha256": {
+    "README.md": "cf3401db77d461b1d847ca0c69ead56c11ddbf8e9c5492729313a37c9f567e59",
+    "NEXT_CHAT_HANDOFF.txt": "38e48f0bf5413598aa79b508e2fc477b083a0f0932428a703cbe31d8462772cc",
+    "docs/RETOMADA.md": "987d51f5df5817b313e37a9094fa46df241653936f6bab9e24b716b64d89759b",
+    "docs/ROADMAP_MLS_COMMERCE_OS.md": "2342fe3eccbf20a718ec716cee2958032b58371583bb8202c65a423b6de91f99",
+    "docs/MLS_CODEX_HANDOFF_2026_10_28.md": "62d6a0ac7275ae6124190c0278a665613752113a1892b446b8b63d0887da6c80",
+    "docs/owner-operation/README.md": "a5ceb23fe86267a164be4dc14a764291b13e4b12f525c5333196ab4a7f5bfe2f",
+    "docs/system-audit/README.md": "7190ccfc1938520343aa0f5a6bd5bf51c57abcf223095946fb663edcbfed3b92"
+  },
+  "previous_publication_receipt_sha256": "9721784d842209831f4348d5771bffab4c213714b81da3b638120d4f8348487c"
+}

@@ -1,6 +1,6 @@
 {
   "schema": "mls_master_mission_checkpoint_v1",
-  "updated_at": "2026-11-17T19:54:15.723217+00:00",
+  "updated_at": "2026-11-17T20:20:27.302813+00:00",
   "base_visual_sha": "8d860b2c4f26531c53c4cdba0e06a14f51a7eef4",
   "visual_branch": "feature/mls-mockup-parity-real-charts-20261029",
   "visual_pr": 79,
@@ -181,93 +181,31 @@
   ],
   "current_release": {
     "status": "PUBLISHED_VERIFIED_TECHNICAL_PUBLIC_ONLY",
-    "release_id": "2026-11-16.5",
-    "release": "2026-11-16.5",
-    "source_commit": "ed651fa7a5bd949519c37d287bcaab9c31cb464a",
-    "prepared_source_commit": "1ac7b79c7ac38b6bd09ac8ed38d593ec40bad080",
-    "receipt": "docs/system-audit/publication-live.json",
-    "verified_at": "2026-11-17T19:47:28.393452+00:00",
+    "release_id": "2026-11-17.1",
+    "release": "2026-11-17.1",
+    "source_commit": "e26357dd23b7c488b803481099b2da0af66eb6b6",
+    "prepared_source_commit": "2c1764b607ab719f5109688b9ad6559e69ce979c",
+    "receipt": "docs/system-audit/publication-catalog-diagnostics-live.json",
+    "verified_at": "2026-11-17T20:20:27.302813+00:00",
     "published": true,
     "native_verified": true,
     "public_smoke_complete": true,
-    "verification_scope": "EXACT_NATIVE_SOURCE_CONFIGURATION_100_PERCENT_TRAFFIC_PUBLIC_TLS_HTTP_ROUTING_AND_EXACT_ASSETS; OWNER_OPERATIONAL_ACCEPTANCE_PENDING",
-    "ci_run": 44154590335,
-    "node_tests_pass": 4593,
+    "verification_scope": "EXACT_NATIVE_SOURCE_CONFIGURATION_100_PERCENT_TRAFFIC_PUBLIC_TLS_HTTP_ROUTING_AND_EXACT_ASSETS; OWNER_ACCEPTANCE_PENDING",
+    "ci_run": 44164656045,
+    "node_tests_pass": 4631,
     "python_tests_pass": 67,
     "workers": {
-      "app": "556565ec-a630-42a7-9b43-a5f24867497c",
-      "auth": "63f8176d-47da-4371-adf8-f9c72733247e",
-      "finance": "cb1d47af-7683-4426-b56e-9b68a8604eee"
+      "finance": "60259fca-980a-4255-8157-fb74b43023cf",
+      "auth": "5848d2d1-944f-4633-84ce-78886a701dc2",
+      "app": "078e9f9e-d6b3-4dee-8d4c-33a821d43288"
     },
     "pull_request": 128,
     "git_integration": "DRAFT_OPEN_NO_MERGE_OR_AUTO_MERGE",
     "account_financial_acceptance": false,
     "owner_live_qa": "NOT_PERFORMED",
+    "actual_catalog_problem_resolved": false,
     "m2_closed": false,
     "m22_closed": false,
-    "documentary_ci": {
-      "head_sha": "0315e454ea42a4ee477f7aed7deeeb7edd8845fd",
-      "id": 44159400083,
-      "run_number": 662,
-      "status": "completed",
-      "conclusion": "success",
-      "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/44159400083",
-      "checks": [
-        {
-          "name": "Workers Builds: brazacommerce-finance",
-          "id": 134309598385,
-          "head_sha": "0315e454ea42a4ee477f7aed7deeeb7edd8845fd",
-          "status": "completed",
-          "conclusion": "success",
-          "completed_at": "2026-11-17T19:32:13Z",
-          "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/runs/134309598385"
-        },
-        {
-          "name": "Workers Builds: brazacommerce-auth",
-          "id": 134309522330,
-          "head_sha": "0315e454ea42a4ee477f7aed7deeeb7edd8845fd",
-          "status": "completed",
-          "conclusion": "success",
-          "completed_at": "2026-11-17T19:32:05Z",
-          "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/runs/134309522330"
-        },
-        {
-          "name": "Workers Builds: brazacommerce-app",
-          "id": 134309280508,
-          "head_sha": "0315e454ea42a4ee477f7aed7deeeb7edd8845fd",
-          "status": "completed",
-          "conclusion": "success",
-          "completed_at": "2026-11-17T19:31:43Z",
-          "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/runs/134309280508"
-        },
-        {
-          "name": "validate",
-          "id": 134308826489,
-          "head_sha": "0315e454ea42a4ee477f7aed7deeeb7edd8845fd",
-          "status": "completed",
-          "conclusion": "success",
-          "completed_at": "2026-11-17T19:41:48Z",
-          "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/44159400083/job/134308826489"
-        }
-      ],
-      "scope": "FOLLOWUP_DOCUMENTATION_ONLY; SOURCE_PUBLICATION_CI_REMAINS661_ED651FA",
-      "node": {
-        "tests": 4593,
-        "pass": 4593,
-        "fail": 0,
-        "cancelled": 0,
-        "skipped": 0
-      },
-      "python": {
-        "pass": 67,
-        "fail": 0
-      },
-      "compiled_hashes": {
-        "app": "3633dfb963aca8e5f10d90b9427cc482adedf0070eed631929886160b9e7631b",
-        "auth": "f37c53b904ab5d083abb11d84298970b0b62315f54ac12da560d29e145c48347",
-        "finance": "9b21fdf180e37a0bd0f4bb13929bafdcdad158c8de0ba0c66acd0f437bf6d83e"
-      }
-    },
     "canonical_checkpoint": "docs/MLS_COMMERCE_OS_CHECKPOINT.json"
   },
   "validation_history": [
@@ -304,93 +242,31 @@
   ],
   "live_release": {
     "status": "PUBLISHED_VERIFIED_TECHNICAL_PUBLIC_ONLY",
-    "release_id": "2026-11-16.5",
-    "release": "2026-11-16.5",
-    "source_commit": "ed651fa7a5bd949519c37d287bcaab9c31cb464a",
-    "prepared_source_commit": "1ac7b79c7ac38b6bd09ac8ed38d593ec40bad080",
-    "receipt": "docs/system-audit/publication-live.json",
-    "verified_at": "2026-11-17T19:47:28.393452+00:00",
+    "release_id": "2026-11-17.1",
+    "release": "2026-11-17.1",
+    "source_commit": "e26357dd23b7c488b803481099b2da0af66eb6b6",
+    "prepared_source_commit": "2c1764b607ab719f5109688b9ad6559e69ce979c",
+    "receipt": "docs/system-audit/publication-catalog-diagnostics-live.json",
+    "verified_at": "2026-11-17T20:20:27.302813+00:00",
     "published": true,
     "native_verified": true,
     "public_smoke_complete": true,
-    "verification_scope": "EXACT_NATIVE_SOURCE_CONFIGURATION_100_PERCENT_TRAFFIC_PUBLIC_TLS_HTTP_ROUTING_AND_EXACT_ASSETS; OWNER_OPERATIONAL_ACCEPTANCE_PENDING",
-    "ci_run": 44154590335,
-    "node_tests_pass": 4593,
+    "verification_scope": "EXACT_NATIVE_SOURCE_CONFIGURATION_100_PERCENT_TRAFFIC_PUBLIC_TLS_HTTP_ROUTING_AND_EXACT_ASSETS; OWNER_ACCEPTANCE_PENDING",
+    "ci_run": 44164656045,
+    "node_tests_pass": 4631,
     "python_tests_pass": 67,
     "workers": {
-      "app": "556565ec-a630-42a7-9b43-a5f24867497c",
-      "auth": "63f8176d-47da-4371-adf8-f9c72733247e",
-      "finance": "cb1d47af-7683-4426-b56e-9b68a8604eee"
+      "finance": "60259fca-980a-4255-8157-fb74b43023cf",
+      "auth": "5848d2d1-944f-4633-84ce-78886a701dc2",
+      "app": "078e9f9e-d6b3-4dee-8d4c-33a821d43288"
     },
     "pull_request": 128,
     "git_integration": "DRAFT_OPEN_NO_MERGE_OR_AUTO_MERGE",
     "account_financial_acceptance": false,
     "owner_live_qa": "NOT_PERFORMED",
+    "actual_catalog_problem_resolved": false,
     "m2_closed": false,
     "m22_closed": false,
-    "documentary_ci": {
-      "head_sha": "0315e454ea42a4ee477f7aed7deeeb7edd8845fd",
-      "id": 44159400083,
-      "run_number": 662,
-      "status": "completed",
-      "conclusion": "success",
-      "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/44159400083",
-      "checks": [
-        {
-          "name": "Workers Builds: brazacommerce-finance",
-          "id": 134309598385,
-          "head_sha": "0315e454ea42a4ee477f7aed7deeeb7edd8845fd",
-          "status": "completed",
-          "conclusion": "success",
-          "completed_at": "2026-11-17T19:32:13Z",
-          "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/runs/134309598385"
-        },
-        {
-          "name": "Workers Builds: brazacommerce-auth",
-          "id": 134309522330,
-          "head_sha": "0315e454ea42a4ee477f7aed7deeeb7edd8845fd",
-          "status": "completed",
-          "conclusion": "success",
-          "completed_at": "2026-11-17T19:32:05Z",
-          "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/runs/134309522330"
-        },
-        {
-          "name": "Workers Builds: brazacommerce-app",
-          "id": 134309280508,
-          "head_sha": "0315e454ea42a4ee477f7aed7deeeb7edd8845fd",
-          "status": "completed",
-          "conclusion": "success",
-          "completed_at": "2026-11-17T19:31:43Z",
-          "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/runs/134309280508"
-        },
-        {
-          "name": "validate",
-          "id": 134308826489,
-          "head_sha": "0315e454ea42a4ee477f7aed7deeeb7edd8845fd",
-          "status": "completed",
-          "conclusion": "success",
-          "completed_at": "2026-11-17T19:41:48Z",
-          "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/44159400083/job/134308826489"
-        }
-      ],
-      "scope": "FOLLOWUP_DOCUMENTATION_ONLY; SOURCE_PUBLICATION_CI_REMAINS661_ED651FA",
-      "node": {
-        "tests": 4593,
-        "pass": 4593,
-        "fail": 0,
-        "cancelled": 0,
-        "skipped": 0
-      },
-      "python": {
-        "pass": 67,
-        "fail": 0
-      },
-      "compiled_hashes": {
-        "app": "3633dfb963aca8e5f10d90b9427cc482adedf0070eed631929886160b9e7631b",
-        "auth": "f37c53b904ab5d083abb11d84298970b0b62315f54ac12da560d29e145c48347",
-        "finance": "9b21fdf180e37a0bd0f4bb13929bafdcdad158c8de0ba0c66acd0f437bf6d83e"
-      }
-    },
     "canonical_checkpoint": "docs/MLS_COMMERCE_OS_CHECKPOINT.json"
   },
   "visual_chart_refinement_20261031": {
@@ -4100,9 +3976,10 @@
     }
   },
   "next_actions": [
-    "Observar catálogo e recuperação histórica pelo cron existente e registrar os códigos/fontes reais. Não forçar retries, pular BANNED/cooldown ou promover PARTIAL/UNKNOWN a COMPLETE.",
-    "Aceite owner em sessão autorizada: Pedidos/receitas DTF, PNGs/medidas, custos e fatos de fabricação. Exportação/prévia não confirma fabricação física.",
-    "Continuar OP-014 e tarefas independentes da matriz; corte sexta13h/Brasília, não duplicação, confirmações/auditoria, autenticação/permissões, seis agentes e gráficos preservados. Venda ADIADO_VENDA."
+    "Observe the next eligible catalog attempt under the existing cron/backoff and record its finite structural diagnostic; 17.1 publication does not prove catalog recovery. Do not force start/step/reset or bypass BANNED/offset/permissions.",
+    "Use the actual structural code and equivalent provider documentation to correct a reproduced upstream shape; absent arrays remain unknown/error, never empty success.",
+    "Owner operational acceptance and independent OP-014 remain open; preserve physical confirmations, historical cost/CMV/closings, Friday13h Brasília, audit, UNKNOWN and no duplicate cost/revenue.",
+    "Sale ADIADO_VENDA; permissions/CSRF/isolation, six agents and charts remain required."
   ],
   "production_weekly_closing_2026_11_03": {
     "id": "PRODUCTION_WEEKLY_FRIDAY_13_CLOSING",
@@ -7179,7 +7056,7 @@
   },
   "current_phase": "OWNER_OPERATION_SYSTEM_STABILITY_16_5",
   "working_branch": "fix/system-stability-20261116",
-  "current_status": "SEE_CANONICAL_CHECKPOINT_CATALOG_DIAGNOSTICS_17_1_CANDIDATE",
+  "current_status": "SEE_CANONICAL_CHECKPOINT_CATALOG_DIAGNOSTICS_17_1_PUBLISHED_CAUSE_PENDING",
   "next_phase": "OWNER_OPERATION_BY_TECHNICAL_DEPENDENCY_NOT_SAAS_PHASE_GATES",
   "active_execution_matrix": "docs/owner-operation/EXECUCAO.json",
   "active_charts_catalog": "docs/owner-operation/CATALOGO_GRAFICOS.json",
@@ -7219,90 +7096,34 @@
   },
   "latest_increment": {
     "task": "CATALOG_RESPONSE_DIAGNOSTICS_17_1",
-    "source_commit": "2c1764b607ab719f5109688b9ad6559e69ce979c",
-    "published": false,
+    "source_commit": "e26357dd23b7c488b803481099b2da0af66eb6b6",
+    "published": true,
     "canonical_checkpoint": "docs/MLS_COMMERCE_OS_CHECKPOINT.json",
-    "receipt": "docs/system-audit/catalog-diagnostics-20261117.json"
+    "receipt": "docs/system-audit/publication-catalog-diagnostics-live.json",
+    "operationally_accepted": false,
+    "actual_catalog_problem_resolved": false,
+    "status": "PUBLISHED_VERIFIED_TECHNICAL_PUBLIC_ONLY"
   },
   "canonical_checkpoint": "docs/MLS_COMMERCE_OS_CHECKPOINT.json",
   "current_fields_role": "Current owner-release fields mirror docs/MLS_COMMERCE_OS_CHECKPOINT.json; dated historical mission evidence remains preserved.",
   "current_owner_publication": {
     "canonical_checkpoint": "docs/MLS_COMMERCE_OS_CHECKPOINT.json",
-    "receipt": "docs/system-audit/publication-live.json",
-    "source_commit": "ed651fa7a5bd949519c37d287bcaab9c31cb464a",
-    "release": "2026-11-16.5",
+    "receipt": "docs/system-audit/publication-catalog-diagnostics-live.json",
+    "source_commit": "e26357dd23b7c488b803481099b2da0af66eb6b6",
+    "release": "2026-11-17.1",
     "published": true,
     "native_verified": true,
-    "public_smoke": "VERIFIED_HTTP_ROUTING_AND_EXACT_ASSETS",
+    "public_smoke": "VERIFIED_HTTP_AND_EXACT_ASSETS",
     "operationally_accepted": false,
-    "documentary_ci": {
-      "head_sha": "0315e454ea42a4ee477f7aed7deeeb7edd8845fd",
-      "id": 44159400083,
-      "run_number": 662,
-      "status": "completed",
-      "conclusion": "success",
-      "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/44159400083",
-      "checks": [
-        {
-          "name": "Workers Builds: brazacommerce-finance",
-          "id": 134309598385,
-          "head_sha": "0315e454ea42a4ee477f7aed7deeeb7edd8845fd",
-          "status": "completed",
-          "conclusion": "success",
-          "completed_at": "2026-11-17T19:32:13Z",
-          "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/runs/134309598385"
-        },
-        {
-          "name": "Workers Builds: brazacommerce-auth",
-          "id": 134309522330,
-          "head_sha": "0315e454ea42a4ee477f7aed7deeeb7edd8845fd",
-          "status": "completed",
-          "conclusion": "success",
-          "completed_at": "2026-11-17T19:32:05Z",
-          "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/runs/134309522330"
-        },
-        {
-          "name": "Workers Builds: brazacommerce-app",
-          "id": 134309280508,
-          "head_sha": "0315e454ea42a4ee477f7aed7deeeb7edd8845fd",
-          "status": "completed",
-          "conclusion": "success",
-          "completed_at": "2026-11-17T19:31:43Z",
-          "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/runs/134309280508"
-        },
-        {
-          "name": "validate",
-          "id": 134308826489,
-          "head_sha": "0315e454ea42a4ee477f7aed7deeeb7edd8845fd",
-          "status": "completed",
-          "conclusion": "success",
-          "completed_at": "2026-11-17T19:41:48Z",
-          "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/44159400083/job/134308826489"
-        }
-      ],
-      "scope": "FOLLOWUP_DOCUMENTATION_ONLY; SOURCE_PUBLICATION_CI_REMAINS661_ED651FA",
-      "node": {
-        "tests": 4593,
-        "pass": 4593,
-        "fail": 0,
-        "cancelled": 0,
-        "skipped": 0
-      },
-      "python": {
-        "pass": 67,
-        "fail": 0
-      },
-      "compiled_hashes": {
-        "app": "3633dfb963aca8e5f10d90b9427cc482adedf0070eed631929886160b9e7631b",
-        "auth": "f37c53b904ab5d083abb11d84298970b0b62315f54ac12da560d29e145c48347",
-        "finance": "9b21fdf180e37a0bd0f4bb13929bafdcdad158c8de0ba0c66acd0f437bf6d83e"
-      }
-    }
+    "actual_financial_acceptance": false,
+    "actual_catalog_problem_resolved": false
   },
   "current_checkpoint_pointer": {
     "path": "docs/MLS_COMMERCE_OS_CHECKPOINT.json",
-    "receipt": "docs/system-audit/catalog-diagnostics-20261117.json",
-    "published": false
+    "receipt": "docs/system-audit/publication-catalog-diagnostics-live.json",
+    "validation_head": "e26357dd23b7c488b803481099b2da0af66eb6b6",
+    "published": true,
+    "status": "PUBLISHED_VERIFIED_TECHNICAL_PUBLIC_ONLY"
   },
   "previous_current_release_before_owner_dtf_cycle": {
     "status": "PUBLISHED_VERIFIED",
@@ -7698,5 +7519,279 @@
       "Diagnosticar a falha real do catálogo pelo código finito persistido e observar recuperação histórica legítima; não pular filtros/cooldown nem marcar COMPLETE sem fonte.",
       "Continuar OP-014 e tarefas independentes de produção/custos/pagamentos/devoluções. UNKNOWN, corte sexta13h/Brasília, não duplicação, confirmações/auditoria, autenticação, seis agentes e gráficos preservados; venda ADIADO_VENDA."
     ]
+  },
+  "previous_current_status_before_catalog_diagnostics_17_1_publication": "SEE_CANONICAL_CHECKPOINT_CATALOG_DIAGNOSTICS_17_1_CANDIDATE",
+  "previous_updated_at_before_catalog_diagnostics_17_1_publication": "2026-11-17T19:54:15.723217+00:00",
+  "previous_next_actions_before_catalog_diagnostics_17_1_publication": [
+    "Observar catálogo e recuperação histórica pelo cron existente e registrar os códigos/fontes reais. Não forçar retries, pular BANNED/cooldown ou promover PARTIAL/UNKNOWN a COMPLETE.",
+    "Aceite owner em sessão autorizada: Pedidos/receitas DTF, PNGs/medidas, custos e fatos de fabricação. Exportação/prévia não confirma fabricação física.",
+    "Continuar OP-014 e tarefas independentes da matriz; corte sexta13h/Brasília, não duplicação, confirmações/auditoria, autenticação/permissões, seis agentes e gráficos preservados. Venda ADIADO_VENDA."
+  ],
+  "previous_current_release_before_catalog_diagnostics_17_1_publication": {
+    "status": "PUBLISHED_VERIFIED_TECHNICAL_PUBLIC_ONLY",
+    "release_id": "2026-11-16.5",
+    "release": "2026-11-16.5",
+    "source_commit": "ed651fa7a5bd949519c37d287bcaab9c31cb464a",
+    "prepared_source_commit": "1ac7b79c7ac38b6bd09ac8ed38d593ec40bad080",
+    "receipt": "docs/system-audit/publication-live.json",
+    "verified_at": "2026-11-17T19:47:28.393452+00:00",
+    "published": true,
+    "native_verified": true,
+    "public_smoke_complete": true,
+    "verification_scope": "EXACT_NATIVE_SOURCE_CONFIGURATION_100_PERCENT_TRAFFIC_PUBLIC_TLS_HTTP_ROUTING_AND_EXACT_ASSETS; OWNER_OPERATIONAL_ACCEPTANCE_PENDING",
+    "ci_run": 44154590335,
+    "node_tests_pass": 4593,
+    "python_tests_pass": 67,
+    "workers": {
+      "app": "556565ec-a630-42a7-9b43-a5f24867497c",
+      "auth": "63f8176d-47da-4371-adf8-f9c72733247e",
+      "finance": "cb1d47af-7683-4426-b56e-9b68a8604eee"
+    },
+    "pull_request": 128,
+    "git_integration": "DRAFT_OPEN_NO_MERGE_OR_AUTO_MERGE",
+    "account_financial_acceptance": false,
+    "owner_live_qa": "NOT_PERFORMED",
+    "m2_closed": false,
+    "m22_closed": false,
+    "documentary_ci": {
+      "head_sha": "0315e454ea42a4ee477f7aed7deeeb7edd8845fd",
+      "id": 44159400083,
+      "run_number": 662,
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/44159400083",
+      "checks": [
+        {
+          "name": "Workers Builds: brazacommerce-finance",
+          "id": 134309598385,
+          "head_sha": "0315e454ea42a4ee477f7aed7deeeb7edd8845fd",
+          "status": "completed",
+          "conclusion": "success",
+          "completed_at": "2026-11-17T19:32:13Z",
+          "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/runs/134309598385"
+        },
+        {
+          "name": "Workers Builds: brazacommerce-auth",
+          "id": 134309522330,
+          "head_sha": "0315e454ea42a4ee477f7aed7deeeb7edd8845fd",
+          "status": "completed",
+          "conclusion": "success",
+          "completed_at": "2026-11-17T19:32:05Z",
+          "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/runs/134309522330"
+        },
+        {
+          "name": "Workers Builds: brazacommerce-app",
+          "id": 134309280508,
+          "head_sha": "0315e454ea42a4ee477f7aed7deeeb7edd8845fd",
+          "status": "completed",
+          "conclusion": "success",
+          "completed_at": "2026-11-17T19:31:43Z",
+          "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/runs/134309280508"
+        },
+        {
+          "name": "validate",
+          "id": 134308826489,
+          "head_sha": "0315e454ea42a4ee477f7aed7deeeb7edd8845fd",
+          "status": "completed",
+          "conclusion": "success",
+          "completed_at": "2026-11-17T19:41:48Z",
+          "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/44159400083/job/134308826489"
+        }
+      ],
+      "scope": "FOLLOWUP_DOCUMENTATION_ONLY; SOURCE_PUBLICATION_CI_REMAINS661_ED651FA",
+      "node": {
+        "tests": 4593,
+        "pass": 4593,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      },
+      "python": {
+        "pass": 67,
+        "fail": 0
+      },
+      "compiled_hashes": {
+        "app": "3633dfb963aca8e5f10d90b9427cc482adedf0070eed631929886160b9e7631b",
+        "auth": "f37c53b904ab5d083abb11d84298970b0b62315f54ac12da560d29e145c48347",
+        "finance": "9b21fdf180e37a0bd0f4bb13929bafdcdad158c8de0ba0c66acd0f437bf6d83e"
+      }
+    },
+    "canonical_checkpoint": "docs/MLS_COMMERCE_OS_CHECKPOINT.json"
+  },
+  "previous_live_release_before_catalog_diagnostics_17_1_publication": {
+    "status": "PUBLISHED_VERIFIED_TECHNICAL_PUBLIC_ONLY",
+    "release_id": "2026-11-16.5",
+    "release": "2026-11-16.5",
+    "source_commit": "ed651fa7a5bd949519c37d287bcaab9c31cb464a",
+    "prepared_source_commit": "1ac7b79c7ac38b6bd09ac8ed38d593ec40bad080",
+    "receipt": "docs/system-audit/publication-live.json",
+    "verified_at": "2026-11-17T19:47:28.393452+00:00",
+    "published": true,
+    "native_verified": true,
+    "public_smoke_complete": true,
+    "verification_scope": "EXACT_NATIVE_SOURCE_CONFIGURATION_100_PERCENT_TRAFFIC_PUBLIC_TLS_HTTP_ROUTING_AND_EXACT_ASSETS; OWNER_OPERATIONAL_ACCEPTANCE_PENDING",
+    "ci_run": 44154590335,
+    "node_tests_pass": 4593,
+    "python_tests_pass": 67,
+    "workers": {
+      "app": "556565ec-a630-42a7-9b43-a5f24867497c",
+      "auth": "63f8176d-47da-4371-adf8-f9c72733247e",
+      "finance": "cb1d47af-7683-4426-b56e-9b68a8604eee"
+    },
+    "pull_request": 128,
+    "git_integration": "DRAFT_OPEN_NO_MERGE_OR_AUTO_MERGE",
+    "account_financial_acceptance": false,
+    "owner_live_qa": "NOT_PERFORMED",
+    "m2_closed": false,
+    "m22_closed": false,
+    "documentary_ci": {
+      "head_sha": "0315e454ea42a4ee477f7aed7deeeb7edd8845fd",
+      "id": 44159400083,
+      "run_number": 662,
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/44159400083",
+      "checks": [
+        {
+          "name": "Workers Builds: brazacommerce-finance",
+          "id": 134309598385,
+          "head_sha": "0315e454ea42a4ee477f7aed7deeeb7edd8845fd",
+          "status": "completed",
+          "conclusion": "success",
+          "completed_at": "2026-11-17T19:32:13Z",
+          "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/runs/134309598385"
+        },
+        {
+          "name": "Workers Builds: brazacommerce-auth",
+          "id": 134309522330,
+          "head_sha": "0315e454ea42a4ee477f7aed7deeeb7edd8845fd",
+          "status": "completed",
+          "conclusion": "success",
+          "completed_at": "2026-11-17T19:32:05Z",
+          "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/runs/134309522330"
+        },
+        {
+          "name": "Workers Builds: brazacommerce-app",
+          "id": 134309280508,
+          "head_sha": "0315e454ea42a4ee477f7aed7deeeb7edd8845fd",
+          "status": "completed",
+          "conclusion": "success",
+          "completed_at": "2026-11-17T19:31:43Z",
+          "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/runs/134309280508"
+        },
+        {
+          "name": "validate",
+          "id": 134308826489,
+          "head_sha": "0315e454ea42a4ee477f7aed7deeeb7edd8845fd",
+          "status": "completed",
+          "conclusion": "success",
+          "completed_at": "2026-11-17T19:41:48Z",
+          "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/44159400083/job/134308826489"
+        }
+      ],
+      "scope": "FOLLOWUP_DOCUMENTATION_ONLY; SOURCE_PUBLICATION_CI_REMAINS661_ED651FA",
+      "node": {
+        "tests": 4593,
+        "pass": 4593,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      },
+      "python": {
+        "pass": 67,
+        "fail": 0
+      },
+      "compiled_hashes": {
+        "app": "3633dfb963aca8e5f10d90b9427cc482adedf0070eed631929886160b9e7631b",
+        "auth": "f37c53b904ab5d083abb11d84298970b0b62315f54ac12da560d29e145c48347",
+        "finance": "9b21fdf180e37a0bd0f4bb13929bafdcdad158c8de0ba0c66acd0f437bf6d83e"
+      }
+    },
+    "canonical_checkpoint": "docs/MLS_COMMERCE_OS_CHECKPOINT.json"
+  },
+  "previous_latest_increment_before_catalog_diagnostics_17_1_publication": {
+    "task": "CATALOG_RESPONSE_DIAGNOSTICS_17_1",
+    "source_commit": "2c1764b607ab719f5109688b9ad6559e69ce979c",
+    "published": false,
+    "canonical_checkpoint": "docs/MLS_COMMERCE_OS_CHECKPOINT.json",
+    "receipt": "docs/system-audit/catalog-diagnostics-20261117.json"
+  },
+  "previous_current_owner_publication_before_catalog_diagnostics_17_1_publication": {
+    "canonical_checkpoint": "docs/MLS_COMMERCE_OS_CHECKPOINT.json",
+    "receipt": "docs/system-audit/publication-live.json",
+    "source_commit": "ed651fa7a5bd949519c37d287bcaab9c31cb464a",
+    "release": "2026-11-16.5",
+    "published": true,
+    "native_verified": true,
+    "public_smoke": "VERIFIED_HTTP_ROUTING_AND_EXACT_ASSETS",
+    "operationally_accepted": false,
+    "documentary_ci": {
+      "head_sha": "0315e454ea42a4ee477f7aed7deeeb7edd8845fd",
+      "id": 44159400083,
+      "run_number": 662,
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/44159400083",
+      "checks": [
+        {
+          "name": "Workers Builds: brazacommerce-finance",
+          "id": 134309598385,
+          "head_sha": "0315e454ea42a4ee477f7aed7deeeb7edd8845fd",
+          "status": "completed",
+          "conclusion": "success",
+          "completed_at": "2026-11-17T19:32:13Z",
+          "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/runs/134309598385"
+        },
+        {
+          "name": "Workers Builds: brazacommerce-auth",
+          "id": 134309522330,
+          "head_sha": "0315e454ea42a4ee477f7aed7deeeb7edd8845fd",
+          "status": "completed",
+          "conclusion": "success",
+          "completed_at": "2026-11-17T19:32:05Z",
+          "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/runs/134309522330"
+        },
+        {
+          "name": "Workers Builds: brazacommerce-app",
+          "id": 134309280508,
+          "head_sha": "0315e454ea42a4ee477f7aed7deeeb7edd8845fd",
+          "status": "completed",
+          "conclusion": "success",
+          "completed_at": "2026-11-17T19:31:43Z",
+          "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/runs/134309280508"
+        },
+        {
+          "name": "validate",
+          "id": 134308826489,
+          "head_sha": "0315e454ea42a4ee477f7aed7deeeb7edd8845fd",
+          "status": "completed",
+          "conclusion": "success",
+          "completed_at": "2026-11-17T19:41:48Z",
+          "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/44159400083/job/134308826489"
+        }
+      ],
+      "scope": "FOLLOWUP_DOCUMENTATION_ONLY; SOURCE_PUBLICATION_CI_REMAINS661_ED651FA",
+      "node": {
+        "tests": 4593,
+        "pass": 4593,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      },
+      "python": {
+        "pass": 67,
+        "fail": 0
+      },
+      "compiled_hashes": {
+        "app": "3633dfb963aca8e5f10d90b9427cc482adedf0070eed631929886160b9e7631b",
+        "auth": "f37c53b904ab5d083abb11d84298970b0b62315f54ac12da560d29e145c48347",
+        "finance": "9b21fdf180e37a0bd0f4bb13929bafdcdad158c8de0ba0c66acd0f437bf6d83e"
+      }
+    }
+  },
+  "previous_current_checkpoint_pointer_before_catalog_diagnostics_17_1_publication": {
+    "path": "docs/MLS_COMMERCE_OS_CHECKPOINT.json",
+    "receipt": "docs/system-audit/catalog-diagnostics-20261117.json",
+    "published": false
   }
 }

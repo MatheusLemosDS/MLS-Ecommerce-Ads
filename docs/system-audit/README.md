@@ -1,5 +1,13 @@
 # Varredura de estabilidade — operação própria
 
+## Catálogo17.1 — diagnóstico publicado, recuperação ainda não comprovada
+
+[Recibo 17.1](publication-catalog-diagnostics-live.json) · [validação](catalog-diagnostics-20261117.json). App/Auth/Finance foram publicados e verificados pelo candidato exato aprovado, sem mudança de schema, permissões ou workflows. A correção acrescenta diagnóstico estrutural finito; preserva erro 502, identidade, filtros/cursor e backoff. Não normaliza ausência em sucesso e não prova que o erro real do catálogo foi resolvido.
+
+A próxima evidência necessária é o diagnóstico da tentativa natural elegível do catálogo. Não executar varredura forçada, reset ou bypass para obter uma tela verde. Recuperação de fontes, completude financeira e aceite owner continuam separados. O histórico 16.5 e seus incidentes/recibos permanecem íntegros abaixo.
+
+## Histórico da publicação 16.5
+
 **Estabilidade16.5 publicada e verificada técnica e publicamente.** [Recibo](publication-live.json), [validação](validation.json) e [bloqueios restantes](BLOCKERS.json). Fonte ed651fa/CI661 e registro documental0315e454/CI662 aprovados, com os mesmos hashes. Executor recuperado; oito endpoints e oito assets conferidos sem redeploy. Incidente anterior preservado; recuperação integral de fontes e aceite operacional/financeiro continuam pendentes.
 
 Base de código preservada: `f78b503`, PR127, Live16.4. Main reconfirmada pelo conector GitHub em `346f30f`. A CI660 da própria base terminou aprovada; falhas de rodadas anteriores não são tratadas como falhas atuais sem reprodução. [Base e escopo](BASELINE.json).

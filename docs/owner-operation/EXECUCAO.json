@@ -5719,7 +5719,7 @@
     "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/346f30f200e5cbd3d9efd26663a483c625d9c6e7/docs/financial-automation/publication-live-20261113.json"
   ],
   "source_specification": "input/ROADMAP_EXECUTAVEL_USO_PROPRIO_MLS.json",
-  "updated_at": "2026-11-17T19:54:15.723217+00:00",
+  "updated_at": "2026-11-17T20:20:27.302813+00:00",
   "canonical_checkpoint": "docs/MLS_COMMERCE_OS_CHECKPOINT.json",
   "specification_initial_checkpoint_historical": {
     "fase_corrente": "U0",
@@ -5733,20 +5733,80 @@
   "operational_delivery": {
     "task": "CATALOG_RESPONSE_DIAGNOSTICS_17_1",
     "branch": "fix/system-stability-20261116",
-    "source_commit": "2c1764b607ab719f5109688b9ad6559e69ce979c",
+    "source_commit": "e26357dd23b7c488b803481099b2da0af66eb6b6",
     "release_candidate": "2026-11-17.1",
     "base_main": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
     "code": true,
-    "tested_locally": "75_TARGETED_PASS_FULL_LOCAL_NODE_RUNNING",
-    "exact_head_github_ci": "PENDING",
-    "published": false,
+    "tested_locally": "4631_NODE_67_PYTHON_75_TARGETED_PASS_IDENTICAL_TREE",
+    "exact_head_github_ci": {
+      "id": 44164656045,
+      "run_number": 663,
+      "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/44164656045",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "e26357dd23b7c488b803481099b2da0af66eb6b6",
+      "node": {
+        "tests": 4631,
+        "pass": 4631,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      },
+      "python": {
+        "pass": 67,
+        "fail": 0
+      },
+      "compiled_hashes": {
+        "app": "db0c20e75d6237de140cbacd3e256104336cc348e1af93cf6ce192b7e81d4239",
+        "auth": "e48e0dee32ee2d68c1523a716cd752e1df189f59d54e5f16c7899e45ae08b8a0",
+        "finance": "522cd735b73157eee92f1859d87959f5e66a7b8070afb4b2c26cb92006a44bf0"
+      },
+      "workflow_preflight_step": "SKIPPED_BY_EXISTING_STACKED_PR_CONDITION; LOCAL_PREFLIGHT_PASS",
+      "cloudflare_checks": [
+        {
+          "name": "Workers Builds: brazacommerce-app",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 134328116832,
+          "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-app/production/previews/fix-system-stability-20261116/builds/2c406e8b-1f2e-479f-9cf0-ec69409d409a"
+        },
+        {
+          "name": "Workers Builds: brazacommerce-finance",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 134328038598,
+          "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-finance/production/previews/fix-system-stability-20261116/builds/36ccef33-22d8-4914-8238-a74db2579c32"
+        },
+        {
+          "name": "Workers Builds: brazacommerce-auth",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 134328001622,
+          "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-auth/production/previews/fix-system-stability-20261116/builds/084cc3bf-8482-42c8-ac6a-24964e329e24"
+        }
+      ]
+    },
+    "published": true,
     "operationally_accepted": false,
     "actual_catalog_problem_resolved": false,
     "receipt": "../system-audit/catalog-diagnostics-20261117.json",
     "previous_published_receipt": "../system-audit/publication-live.json",
     "pull_request": 128,
     "sale_track": "ADIADO_VENDA",
-    "next_independent_task": "OP-014"
+    "next_independent_task": "OP-014",
+    "validation_head": "e26357dd23b7c488b803481099b2da0af66eb6b6",
+    "local_validated_commit": "f1b01f02bb8daf538d8c481c200d38d91e2cf8c9",
+    "source_tree": "fc7be331680f6724281c49110d9ade9b96a8b986",
+    "release_id": "2026-11-17.1",
+    "publication_receipt": "../system-audit/publication-catalog-diagnostics-live.json",
+    "actual_financial_acceptance": false,
+    "status": "PUBLISHED_VERIFIED_TECHNICAL_PUBLIC_ONLY",
+    "git_integration": "DRAFT_OPEN_NO_MERGE_OR_AUTO_MERGE",
+    "workers": {
+      "finance": "60259fca-980a-4255-8157-fb74b43023cf",
+      "auth": "5848d2d1-944f-4633-84ce-78886a701dc2",
+      "app": "078e9f9e-d6b3-4dee-8d4c-33a821d43288"
+    }
   },
   "latest_owner_constraints": {
     "production_friday_13_brasilia": true,
@@ -6356,6 +6416,24 @@
         }
       },
       "native_reverified_at": "2026-11-17T19:42:35.705887+00:00"
+    },
+    {
+      "task": "CATALOG_RESPONSE_DIAGNOSTICS_17_1",
+      "branch": "fix/system-stability-20261116",
+      "source_commit": "2c1764b607ab719f5109688b9ad6559e69ce979c",
+      "release_candidate": "2026-11-17.1",
+      "base_main": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
+      "code": true,
+      "tested_locally": "75_TARGETED_PASS_FULL_LOCAL_NODE_RUNNING",
+      "exact_head_github_ci": "PENDING",
+      "published": false,
+      "operationally_accepted": false,
+      "actual_catalog_problem_resolved": false,
+      "receipt": "../system-audit/catalog-diagnostics-20261117.json",
+      "previous_published_receipt": "../system-audit/publication-live.json",
+      "pull_request": 128,
+      "sale_track": "ADIADO_VENDA",
+      "next_independent_task": "OP-014"
     }
   ]
 }

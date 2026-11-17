@@ -4,6 +4,16 @@ A trilha ativa é **owner_operation**. Cadastro de outros clientes, e-mail comer
 
 [Checkpoint canônico](../MLS_COMMERCE_OS_CHECKPOINT.json) · [36 tarefas e dependências técnicas](EXECUCAO.json) · [21 contratos visuais e famílias preservadas](CATALOGO_GRAFICOS.json) · [inspeção atual](validation/reconciliation.json) · [validação do incremento](validation/owner-dtf-batches.json).
 
+## Diagnóstico do catálogo 17.1 — publicação técnica, causa real pendente
+
+A versão 17.1 preserva códigos estruturais finitos entre Finance/Auth/App, mantendo HTTP 502, cursor, filtro BANNED, backoff e permissões. Publicação não comprova recuperação do catálogo. [Recibo](../system-audit/publication-catalog-diagnostics-live.json) · [validação](../system-audit/catalog-diagnostics-20261117.json) · [histórico 16.5](../system-audit/publication-live.json).
+
+1. Observe a próxima tentativa natural elegível pelo cron existente e confira o código estrutural sanitizado. Não force start/step/reset ou pule BANNED/cooldown.
+2. Use o código efetivamente observado para reproduzir a estrutura rejeitada. Campo ausente/nulo continua erro/UNKNOWN, nunca uma lista vazia inventada.
+3. Pedidos, DTF, fabricação, custos e pagamentos independentes continuam pelos seus próprios gates. Prévia/exportação não confirma fabricação; fatos físicos, origem, custo histórico e pagamentos precisam das confirmações aplicáveis.
+
+Aceite owner/financeiro e correção real do catálogo permanecem pendentes; nenhum estado PARTIAL virou COMPLETE por esta publicação. OP-014 segue independente; venda ADIADO_VENDA.
+
 ## Estabilidade16.5 — verificação técnica e pública concluída
 
 App/Auth/Finance seguem publicados nas mesmas versões, com bytes/configurações/tráfego e oito endpoints/oito assets públicos conferidos. [Recibo](../system-audit/publication-live.json) · [validação](../system-audit/validation.json) · [bloqueios reais restantes](../system-audit/BLOCKERS.json). O incidente do executor e do503 Envoy foi preservado no histórico; não houve redeploy nesta conferência. Aceite owner e recuperação integral de fontes permanecem pendentes.
