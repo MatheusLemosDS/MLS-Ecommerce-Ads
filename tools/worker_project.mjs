@@ -5,6 +5,8 @@ import path from 'node:path';
 export const PROJECT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 export const TARGETS = Object.freeze({
   app: Object.freeze({name: 'brazacommerce-app', main: '../../dist/app-worker.mjs', baselineHashes: [
+    // Exact reviewed stability module, emitted without rebundling; all CI/Live gates remain mandatory.
+    '3633dfb963aca8e5f10d90b9427cc482adedf0070eed631929886160b9e7631b',
     // Exact shirt-cost editing layout and same-path dry package; existing gates retained.
     'f86536f9f50606b2cf20a66b00ae16d25febe474cf4030f0abf791ec69a45f61',
     '533d8c83a60d656f5854918a8de3e789a93d68f3ac47fdf27edde465c82913af',
@@ -275,6 +277,8 @@ export const TARGETS = Object.freeze({
     '26612b7ea0edbea55e06f5fc817a18defd6b4fe65381e6d564b7d360b7b80278',
   ]}),
   auth: Object.freeze({name: 'brazacommerce-auth', main: '../../dist/auth-worker.mjs', baselineHashes: [
+    // Exact reviewed stability module, emitted without rebundling; all CI/Live gates remain mandatory.
+    'f37c53b904ab5d083abb11d84298970b0b62315f54ac12da560d29e145c48347',
     // Exact shirt-cost editing layout and same-path dry package; existing gates retained.
     '22540b94a52d0c8ad00959c100bb1319231dac8df17deb1d56c4399e9780dc48',
     'b80e249991e4be8c2d34f7a1fcad7991132fd154e0818e076c37ab8bb9cf9feb',
@@ -357,6 +361,8 @@ export const TARGETS = Object.freeze({
     '47c83f87f191fd0e5ff503d9c4bcf4671cd986b0965e66e84f1a6ed952dac925',
   ]}),
   finance: Object.freeze({name: 'brazacommerce-finance', main: '../../dist/finance-worker.mjs', baselineHashes: [
+    // Exact reviewed stability module, emitted without rebundling; all CI/Live gates remain mandatory.
+    '9b21fdf180e37a0bd0f4bb13929bafdcdad158c8de0ba0c66acd0f437bf6d83e',
     // Financial automation candidate: exact local build and same-path Wrangler dry run; CI/Live gates remain mandatory.
     'ccce234f36f0a763942bf30e274360b9d1223b3594b6600adf3352fafd92efb4',
     '3e3f3d35a3e0037c251f7abda29cc8a64643ee255771d07f2893d32d8ef7d22a',

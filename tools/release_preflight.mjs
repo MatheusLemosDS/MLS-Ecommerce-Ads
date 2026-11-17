@@ -47,6 +47,8 @@ export const RELEASE_ALLOWED_FILES=Object.freeze([...approvedCandidate.allowed_f
 // modules, provider business actions or any deployment profile.
 export const RELEASE_APPROVED_PROTECTED_FILES=Object.freeze([
  "web/finance/src/auth-router.mjs",
+ "web/finance/src/business-period-missing-run.mjs",
+ "web/finance/tests/business-period-missing-run.test.mjs",
  "web/finance/src/business-period.mjs",
  "web/finance/src/commercial-finance-worker.mjs",
  "web/finance/src/connection-store.mjs",
