@@ -39,3 +39,15 @@ export function financeProductIndexDiagnostic(error){
  const upstream=Object.getOwnPropertyDescriptor(error||{},'upstream_status')?.value;
  return {code:safeCode,http:Number.isInteger(upstream)&&upstream>=100&&upstream<=599?upstream:null};
 }
+
+// Closed diagnostic projection for the existing private transport only.
+export function projectProductIndexDiagnostic(value,{app=false}={}){
+ try{
+  if(!value||typeof value!=='object'||![Object.prototype,null].includes(Object.getPrototypeOf(value))||Reflect.ownKeys(value).length!==2)return null;
+  const code=Object.getOwnPropertyDescriptor(value,'code')?.value,http=Object.getOwnPropertyDescriptor(value,'http')?.value;
+  if(typeof code!=='string'||!(http===null||Number.isInteger(http)&&http>=100&&http<=599))return null;
+  const safe=financeProductIndexDiagnostic({code,upstream_status:http});
+  if(code==='FINANCE_PRODUCT_INDEX_BUSY'||app&&['FINANCE_PRODUCT_INDEX_APP_CONFIGURATION','FINANCE_PRODUCT_INDEX_APP_RESPONSE_INVALID','FINANCE_PRODUCT_INDEX_APP_HTTP_ERROR','FINANCE_PRODUCT_INDEX_APP_TIMEOUT','FINANCE_PRODUCT_INDEX_APP_UPSTREAM_FAILED'].includes(code))return {code,http};
+  return safe.code===code?safe:null;
+ }catch{return null;}
+}

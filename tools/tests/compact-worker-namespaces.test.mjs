@@ -214,7 +214,10 @@ test('the explicit manual host selection preserves APIs, schema strings and froz
  assert.equal(raw.brazaCostRulesStore.costRuleSchemaForEnvironment.length,1);
  assert.equal(typeof raw.brazaProductionDtfStore.readProductionDtfBatches,'function');
  assert.equal(typeof raw.brazaProductionDtfStore.readProductionDtfBatch,'function');
- assert.equal(functions,138);assert.equal(values,17);assert.equal(strings,122); // One additive monthly-history fairness DDL string.
+ assert.equal(raw.brazaProductIndexFrame.projectProductIndexDiagnostic.length,1);
+ assert.equal(raw.brazaProductIndexFrame.financeProductIndexDiagnostic.length,1);
+ assert.ok(raw.brazaProductRegistry.PRODUCT_REGISTRY_SCHEMA.some(sql=>sql.startsWith('CREATE TABLE IF NOT EXISTS product_registry_source_diagnostics')));
+ assert.equal(functions,140);assert.equal(values,17);assert.equal(strings,123);
  assert.ok(profiles.manual_saved>=48394,'additional manual formatting must save at least48394 bytes; actual '+profiles.manual_saved);
 });
 

@@ -76,9 +76,10 @@ def build():
     if re.search(r'^import\b',product_index,re.M):
         raise SystemExit('Unreviewed product index frame import; candidate not built.')
     product_index=re.sub(r'^export\s+', '', product_index, flags=re.M)
-    product_index_names='projectProductIndexRequest,projectProductIndexFrame,productIndexRequestMatches,financeProductIndexDiagnostic'
+    product_index_names='projectProductIndexRequest,projectProductIndexFrame,productIndexRequestMatches,financeProductIndexDiagnostic,projectProductIndexDiagnostic'
     product_index_bundle='const brazaProductIndexFrame = (() => {\n'+product_index+'\nreturn {'+product_index_names+'};\n})();\n'
-    product_index_import="import {"+product_index_names+"} from './product-index-frame.mjs';\n"
+    product_index_import="import {projectProductIndexRequest,projectProductIndexFrame,productIndexRequestMatches,financeProductIndexDiagnostic} from './product-index-frame.mjs';\n"
+    product_index_router_import="import {"+product_index_names+"} from './product-index-frame.mjs';\n"
     historical=(FINANCE/'src/historical-variant-evidence-frame.mjs').read_text()
     if re.search(r'^import\b',historical,re.M):
         raise SystemExit('Unreviewed historical evidence frame import; candidate not built.')
@@ -166,9 +167,9 @@ def build():
     if router_source.count(cash_period_import)!=1:
         raise SystemExit('Cash period router import not unique; candidate not built.')
     router_source=router_source.replace(cash_period_import,'')
-    if router_source.count(preview_import)!=1 or router_source.count(catalog_import)!=1 or router_source.count(catalog_media_import)!=1 or router_source.count(period_import)!=1 or router_source.count(daily_import)!=1 or router_source.count(business_import)!=1 or router_source.count(business_variants_import)!=1 or router_source.count(production_import)!=1 or router_source.count(product_index_import)!=1 or router_source.count(historical_import)!=1 or router_source.count(reconciliation_import)!=1 or router_source.count(original_items_import)!=1 or router_source.count(escrow_release_import)!=1 or router_source.count(income_overview_import)!=1 or router_source.count(income_detail_import)!=1 or router_source.count(income_diagnostic_import)!=1 or router_source.count(pending_income_import)!=1:
+    if router_source.count(preview_import)!=1 or router_source.count(catalog_import)!=1 or router_source.count(catalog_media_import)!=1 or router_source.count(period_import)!=1 or router_source.count(daily_import)!=1 or router_source.count(business_import)!=1 or router_source.count(business_variants_import)!=1 or router_source.count(production_import)!=1 or router_source.count(product_index_router_import)!=1 or router_source.count(historical_import)!=1 or router_source.count(reconciliation_import)!=1 or router_source.count(original_items_import)!=1 or router_source.count(escrow_release_import)!=1 or router_source.count(income_overview_import)!=1 or router_source.count(income_detail_import)!=1 or router_source.count(income_diagnostic_import)!=1 or router_source.count(pending_income_import)!=1:
         raise SystemExit('Shared router import not unique; candidate not built.')
-    router=re.sub(r'^export\s+', '', router_source.replace(preview_import,'').replace(catalog_import,'').replace(catalog_media_import,'').replace(period_import,'').replace(daily_import,'').replace(business_import,'').replace(business_variants_import,'').replace(production_import,'').replace(product_index_import,'').replace(historical_import,'').replace(reconciliation_import,'').replace(original_items_import,'').replace(escrow_release_import,'').replace(income_overview_import,'').replace(income_detail_import,'').replace(income_diagnostic_import,'').replace(pending_income_import,''), flags=re.M)
+    router=re.sub(r'^export\s+', '', router_source.replace(preview_import,'').replace(catalog_import,'').replace(catalog_media_import,'').replace(period_import,'').replace(daily_import,'').replace(business_import,'').replace(business_variants_import,'').replace(production_import,'').replace(product_index_router_import,'').replace(historical_import,'').replace(reconciliation_import,'').replace(original_items_import,'').replace(escrow_release_import,'').replace(income_overview_import,'').replace(income_detail_import,'').replace(income_diagnostic_import,'').replace(pending_income_import,''), flags=re.M)
     if re.search(r'^import\b',router,re.M):
         raise SystemExit('Unreviewed router import; candidate not built.')
     needle='    const url = new URL(request.url);'
