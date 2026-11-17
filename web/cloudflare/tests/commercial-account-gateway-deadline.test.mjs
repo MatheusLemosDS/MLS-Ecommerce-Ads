@@ -29,6 +29,11 @@ test('an Auth response arriving after timeout is cancelled rather than accepted 
  const response=await bounded(accountBridgeCall(new Request(origin+'/api/account/session'),env,{timeoutMs:10,fetchImpl:async()=>{calls++;await pause(35);return new Response(stream,{headers:{'content-type':'application/json'}});}}));
  assert.equal(response.status,503);assert.equal((await response.json()).error,'ACCOUNT_SERVICE_TIMEOUT');await pause(60);assert.equal(calls,1);assert.equal(cancelled,1);assert.equal(stream.locked,false);
 });
+for(const [status,contentType] of [[502,'application/json'],[200,'text/html']])test('late invalid Auth response is cancelled after the outer deadline already settled '+status+'/'+contentType,async()=>{
+ let cancelled=0,calls=0;const body=new ReadableStream({pull(){return new Promise(()=>{});},cancel(){cancelled++;return new Promise(()=>{});}});
+ const res=await bounded(accountBridgeCall(new Request(origin+'/api/account/session'),env,{timeoutMs:10,fetchImpl:async()=>{calls++;await pause(35);return new Response(body,{status,headers:{'content-type':contentType}});}}));
+ assert.equal(res.status,503);assert.equal((await res.json()).error,'ACCOUNT_SERVICE_TIMEOUT');await pause(60);assert.equal(calls,1);assert.equal(cancelled,1);assert.equal(body.locked,false);
+});
 test('unbounded empty chunks cannot starve the deadline or grow an unbounded chunk list',async()=>{
  let calls=0,cancelled=0;const stream=new ReadableStream({pull(c){c.enqueue(new Uint8Array());},cancel(){cancelled++;}});
  const response=await bounded(accountBridgeCall(post(stream),env,{timeoutMs:10,fetchImpl:async()=>{calls++;return frame();}}));assert.equal(response.status,400);assert.equal((await response.json()).error,'ACCOUNT_REQUEST_INVALID');assert.equal(calls,0);assert.equal(cancelled,1);assert.equal(stream.locked,false);
