@@ -9,6 +9,13 @@ export const MLS_BROWSER_ASSET_MANIFEST=Object.freeze({
       "bytes": 38035
     },
     {
+      "id": "dtf",
+      "path": "/assets/mls/63e4da3d9e8e272f882026d3d500180b98988792133e4b66c77788192ebdcc63.js",
+      "sha256": "63e4da3d9e8e272f882026d3d500180b98988792133e4b66c77788192ebdcc63",
+      "integrity": "sha256-Y+TaPZ6OJy+IICbT1QAYC5iYh5ITPktmx3eIGS69zGM=",
+      "bytes": 49778
+    },
+    {
       "id": "month",
       "path": "/assets/mls/5203d255416bacb97cd44ddef29a2fc76b1432f0a1ea731fabacc4bb071fcd07.js",
       "sha256": "5203d255416bacb97cd44ddef29a2fc76b1432f0a1ea731fabacc4bb071fcd07",
@@ -38,19 +45,19 @@ export const MLS_BROWSER_ASSET_MANIFEST=Object.freeze({
     },
     {
       "id": "workspace",
-      "path": "/assets/mls/647a03c700a64eff24111bdeb6b5135c49e2482da227e9fbf72686bf87d88af7.js",
-      "sha256": "647a03c700a64eff24111bdeb6b5135c49e2482da227e9fbf72686bf87d88af7",
-      "integrity": "sha256-ZHoDxwCmTv8kERvetrUTXEniSC2iJ+n79yaGv4fYivc=",
-      "bytes": 475458
+      "path": "/assets/mls/ecce6528e87fe80bda1198235b2b76010e83293361afcd0d4a50a46919be97e1.js",
+      "sha256": "ecce6528e87fe80bda1198235b2b76010e83293361afcd0d4a50a46919be97e1",
+      "integrity": "sha256-7M5lKOh/6AvaEZgjWyt2AQ6DKTNhr80NSlCkaRm+l+E=",
+      "bytes": 492279
     }
   ],
   "retained": [
     {
       "id": "workspace",
-      "path": "/assets/mls/e3b12127a14b70185a25c83dae547facc946a4fe87afe0369a8f47665f6398ca.js",
-      "sha256": "e3b12127a14b70185a25c83dae547facc946a4fe87afe0369a8f47665f6398ca",
-      "integrity": "sha256-47EhJ6FLcBhaJcg9rlR/rMlGpP6Hr+A2mo9HZl9jmMo=",
-      "bytes": 462298
+      "path": "/assets/mls/647a03c700a64eff24111bdeb6b5135c49e2482da227e9fbf72686bf87d88af7.js",
+      "sha256": "647a03c700a64eff24111bdeb6b5135c49e2482da227e9fbf72686bf87d88af7",
+      "integrity": "sha256-ZHoDxwCmTv8kERvetrUTXEniSC2iJ+n79yaGv4fYivc=",
+      "bytes": 475458
     }
   ]
 });

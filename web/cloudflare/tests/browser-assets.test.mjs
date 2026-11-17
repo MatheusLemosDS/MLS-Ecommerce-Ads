@@ -1,3 +1,5 @@
+import {DTF_ENGINE_CLIENT} from '../src/dtf-layout.mjs';
+import {DTF_CLIENT} from '../src/dtf-view.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
@@ -32,8 +34,8 @@ test('the monthly browser asset is byte-identical to the unchanged legacy client
  assert.throws(()=>browserAssetScript('private'),/BROWSER_ASSET_MANIFEST_INVALID/);
 });
 
-test('the workspace controller joins the closed six-asset public inventory without changing published legacy clients',()=>{
- assert.deepEqual(manifest.assets.map(row=>row.id),['bank','month','orders','production','weekly','workspace']);
+test('the workspace controller joins the closed seven-asset public inventory without changing published legacy clients',()=>{
+ assert.deepEqual(manifest.assets.map(row=>row.id),['bank','dtf','month','orders','production','weekly','workspace']);
  const published=JSON.parse(readFileSync(path.join(root,'workers','app','browser-assets-published.json'),'utf8'));
  for(const previous of published.assets){
   assert.ok([...manifest.assets,...manifest.retained].some(row=>JSON.stringify(row)===JSON.stringify(previous)),'the exact immediately published predecessor remains addressable for '+previous.id);
@@ -103,12 +105,13 @@ for(const minify of [false,true])test('compiled Worker serves the exact asset in
 });
 
 
-test('the reviewed current six-asset inventory preserves exact controller bytes and parser-blocking order',()=>{
+test('the reviewed current seven-asset inventory preserves exact controller bytes and parser-blocking order',()=>{
  // The financial draft guard changes the month controller by one explicit condition.
  // Month was reviewed again after TEN-05 cleanup (sourceb91ff45049ab42b3a34182c970e066b336a2aa8cf84a66c79e2da9d4bed8083e).
  // Its previous61f017... hash predates private-cache/DOM teardown; this is a functional security change, not distribution drift.
  const reviewed={bank:'0d6250f5888258fa29664eac45b2cd821d3872b1c96ac47dda46bd7fd10e6a0c',month:'5203d255416bacb97cd44ddef29a2fc76b1432f0a1ea731fabacc4bb071fcd07',orders:'ec6397070416275d880f293d4abe8d7f531215af369d7e9a275c10f019a8c3c8',production:'549c2b0f6ae183249bed2472af894cf5211d4a6853fc33c0ce6c127aa3ebf034',weekly:'04ae3166780be18f31754212640b0887abe9e20830ac4309a6e31109398e4eeb'};
  for(const [id,sha]of Object.entries(reviewed))assert.equal(manifest.assets.find(row=>row.id===id).sha256,sha,'the reviewed exact '+id+' asset must not drift');
+ const dtf=manifest.assets.find(row=>row.id==='dtf');assert.ok(dtf&&dtf.bytes<=262144);assert.deepEqual(readFileSync(path.join(root,'dist','browser-assets',...dtf.path.slice(1).split('/'))),Buffer.from((DTF_ENGINE_CLIENT+'\n/* MLS_DTF_ENGINE_END */\n'+DTF_CLIENT).replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g,c=>'\\u'+c.charCodeAt(0).toString(16).padStart(4,'0'))));
  const row=manifest.assets.find(row=>row.id==='workspace');assert.ok(row);assert.ok(row.bytes>262144&&row.bytes<=1048576);
  const emitted=Buffer.from(CLIENT.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g,c=>'\\u'+c.charCodeAt(0).toString(16).padStart(4,'0')));const bytes=readFileSync(path.join(root,'dist','browser-assets',...row.path.slice(1).split('/')));assert.deepEqual(bytes,emitted,'workspace distribution preserves every frozen controller byte');
  const tag=browserAssetScript('workspace');assert.equal(tag,'<script src="'+row.path+'" integrity="'+row.integrity+'" crossorigin="anonymous"></script>');assert.doesNotMatch(tag,/\b(async|defer|onerror)\b/);
@@ -131,4 +134,8 @@ test('workspace load-error helper accepts only its exact same-origin resource an
  for(const src of ['https://asset.fixture'+bank.path,'https://untrusted.fixture'+row.path,'https://asset.fixture'+row.path+'?changed=true'])listener({target:{tagName:'SCRIPT',src}});
  listener({target:{tagName:'DIV',src:'https://asset.fixture'+row.path}});assert.equal(status.textContent,'');assert.equal(retry.hidden,true);
  listener({target:{tagName:'SCRIPT',src:'https://asset.fixture'+row.path}});assert.match(status.textContent,/Não foi possível carregar o painel/);assert.equal(status.attributes.role,'alert');assert.equal(status.style.color,'var(--negative,#b42318)');assert.equal(retry.hidden,false);assert.equal(retry.disabled,false);assert.equal(typeof retry.onclick,'function');assert.equal(reloads,0,'fallback never reloads automatically');retry.onclick();assert.equal(reloads,1);
+});
+
+test('DTF resource failure offers an explicit reload without starting the print controller or calling APIs',()=>{
+ const row=manifest.assets.find(r=>r.id==='dtf');let listener;const status={style:{},setAttribute(){},textContent:''},retry={hidden:true,disabled:true};const context=vm.createContext({URL,location:{origin:'https://asset.fixture',href:'https://asset.fixture/admin',reload(){}},document:{addEventListener:(type,fn)=>{listener=fn;},getElementById:id=>id==='message'?status:retry}});vm.runInContext(browserWorkspaceFailureScript(),context);listener({target:{tagName:'SCRIPT',src:'https://asset.fixture'+row.path}});assert.match(status.textContent,/Não foi possível carregar o painel/);assert.equal(retry.hidden,false);assert.equal(typeof retry.onclick,'function');
 });

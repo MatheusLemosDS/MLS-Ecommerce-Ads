@@ -1,6 +1,6 @@
 {
   "schema": "mls_master_mission_checkpoint_v1",
-  "updated_at": "2026-11-16T17:58:53.316351+00:00",
+  "updated_at": "2026-11-17T00:54:04.350468+00:00",
   "base_visual_sha": "8d860b2c4f26531c53c4cdba0e06a14f51a7eef4",
   "visual_branch": "feature/mls-mockup-parity-real-charts-20261029",
   "visual_pr": 79,
@@ -180,33 +180,30 @@
     }
   ],
   "current_release": {
-    "status": "PUBLISHED_VERIFIED",
+    "status": "PUBLISHED_VERIFIED_TECHNICAL_PUBLIC_ONLY",
     "verification_scope": "TECHNICAL_PUBLIC_ONLY",
-    "release_id": "2026-11-13.3",
-    "release": "2026-11-13.3",
-    "source_commit": "f68525ea1d136350ece9942433352accdf97d992",
-    "prepared_source_commit": "3cf489e33071b32bc73e2efaf2aecfc62618d46a",
-    "ci_run": 43531882471,
-    "node_tests_pass": 4432,
+    "release_id": "2026-11-16.2",
+    "release": "2026-11-16.2",
+    "source_commit": "9c94210cbecb50c7d6a32f2937852b623c529032",
+    "prepared_source_commit": "457ddad95953f5b3b8b8c31e71499697ad39cac8",
+    "ci_run": 43986753284,
+    "node_tests_pass": 4480,
     "python_tests_pass": 67,
-    "receipt": "docs/financial-automation/publication-live-20261113.json",
-    "public_verification": "docs/financial-automation/publication-live-20261113.json",
-    "verified_at": "2026-11-14T00:22:15.598Z",
+    "receipt": "docs/owner-operation/validation/publication-dtf-cycle-live-20261116.json",
+    "verified_at": "2026-11-17T00:54:04.350468+00:00",
     "published": true,
-    "pull_request": 121,
+    "pull_request": 125,
     "owner_live_qa": "NOT_PERFORMED",
     "account_financial_acceptance": false,
     "m2_closed": false,
     "m22_closed": false,
-    "git_integration": "CHECK_PR121_CURRENT_STATE",
     "workers": {
       "finance": "50b31451-c6cf-4456-bd09-be5d1956e0da",
-      "auth": "dfd2fc99-728f-4f29-96ee-a4b256c5640a",
-      "app": "9bfc21d6-dec9-4fa6-89d8-7ea1dec50993"
+      "auth": "13669515-04e6-41e6-a821-f6b2d9b52d1d",
+      "app": "f4223bd8-ffe6-4a31-b36b-9063fba5fbc5"
     },
-    "owner_live_authenticated_qa": "NOT_PERFORMED",
-    "natural_resume_observed_at": "2026-11-14T00:33:17.899767+00:00",
-    "natural_resume_scope": "ORIGINAL_NOVEMBER_ADS_LANE_ONLY"
+    "git_integration": "DRAFT_OPEN_NO_MERGE_OR_AUTO_MERGE",
+    "canonical_checkpoint": "docs/MLS_COMMERCE_OS_CHECKPOINT.json"
   },
   "validation_history": [
     {
@@ -241,33 +238,30 @@
     }
   ],
   "live_release": {
-    "status": "PUBLISHED_VERIFIED",
+    "status": "PUBLISHED_VERIFIED_TECHNICAL_PUBLIC_ONLY",
     "verification_scope": "TECHNICAL_PUBLIC_ONLY",
-    "release_id": "2026-11-13.3",
-    "release": "2026-11-13.3",
-    "source_commit": "f68525ea1d136350ece9942433352accdf97d992",
-    "prepared_source_commit": "3cf489e33071b32bc73e2efaf2aecfc62618d46a",
-    "ci_run": 43531882471,
-    "node_tests_pass": 4432,
+    "release_id": "2026-11-16.2",
+    "release": "2026-11-16.2",
+    "source_commit": "9c94210cbecb50c7d6a32f2937852b623c529032",
+    "prepared_source_commit": "457ddad95953f5b3b8b8c31e71499697ad39cac8",
+    "ci_run": 43986753284,
+    "node_tests_pass": 4480,
     "python_tests_pass": 67,
-    "receipt": "docs/financial-automation/publication-live-20261113.json",
-    "public_verification": "docs/financial-automation/publication-live-20261113.json",
-    "verified_at": "2026-11-14T00:22:15.598Z",
+    "receipt": "docs/owner-operation/validation/publication-dtf-cycle-live-20261116.json",
+    "verified_at": "2026-11-17T00:54:04.350468+00:00",
     "published": true,
-    "pull_request": 121,
+    "pull_request": 125,
     "owner_live_qa": "NOT_PERFORMED",
     "account_financial_acceptance": false,
     "m2_closed": false,
     "m22_closed": false,
-    "git_integration": "CHECK_PR121_CURRENT_STATE",
     "workers": {
       "finance": "50b31451-c6cf-4456-bd09-be5d1956e0da",
-      "auth": "dfd2fc99-728f-4f29-96ee-a4b256c5640a",
-      "app": "9bfc21d6-dec9-4fa6-89d8-7ea1dec50993"
+      "auth": "13669515-04e6-41e6-a821-f6b2d9b52d1d",
+      "app": "f4223bd8-ffe6-4a31-b36b-9063fba5fbc5"
     },
-    "owner_live_authenticated_qa": "NOT_PERFORMED",
-    "natural_resume_observed_at": "2026-11-14T00:33:17.899767+00:00",
-    "natural_resume_scope": "ORIGINAL_NOVEMBER_ADS_LANE_ONLY"
+    "git_integration": "DRAFT_OPEN_NO_MERGE_OR_AUTO_MERGE",
+    "canonical_checkpoint": "docs/MLS_COMMERCE_OS_CHECKPOINT.json"
   },
   "visual_chart_refinement_20261031": {
     "id": "LIVE_VISUAL_CHART_INSPECTION_AND_COST_RULE_SCOPE",
@@ -7055,9 +7049,9 @@
       "Concluir M2/M2.2 com devoluções e fabricação reais, Seller Centre e Nubank no mesmo recorte, sem dupla contagem."
     ]
   },
-  "current_phase": "OWNER_OPERATION_U2_DTF_ARTWORK_BACKUP",
-  "working_branch": "feature/owner-dtf-artwork-backup-20261116",
-  "current_status": "OP013_PUBLISHED_NATIVE_VERIFIED_PUBLIC_SMOKE_BLOCKED_BY_ENVIRONMENT_TRANSPORT",
+  "current_phase": "OWNER_OPERATION_U2_DTF_COMPLETE_PRINT_CYCLE",
+  "working_branch": "feature/owner-dtf-cycle-20261116",
+  "current_status": "SEE_CANONICAL_CHECKPOINT_DTF_PUBLISHED_TECHNICAL_ACCEPTANCE_PENDING",
   "next_phase": "OWNER_OPERATION_BY_TECHNICAL_DEPENDENCY_NOT_SAAS_PHASE_GATES",
   "active_execution_matrix": "docs/owner-operation/EXECUCAO.json",
   "active_charts_catalog": "docs/owner-operation/CATALOGO_GRAFICOS.json",
@@ -7096,6 +7090,90 @@
     ]
   },
   "latest_increment": {
+    "task": "OP-012",
+    "published": true,
+    "canonical_checkpoint": "docs/MLS_COMMERCE_OS_CHECKPOINT.json",
+    "receipt": "docs/owner-operation/validation/publication-dtf-cycle-live-20261116.json",
+    "operationally_accepted": false
+  },
+  "canonical_checkpoint": "docs/MLS_COMMERCE_OS_CHECKPOINT.json",
+  "current_fields_role": "Current owner-release fields mirror docs/MLS_COMMERCE_OS_CHECKPOINT.json; dated historical mission evidence remains preserved.",
+  "current_owner_publication": {
+    "canonical_checkpoint": "docs/MLS_COMMERCE_OS_CHECKPOINT.json",
+    "receipt": "docs/owner-operation/validation/publication-dtf-cycle-live-20261116.json",
+    "source_commit": "9c94210cbecb50c7d6a32f2937852b623c529032",
+    "release": "2026-11-16.2",
+    "published": true,
+    "native_verified": true,
+    "public_smoke": "VERIFIED_HTTP8_ASSETS8",
+    "operationally_accepted": false
+  },
+  "current_checkpoint_pointer": {
+    "path": "docs/MLS_COMMERCE_OS_CHECKPOINT.json",
+    "receipt": "docs/owner-operation/validation/publication-dtf-cycle-live-20261116.json",
+    "validation_head": "9c94210cbecb50c7d6a32f2937852b623c529032",
+    "published": true,
+    "blocker": null
+  },
+  "previous_current_release_before_owner_dtf_cycle": {
+    "status": "PUBLISHED_VERIFIED",
+    "verification_scope": "TECHNICAL_PUBLIC_ONLY",
+    "release_id": "2026-11-13.3",
+    "release": "2026-11-13.3",
+    "source_commit": "f68525ea1d136350ece9942433352accdf97d992",
+    "prepared_source_commit": "3cf489e33071b32bc73e2efaf2aecfc62618d46a",
+    "ci_run": 43531882471,
+    "node_tests_pass": 4432,
+    "python_tests_pass": 67,
+    "receipt": "docs/financial-automation/publication-live-20261113.json",
+    "public_verification": "docs/financial-automation/publication-live-20261113.json",
+    "verified_at": "2026-11-14T00:22:15.598Z",
+    "published": true,
+    "pull_request": 121,
+    "owner_live_qa": "NOT_PERFORMED",
+    "account_financial_acceptance": false,
+    "m2_closed": false,
+    "m22_closed": false,
+    "git_integration": "CHECK_PR121_CURRENT_STATE",
+    "workers": {
+      "finance": "50b31451-c6cf-4456-bd09-be5d1956e0da",
+      "auth": "dfd2fc99-728f-4f29-96ee-a4b256c5640a",
+      "app": "9bfc21d6-dec9-4fa6-89d8-7ea1dec50993"
+    },
+    "owner_live_authenticated_qa": "NOT_PERFORMED",
+    "natural_resume_observed_at": "2026-11-14T00:33:17.899767+00:00",
+    "natural_resume_scope": "ORIGINAL_NOVEMBER_ADS_LANE_ONLY"
+  },
+  "previous_live_release_before_owner_dtf_cycle": {
+    "status": "PUBLISHED_VERIFIED",
+    "verification_scope": "TECHNICAL_PUBLIC_ONLY",
+    "release_id": "2026-11-13.3",
+    "release": "2026-11-13.3",
+    "source_commit": "f68525ea1d136350ece9942433352accdf97d992",
+    "prepared_source_commit": "3cf489e33071b32bc73e2efaf2aecfc62618d46a",
+    "ci_run": 43531882471,
+    "node_tests_pass": 4432,
+    "python_tests_pass": 67,
+    "receipt": "docs/financial-automation/publication-live-20261113.json",
+    "public_verification": "docs/financial-automation/publication-live-20261113.json",
+    "verified_at": "2026-11-14T00:22:15.598Z",
+    "published": true,
+    "pull_request": 121,
+    "owner_live_qa": "NOT_PERFORMED",
+    "account_financial_acceptance": false,
+    "m2_closed": false,
+    "m22_closed": false,
+    "git_integration": "CHECK_PR121_CURRENT_STATE",
+    "workers": {
+      "finance": "50b31451-c6cf-4456-bd09-be5d1956e0da",
+      "auth": "dfd2fc99-728f-4f29-96ee-a4b256c5640a",
+      "app": "9bfc21d6-dec9-4fa6-89d8-7ea1dec50993"
+    },
+    "owner_live_authenticated_qa": "NOT_PERFORMED",
+    "natural_resume_observed_at": "2026-11-14T00:33:17.899767+00:00",
+    "natural_resume_scope": "ORIGINAL_NOVEMBER_ADS_LANE_ONLY"
+  },
+  "previous_latest_increment_before_owner_dtf_cycle": {
     "task": "OP-011",
     "source_commit": "e168e9a04d7b6feaaf885bd645d9394533dadeee",
     "release_candidate": "2026-11-15.4",
@@ -7121,9 +7199,7 @@
     "pull_request": 123,
     "git_integration": "PR123_DRAFT_OPEN_NOT_MERGED"
   },
-  "canonical_checkpoint": "docs/MLS_COMMERCE_OS_CHECKPOINT.json",
-  "current_fields_role": "POINTER_ONLY_TO_CANONICAL_CHECKPOINT_NOT_SEPARATE_EXECUTION_STATE",
-  "current_owner_publication": {
+  "previous_current_owner_publication_before_owner_dtf_cycle": {
     "canonical_checkpoint": "docs/MLS_COMMERCE_OS_CHECKPOINT.json",
     "receipt": "docs/owner-operation/validation/publication-artwork-live-20261116.json",
     "source_commit": "98a58087f4435acb4e4c166047f5e1e3168c110d",

@@ -1,9 +1,9 @@
 {
   "schema": "mls_browser_assets_published_v1",
   "publication": {
-    "worker_version": "18e1585b-e5fc-4b1f-b002-234d18ac7d43",
-    "source_sha256": "eeeb61de8779de2bb1cecca38859f1b6af77227b7a160d93d13839aa0825b7e0",
-    "verified_at": "2026-11-16T03:29:23.839Z"
+    "worker_version": "f4223bd8-ffe6-4a31-b36b-9063fba5fbc5",
+    "source_sha256": "f1166d81a885f3f425d8fd95813b77e81b14b0cd3ee02250e9f8c40878d9c037",
+    "verified_at": "2026-11-17T00:51:10.185Z"
   },
   "assets": [
     {
@@ -12,6 +12,13 @@
       "sha256": "0d6250f5888258fa29664eac45b2cd821d3872b1c96ac47dda46bd7fd10e6a0c",
       "integrity": "sha256-DWJQ9YiCWPopZk6sRbLNgh04crHJasR92ka9f9EOagw=",
       "bytes": 38035
+    },
+    {
+      "id": "dtf",
+      "path": "/assets/mls/63e4da3d9e8e272f882026d3d500180b98988792133e4b66c77788192ebdcc63.js",
+      "sha256": "63e4da3d9e8e272f882026d3d500180b98988792133e4b66c77788192ebdcc63",
+      "integrity": "sha256-Y+TaPZ6OJy+IICbT1QAYC5iYh5ITPktmx3eIGS69zGM=",
+      "bytes": 49778
     },
     {
       "id": "month",
@@ -43,26 +50,19 @@
     },
     {
       "id": "workspace",
-      "path": "/assets/mls/e3b12127a14b70185a25c83dae547facc946a4fe87afe0369a8f47665f6398ca.js",
-      "sha256": "e3b12127a14b70185a25c83dae547facc946a4fe87afe0369a8f47665f6398ca",
-      "integrity": "sha256-47EhJ6FLcBhaJcg9rlR/rMlGpP6Hr+A2mo9HZl9jmMo=",
-      "bytes": 462298
+      "path": "/assets/mls/ecce6528e87fe80bda1198235b2b76010e83293361afcd0d4a50a46919be97e1.js",
+      "sha256": "ecce6528e87fe80bda1198235b2b76010e83293361afcd0d4a50a46919be97e1",
+      "integrity": "sha256-7M5lKOh/6AvaEZgjWyt2AQ6DKTNhr80NSlCkaRm+l+E=",
+      "bytes": 492279
     }
   ],
   "retained": [
     {
-      "id": "month",
-      "path": "/assets/mls/347a294216d16151105c5b5074174af01c01a9bc398e713aaf2c9184a48b1db2.js",
-      "sha256": "347a294216d16151105c5b5074174af01c01a9bc398e713aaf2c9184a48b1db2",
-      "integrity": "sha256-NHopQhbRYVEQXFtQdBdK8BwBqbw5jnE6ryyRhKSLHbI=",
-      "bytes": 704759
-    },
-    {
       "id": "workspace",
-      "path": "/assets/mls/d5961f95cc6649d963f42e28a50e2e12563ce0d0d66833bb28ce5e16d172922c.js",
-      "sha256": "d5961f95cc6649d963f42e28a50e2e12563ce0d0d66833bb28ce5e16d172922c",
-      "integrity": "sha256-1ZYflcxmSdlj9C4opQ4uElY84NDWaDO7KM5eFtFykiw=",
-      "bytes": 341729
+      "path": "/assets/mls/647a03c700a64eff24111bdeb6b5135c49e2482da227e9fbf72686bf87d88af7.js",
+      "sha256": "647a03c700a64eff24111bdeb6b5135c49e2482da227e9fbf72686bf87d88af7",
+      "integrity": "sha256-ZHoDxwCmTv8kERvetrUTXEniSC2iJ+n79yaGv4fYivc=",
+      "bytes": 475458
     }
   ]
 }

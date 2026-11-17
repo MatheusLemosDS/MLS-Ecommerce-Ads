@@ -1,5 +1,9 @@
 <!-- OWNER_OPERATION_CURRENT -->
-Operação própria: **DTF2026-11-16.1 publicado**, CI4452 Node/67 Python aprovada. Fontes/configuração/rotas conferidas; smoke HTTP/assets públicos bloqueados pelo proxy Envoy do ambiente. Aceite com artes reais pendente. [Uso, limites e próximo passo](docs/owner-operation/README.md) · [Recibo](docs/owner-operation/validation/publication-artwork-live-20261116.json). Os registros datados abaixo preservam entregas anteriores.
+Operação própria: **montador DTF 2026-11-16.2 publicado e verificado tecnicamente**. [Como usar](docs/owner-operation/README.md) · [checkpoint canônico](docs/MLS_COMMERCE_OS_CHECKPOINT.json) · [recibo](docs/owner-operation/validation/publication-dtf-cycle-live-20261116.json).
+
+Kits têm composição explícita por variação/SKU de origem; impressão parcial, saldo, liberação confirmada de EXPORTED, reimpressão por parte, perda e correção auditada preservam fatos. Fonte 9c94210, CI 43986753284: 4.480 Node/67 Python, mais8 casos locais autenticados após recuperar o executor. App/Auth novos com 100% do tráfego, Finance retido; bytes/configurações/rotas/cron, 8 verificações HTTP e 8 arquivos públicos conferidos. PR #125 permanece rascunho, sem merge/auto-merge; main 346f30f preservada.
+
+Próximo passo do proprietário: abra Produção → Montador e fila DTF, importe os PNGs reais, confirme as artes/larguras dos kits e confira uma folha em tamanho real antes de registrar impressão. Aceite físico/financeiro ainda pendente. Próximo desenvolvimento independente: OP-014, fabricação/custos/pagamentos conforme a matriz. Impressão não comprova fabricação; ausência de fonte/custo não é zero; não duplicar custos/receitas. [Regras ativas e gates](AGENTS.md#regras-de-domínio-ativas): sexta às 13h/Brasília, confirmações e auditoria permanecem. Gráficos e seis agentes preservados; venda ADIADO_VENDA. Históricos integrais seguem abaixo e nos recibos.
 <!-- END_OWNER_OPERATION_CURRENT -->
 
 <!-- FINANCIAL_AUTOMATION_CURRENT -->

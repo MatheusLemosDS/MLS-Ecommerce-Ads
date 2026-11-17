@@ -1,11 +1,9 @@
 <!-- OWNER_OPERATION_CURRENT -->
-Prioridade: operação própria. [Uso e estado](owner-operation/README.md), [matriz](owner-operation/EXECUCAO.json), [checkpoint canônico](MLS_COMMERCE_OS_CHECKPOINT.json).
+Operação própria: **montador DTF 2026-11-16.2 publicado e verificado tecnicamente**. [Como usar](owner-operation/README.md) · [checkpoint canônico](MLS_COMMERCE_OS_CHECKPOINT.json) · [recibo](owner-operation/validation/publication-dtf-cycle-live-20261116.json).
 
-OP013 publicado:2026-11-16.1, ZIP privado das artes com PNGs/manifesto/hashes e restauração confirmada sem sobrescrever imagens diferentes. Fonte98a5808, CI43919859561 aprovada:4452 Node/67 Python, zero falhas/skips/cancelamentos. App/Auth novos; Finance retido. Bytes/configuração/tráfego100%/domínios/cron conferidos nativamente. [Recibo](owner-operation/validation/publication-artwork-live-20261116.json).
+Kits têm composição explícita por variação/SKU de origem; impressão parcial, saldo, liberação confirmada de EXPORTED, reimpressão por parte, perda e correção auditada preservam fatos. Fonte 9c94210, CI 43986753284: 4.480 Node/67 Python, mais8 casos locais autenticados após recuperar o executor. App/Auth novos com 100% do tráfego, Finance retido; bytes/configurações/rotas/cron, 8 verificações HTTP e 8 arquivos públicos conferidos. PR #125 permanece rascunho, sem merge/auto-merge; main 346f30f preservada.
 
-Pendência concreta: smoke HTTP e7 assets públicos devolvem503/98 bytes Envoy no proxy do ambiente, também visto no GitHub CLI. Não inferir falha da aplicação nem concluir a conferência pública. Ledger de assets anterior preservado até ler/verificar todos os bytes; resolver antes de outra publicação. PR124 rascunho sobre PR123, sem merge/auto-merge; main346f30f/PR121 e pai754d20f preservados. Aceite real das artes/impressão e M2/M2.2 não encerrados.
-
-Próxima leitura: completar HTTP/assets e registrar a publicação aprovada. Próxima implementação independente: OP012, ciclo do lote/cancelamento não impresso/produção parcial com confirmação e auditoria. Venda ADIADO_VENDA; segurança, sexta13h/Brasília e não duplicar custos/receitas continuam ativos. [Histórico](owner-operation/history/continuity-before-op013-20261116.json).
+Próximo passo do proprietário: abra Produção → Montador e fila DTF, importe os PNGs reais, confirme as artes/larguras dos kits e confira uma folha em tamanho real antes de registrar impressão. Aceite físico/financeiro ainda pendente. Próximo desenvolvimento independente: OP-014, fabricação/custos/pagamentos conforme a matriz. Impressão não comprova fabricação; ausência de fonte/custo não é zero; não duplicar custos/receitas. [Regras ativas e gates](../AGENTS.md#regras-de-domínio-ativas): sexta às 13h/Brasília, confirmações e auditoria permanecem. Gráficos e seis agentes preservados; venda ADIADO_VENDA. Históricos integrais seguem abaixo e nos recibos.
 <!-- END_OWNER_OPERATION_CURRENT -->
 
 <!-- FINANCIAL_AUTOMATION_CURRENT -->

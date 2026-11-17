@@ -117,7 +117,7 @@ for row in manual_node.value.elts:
     assert isinstance(row.values[1],ast.Name)
     manual_vars.add(row.values[1].id)
 for node in tree.body:
-    if isinstance(node,ast.Assign) and len(node.targets)==1 and isinstance(node.targets[0],ast.Name) and node.targets[0].id in manual_vars|{'business_tax','dtf_layout'}:
+    if isinstance(node,ast.Assign) and len(node.targets)==1 and isinstance(node.targets[0],ast.Name) and node.targets[0].id in manual_vars|{'business_tax','dtf_layout','dtf_engine_marker'}:
         exec(ast.get_source_segment(source,node),scope)
     elif isinstance(node,ast.For) and isinstance(node.iter,ast.List) and ast.literal_eval(node.iter)==['business-month-summary.mjs','account-diagnosis.mjs','hermes-financial-context.mjs']:
         exec(ast.get_source_segment(source,node),scope)
