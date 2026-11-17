@@ -2,7 +2,7 @@
   "schema": "mls_commerce_os_checkpoint_v1",
   "canonical_roadmap": "docs/ROADMAP_MLS_COMMERCE_OS.md",
   "legacy_roadmap": "docs/ROADMAP_BRAZACOMMERCE.md",
-  "updated_at": "2026-11-17T00:19:26Z",
+  "updated_at": "2026-11-17T00:54:04.350468+00:00",
   "product": {
     "name": "MLS Commerce OS",
     "supervisor": "MLS Hermes",
@@ -31,7 +31,7 @@
   },
   "current_phase": "OWNER_OPERATION_U2_DTF_COMPLETE_PRINT_CYCLE",
   "working_branch": "feature/owner-dtf-cycle-20261116",
-  "current_status": "CI_VALIDADA_PUBLICATION_BLOCKED_EXECUTOR",
+  "current_status": "DTF_PUBLISHED_VERIFIED_TECHNICAL_REAL_OWNER_ACCEPTANCE_PENDING",
   "completed_this_phase": [
     "Conciliação de liberações por pedido com estados VERIFIED, LOCATED_UNVERIFIED, AMBIGUOUS e NOT_LOCATED",
     "Repasse-base, ajuste, repasse após ajuste e liberação exibidos sem dupla dedução",
@@ -120,7 +120,7 @@
     }
   },
   "next_actions": [
-    "Reconnect the execution environment. Preserve/reconcile the existing local worktree and final logs before fetching the remote documentation head. Reuse exact-head CI for 7796836ca144d19b8d12f460fb6a3e3d711b0f5e and unchanged worker packages; recover missing local evidence, refresh native baseline/backups, then controlled Auth/App deploy and independent source/config/public-asset verification. Finance stays unchanged. Publication already authorized.",
+    "Owner: refresh Produção → Montador e fila DTF, import real PNGs, explicitly confirm kit composition, inspect preview/DPI and print at100%; only then confirm actual DTF quantities. Technical publication is verified; real manufacture/financial acceptance remains open.",
     "Owner actual acceptance: import original PNGs, verify dimensions/DPI in preview and print at100%; use physical confirmation only after checking complete DTF units.",
     "Never blind-rollback the old DTF server over partial/reversed physical facts; preserve compatible reader and complete append-only audit and use verified backups.",
     "Manufacture, actual costs, partial payments and returns continue by matrix dependencies. Printing/export is not garment manufacture; absent cost/source is unknown, never zero.",
@@ -137,8 +137,8 @@
     "source_commit": "457ddad95953f5b3b8b8c31e71499697ad39cac8",
     "release_candidate": "2026-11-16.2",
     "implementation": true,
-    "local_validation": "LOCAL_TARGETED_PASS_FULL_LOCAL_RESULT_UNAVAILABLE_AFTER_EXECUTOR_FAILURE",
-    "published": false,
+    "local_validation": "RESUMED_AUTHENTICATED_NATIVE8_PASS_FULL4480_AND_PYTHON67_IN_EXACT_HEAD_CI",
+    "published": true,
     "validated_operationally": false,
     "actual_financial_acceptance": false,
     "receipt": "docs/owner-operation/validation/dtf-cycle.json",
@@ -147,28 +147,42 @@
     "related_task": "OP-010_DTF_COMPOSITION_SUBSET",
     "pull_request": 125,
     "git_integration": "DRAFT_OPEN_NO_MERGE_OR_AUTO_MERGE",
-    "validation_head": "7796836ca144d19b8d12f460fb6a3e3d711b0f5e",
-    "ci_run": 43984485294,
+    "validation_head": "9c94210cbecb50c7d6a32f2937852b623c529032",
+    "ci_run": 43986753284,
     "github_validation": {
-      "id": 43984485294,
-      "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43984485294",
-      "head_sha": "7796836ca144d19b8d12f460fb6a3e3d711b0f5e",
+      "id": 43986753284,
+      "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43986753284",
+      "head_sha": "9c94210cbecb50c7d6a32f2937852b623c529032",
       "conclusion": "success",
       "node": {
         "total": 4480,
         "pass": 4480,
         "fail": 0,
-        "cancelled": 0,
         "skipped": 0,
-        "duration_ms": 735453.95291
+        "cancelled": 0,
+        "duration_ms": 549218.747989
       },
       "python": {
         "total": 67,
-        "pass": 67,
-        "fail": 0
-      }
+        "pass": 67
+      },
+      "compiled_hashes": {
+        "app": "af6b26b6a1fa1237f80d73fe3057ee74d0d2d005dfbc4eb10e92047895a119cf",
+        "auth": "aaafc3a6c16684949d8714f309ce1cf0525d71ac7223fed20d948347ff943182",
+        "finance": "ccce234f36f0a763942bf30e274360b9d1223b3594b6600adf3352fafd92efb4"
+      },
+      "workflow_preflight_step": "SKIPPED_BY_UNCHANGED_CONDITION_PR_BASE_IS_NOT_MAIN",
+      "local_preflight": "FRESH_RELEASE_LOCAL_PREFLIGHT_OK_BEFORE_CONTROLLED_PROMOTION"
     },
-    "publication_blocker": "EXECUTOR_UNAVAILABLE_IN_CURRENT_CONVERSATION"
+    "publication_blocker": null,
+    "publication_source_commit": "9c94210cbecb50c7d6a32f2937852b623c529032",
+    "publication_receipt": "docs/owner-operation/validation/publication-dtf-cycle-live-20261116.json",
+    "workers": {
+      "finance": "50b31451-c6cf-4456-bd09-be5d1956e0da",
+      "auth": "13669515-04e6-41e6-a821-f6b2d9b52d1d",
+      "app": "f4223bd8-ffe6-4a31-b36b-9063fba5fbc5"
+    },
+    "status": "PUBLISHED_VERIFIED_TECHNICAL_PUBLIC_ONLY"
   },
   "incident": {
     "id": "INCIDENT_2026_10_27_PANEL_AGENT_REGRESSION",
@@ -3529,33 +3543,29 @@
     }
   },
   "last_verified_live_release": {
-    "status": "PUBLISHED_VERIFIED",
+    "status": "PUBLISHED_VERIFIED_TECHNICAL_PUBLIC_ONLY",
     "verification_scope": "TECHNICAL_PUBLIC_ONLY",
-    "release_id": "2026-11-13.3",
-    "release": "2026-11-13.3",
-    "source_commit": "f68525ea1d136350ece9942433352accdf97d992",
-    "prepared_source_commit": "3cf489e33071b32bc73e2efaf2aecfc62618d46a",
-    "ci_run": 43531882471,
-    "node_tests_pass": 4432,
+    "release_id": "2026-11-16.2",
+    "release": "2026-11-16.2",
+    "source_commit": "9c94210cbecb50c7d6a32f2937852b623c529032",
+    "prepared_source_commit": "457ddad95953f5b3b8b8c31e71499697ad39cac8",
+    "ci_run": 43986753284,
+    "node_tests_pass": 4480,
     "python_tests_pass": 67,
-    "receipt": "docs/financial-automation/publication-live-20261113.json",
-    "public_verification": "docs/financial-automation/publication-live-20261113.json",
-    "verified_at": "2026-11-14T00:22:15.598Z",
+    "receipt": "docs/owner-operation/validation/publication-dtf-cycle-live-20261116.json",
+    "verified_at": "2026-11-17T00:54:04.350468+00:00",
     "published": true,
-    "pull_request": 121,
+    "pull_request": 125,
     "owner_live_qa": "NOT_PERFORMED",
     "account_financial_acceptance": false,
     "m2_closed": false,
     "m22_closed": false,
-    "git_integration": "CHECK_PR121_CURRENT_STATE",
     "workers": {
       "finance": "50b31451-c6cf-4456-bd09-be5d1956e0da",
-      "auth": "dfd2fc99-728f-4f29-96ee-a4b256c5640a",
-      "app": "9bfc21d6-dec9-4fa6-89d8-7ea1dec50993"
+      "auth": "13669515-04e6-41e6-a821-f6b2d9b52d1d",
+      "app": "f4223bd8-ffe6-4a31-b36b-9063fba5fbc5"
     },
-    "owner_live_authenticated_qa": "NOT_PERFORMED",
-    "natural_resume_observed_at": "2026-11-14T00:33:17.899767+00:00",
-    "natural_resume_scope": "ORIGINAL_NOVEMBER_ADS_LANE_ONLY"
+    "git_integration": "DRAFT_OPEN_NO_MERGE_OR_AUTO_MERGE"
   },
   "previous_next_actions_before_simplified_operations": [
     "Conferir os itens salvos do pedido e da solicitação em MLS Returns; manter unidades comerciais separadas das peças físicas, preservar UNKNOWN e validar a origem antes de integrar reaproveitamento ao lucro.",
@@ -7609,9 +7619,76 @@
         "app": "75da11bb-3bee-4396-918b-79bf5846cb04"
       },
       "public_verification": "BLOCKED_ENVIRONMENT_ENVOY_TRANSPORT"
+    },
+    {
+      "task": "OP-012",
+      "source_commit": "457ddad95953f5b3b8b8c31e71499697ad39cac8",
+      "release_candidate": "2026-11-16.2",
+      "implementation": true,
+      "local_validation": "LOCAL_TARGETED_PASS_FULL_LOCAL_RESULT_UNAVAILABLE_AFTER_EXECUTOR_FAILURE",
+      "published": false,
+      "validated_operationally": false,
+      "actual_financial_acceptance": false,
+      "receipt": "docs/owner-operation/validation/dtf-cycle.json",
+      "source_parent": "d27f85a67906002c9ac8be4bef101eb793f87358",
+      "previous_published_receipt": "docs/owner-operation/validation/publication-artwork-live-20261116.json",
+      "related_task": "OP-010_DTF_COMPOSITION_SUBSET",
+      "pull_request": 125,
+      "git_integration": "DRAFT_OPEN_NO_MERGE_OR_AUTO_MERGE",
+      "validation_head": "7796836ca144d19b8d12f460fb6a3e3d711b0f5e",
+      "ci_run": 43984485294,
+      "github_validation": {
+        "id": 43984485294,
+        "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43984485294",
+        "head_sha": "7796836ca144d19b8d12f460fb6a3e3d711b0f5e",
+        "conclusion": "success",
+        "node": {
+          "total": 4480,
+          "pass": 4480,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0,
+          "duration_ms": 735453.95291
+        },
+        "python": {
+          "total": 67,
+          "pass": 67,
+          "fail": 0
+        }
+      },
+      "publication_blocker": "EXECUTOR_UNAVAILABLE_IN_CURRENT_CONVERSATION"
     }
   ],
-  "execution_environment_blocker": {
+  "previous_last_verified_live_release_before_owner_dtf_cycle": {
+    "status": "PUBLISHED_VERIFIED",
+    "verification_scope": "TECHNICAL_PUBLIC_ONLY",
+    "release_id": "2026-11-13.3",
+    "release": "2026-11-13.3",
+    "source_commit": "f68525ea1d136350ece9942433352accdf97d992",
+    "prepared_source_commit": "3cf489e33071b32bc73e2efaf2aecfc62618d46a",
+    "ci_run": 43531882471,
+    "node_tests_pass": 4432,
+    "python_tests_pass": 67,
+    "receipt": "docs/financial-automation/publication-live-20261113.json",
+    "public_verification": "docs/financial-automation/publication-live-20261113.json",
+    "verified_at": "2026-11-14T00:22:15.598Z",
+    "published": true,
+    "pull_request": 121,
+    "owner_live_qa": "NOT_PERFORMED",
+    "account_financial_acceptance": false,
+    "m2_closed": false,
+    "m22_closed": false,
+    "git_integration": "CHECK_PR121_CURRENT_STATE",
+    "workers": {
+      "finance": "50b31451-c6cf-4456-bd09-be5d1956e0da",
+      "auth": "dfd2fc99-728f-4f29-96ee-a4b256c5640a",
+      "app": "9bfc21d6-dec9-4fa6-89d8-7ea1dec50993"
+    },
+    "owner_live_authenticated_qa": "NOT_PERFORMED",
+    "natural_resume_observed_at": "2026-11-14T00:33:17.899767+00:00",
+    "natural_resume_scope": "ORIGINAL_NOVEMBER_ADS_LANE_ONLY"
+  },
+  "resolved_execution_environment_blocker": {
     "code": "EXECUTOR_UNAVAILABLE_IN_CURRENT_CONVERSATION",
     "observed_failure": "failed to query executor configuration capabilities",
     "provider_status_observation": "RUNNING_CONNECTED_NO_FAILURE_REPORTED",

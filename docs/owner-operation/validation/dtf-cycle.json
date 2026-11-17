@@ -5,8 +5,8 @@
   "source_parent": "d27f85a67906002c9ac8be4bef101eb793f87358",
   "base_main": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
   "branch": "feature/owner-dtf-cycle-20261116",
-  "recorded_at_utc": "2026-11-17T00:19:26Z",
-  "recorded_at_brasilia": "2026-11-16T21:19:26.000-03:00",
+  "recorded_at_utc": "2026-11-17T00:54:04.350468+00:00",
+  "recorded_at_brasilia": "2026-11-16T21:54:04.350468-03:00",
   "release_candidate": "2026-11-16.2",
   "implemented": true,
   "tested": {
@@ -54,54 +54,58 @@
     },
     "sqlite_backup_restore_including_idempotent_retry": true,
     "full_node": {
-      "local_final_result": "UNAVAILABLE_AFTER_EXECUTOR_ACCESS_LOSS",
-      "last_observed_pass_count": 2315,
-      "last_observed_fail_count": 0,
-      "last_observed_head": "b343443412ae4009c2d004561bcab9cc3c01b230",
+      "local_run": "INTERRUPTED_BY_ENVIRONMENT_LOSS_NO_FINAL_RESULT_RETAINED",
+      "last_complete_scope": "Targeted native8 after restoration; full4480 in exact-head GitHub CI, not manually repeated.",
       "github_exact_head_result": {
-        "id": 43984485294,
-        "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43984485294",
-        "head_sha": "7796836ca144d19b8d12f460fb6a3e3d711b0f5e",
+        "id": 43986753284,
+        "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43986753284",
+        "head_sha": "9c94210cbecb50c7d6a32f2937852b623c529032",
         "conclusion": "success",
         "node": {
           "total": 4480,
           "pass": 4480,
           "fail": 0,
-          "cancelled": 0,
           "skipped": 0,
-          "duration_ms": 735453.95291
+          "cancelled": 0,
+          "duration_ms": 549218.747989
         },
         "python": {
           "total": 67,
-          "pass": 67,
-          "fail": 0
-        }
+          "pass": 67
+        },
+        "compiled_hashes": {
+          "app": "af6b26b6a1fa1237f80d73fe3057ee74d0d2d005dfbc4eb10e92047895a119cf",
+          "auth": "aaafc3a6c16684949d8714f309ce1cf0525d71ac7223fed20d948347ff943182",
+          "finance": "ccce234f36f0a763942bf30e274360b9d1223b3594b6600adf3352fafd92efb4"
+        },
+        "workflow_preflight_step": "SKIPPED_BY_UNCHANGED_CONDITION_PR_BASE_IS_NOT_MAIN",
+        "local_preflight": "FRESH_RELEASE_LOCAL_PREFLIGHT_OK_BEFORE_CONTROLLED_PROMOTION"
       }
     },
     "github_ci": {
-      "id": 43984485294,
-      "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43984485294",
-      "head_sha": "7796836ca144d19b8d12f460fb6a3e3d711b0f5e",
+      "id": 43986753284,
+      "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43986753284",
+      "head_sha": "9c94210cbecb50c7d6a32f2937852b623c529032",
       "conclusion": "success",
       "node": {
         "total": 4480,
         "pass": 4480,
         "fail": 0,
-        "cancelled": 0,
         "skipped": 0,
-        "duration_ms": 735453.95291
+        "cancelled": 0,
+        "duration_ms": 549218.747989
       },
       "python": {
         "total": 67,
-        "pass": 67,
-        "fail": 0
+        "pass": 67
       },
-      "workflow_preflight_step": {
-        "conclusion": "skipped",
-        "unchanged_condition": "github.event_name == 'pull_request' && github.event.pull_request.base.ref == 'main'",
-        "actual_pr_base": "feature/owner-dtf-artwork-backup-20261116",
-        "workflow_modified": false
-      }
+      "compiled_hashes": {
+        "app": "af6b26b6a1fa1237f80d73fe3057ee74d0d2d005dfbc4eb10e92047895a119cf",
+        "auth": "aaafc3a6c16684949d8714f309ce1cf0525d71ac7223fed20d948347ff943182",
+        "finance": "ccce234f36f0a763942bf30e274360b9d1223b3594b6600adf3352fafd92efb4"
+      },
+      "workflow_preflight_step": "SKIPPED_BY_UNCHANGED_CONDITION_PR_BASE_IS_NOT_MAIN",
+      "local_preflight": "FRESH_RELEASE_LOCAL_PREFLIGHT_OK_BEFORE_CONTROLLED_PROMOTION"
     },
     "python": {
       "total": 67,
@@ -109,15 +113,30 @@
       "fail": 0
     },
     "local_release_preflight": {
-      "result_before_executor_loss": "RELEASE_LOCAL_PREFLIGHT_OK",
-      "command": "node tools/release_preflight.mjs --base=origin/main",
-      "local_evidence": "/workspace/work/dtf-cycle-evidence/final-gates-preflight.log",
-      "reviewed_input_tree": "1d62280591a481597d4a259bcbaf34bc5cf28d04",
-      "compatibility": "7796836 changes only two existing test files already included in changedPaths/allowed_files; runtime hashes, admin/build source, config, workflow and preflight inputs are unchanged. Reconfirm the CLI gate after recovering the executor before any publication.",
-      "not_production_approval": true
+      "result": "RELEASE_LOCAL_PREFLIGHT_OK",
+      "head": "9c94210cbecb50c7d6a32f2937852b623c529032",
+      "fresh_before_promotion": true,
+      "configs_all_validated": true,
+      "manual_promotion_authorization": "OWNER_OWN_OPERATION_FIRST_PROMPT_SECTION8_8_AND_CONTINUE",
+      "production_approval_is_not_inferred_from_preflight": true
+    },
+    "resume_native_qa": {
+      "head": "9c94210cbecb50c7d6a32f2937852b623c529032",
+      "cases": 8,
+      "pass": 8,
+      "fail": 0,
+      "skipped": 0,
+      "cancelled": 0,
+      "widths": [
+        320,
+        1365
+      ],
+      "normal_and_minified": true,
+      "decoded_synthetic_pngs": true,
+      "scope": "AUTHENTICATED_COMPILED_APP_WITH_SYNTHETIC_SQLITE_ONLY"
     }
   },
-  "published": false,
+  "published": true,
   "operational_acceptance": false,
   "financial_acceptance": false,
   "physical_manufacturing_acceptance": false,
@@ -335,7 +354,7 @@
   "commercial_money_or_marketplace_writes": false,
   "workflow_permissions_or_deployment_profile_changes": false,
   "real_artwork_and_printer_acceptance": "PENDING_OWNER_IMPORT_AND_PHYSICAL_CONFERENCE",
-  "next_independent_task": "Restore supported executor access, reconcile the preserved local work and candidate 7796836ca144d19b8d12f460fb6a3e3d711b0f5e, complete missing local evidence and promote through project scripts with native/public verification. No new authorization is needed. OP-014 remains next after the DTF publication increment.",
+  "next_independent_task": "Owner real PNG/kit/print acceptance; OP-014 manufacturing/cost/payment foundations by matrix dependencies remain independently executable. Printing never proves garment manufacture.",
   "superseded_attempts": [
     {
       "head": "970f2eff5b194d89a90e041939e4b671be85ca92",
@@ -499,24 +518,14 @@
     "supported_transport": "GitHub connector Git Data API; git native transport503; identical tree verified; local predecessor retained.",
     "head": "7796836ca144d19b8d12f460fb6a3e3d711b0f5e",
     "note": "Remote branch and draft PR preserve the complete source; local worktree last inspected before executor loss. Never overwrite uninspected local work.",
-    "validation_head": "7796836ca144d19b8d12f460fb6a3e3d711b0f5e",
+    "validation_head": "9c94210cbecb50c7d6a32f2937852b623c529032",
     "current_documentation_commit": "THIS_FOLLOWUP_COMMIT",
-    "local_head_last_confirmed": "b343443412ae4009c2d004561bcab9cc3c01b230"
+    "local_head_last_confirmed": "b343443412ae4009c2d004561bcab9cc3c01b230",
+    "publication_source_commit": "9c94210cbecb50c7d6a32f2937852b623c529032"
   },
-  "validation_head": "7796836ca144d19b8d12f460fb6a3e3d711b0f5e",
-  "publication_blocker": {
-    "code": "EXECUTOR_UNAVAILABLE_IN_CURRENT_CONVERSATION",
-    "observed_failure": "failed to query executor configuration capabilities",
-    "provider_status_observation": "RUNNING_CONNECTED_NO_FAILURE_REPORTED",
-    "command_observation": "No usable execution environment is available",
-    "diagnostic_capture_history": "NOT_FOUND",
-    "root_cause": "NOT_ESTABLISHED",
-    "cloudflare_grants_changed": false,
-    "publication_authorization_already_present": true,
-    "next_action": "Reconnect the Codex execution environment, inspect and preserve the existing worktrees before checkout/fetch, recover the final local log or revalidate missing evidence, then reuse exact-head CI and run the existing controlled Auth/App release path after fresh native baseline and backup verification.",
-    "cloudflare_configuration_change_indicated": false
-  },
-  "status": "CI_VALIDADA_PUBLICATION_BLOCKED_EXECUTOR",
+  "validation_head": "9c94210cbecb50c7d6a32f2937852b623c529032",
+  "publication_blocker": null,
+  "status": "PUBLISHED_VERIFIED_TECHNICAL_PUBLIC_ONLY",
   "external_build_access_followup": {
     "requests": 6,
     "statuses": [
@@ -556,5 +565,122 @@
     "previous_current_prefixes_archived_in_this_receipt": true,
     "known_relative_links_preserved_or_target_existing_AGENTS": true,
     "functional_suites_repeated_manually": false
-  }
+  },
+  "state_history": [
+    {
+      "recorded_at_utc": "2026-11-17T00:19:26Z",
+      "status": "CI_VALIDADA_PUBLICATION_BLOCKED_EXECUTOR",
+      "publication_blocker": {
+        "code": "EXECUTOR_UNAVAILABLE_IN_CURRENT_CONVERSATION",
+        "observed_failure": "failed to query executor configuration capabilities",
+        "provider_status_observation": "RUNNING_CONNECTED_NO_FAILURE_REPORTED",
+        "command_observation": "No usable execution environment is available",
+        "diagnostic_capture_history": "NOT_FOUND",
+        "root_cause": "NOT_ESTABLISHED",
+        "cloudflare_grants_changed": false,
+        "publication_authorization_already_present": true,
+        "next_action": "Reconnect the Codex execution environment, inspect and preserve the existing worktrees before checkout/fetch, recover the final local log or revalidate missing evidence, then reuse exact-head CI and run the existing controlled Auth/App release path after fresh native baseline and backup verification.",
+        "cloudflare_configuration_change_indicated": false
+      },
+      "tested_full_node": {
+        "local_final_result": "UNAVAILABLE_AFTER_EXECUTOR_ACCESS_LOSS",
+        "last_observed_pass_count": 2315,
+        "last_observed_fail_count": 0,
+        "last_observed_head": "b343443412ae4009c2d004561bcab9cc3c01b230",
+        "github_exact_head_result": {
+          "id": 43984485294,
+          "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43984485294",
+          "head_sha": "7796836ca144d19b8d12f460fb6a3e3d711b0f5e",
+          "conclusion": "success",
+          "node": {
+            "total": 4480,
+            "pass": 4480,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0,
+            "duration_ms": 735453.95291
+          },
+          "python": {
+            "total": 67,
+            "pass": 67,
+            "fail": 0
+          }
+        }
+      },
+      "github_ci": {
+        "id": 43984485294,
+        "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43984485294",
+        "head_sha": "7796836ca144d19b8d12f460fb6a3e3d711b0f5e",
+        "conclusion": "success",
+        "node": {
+          "total": 4480,
+          "pass": 4480,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0,
+          "duration_ms": 735453.95291
+        },
+        "python": {
+          "total": 67,
+          "pass": 67,
+          "fail": 0
+        },
+        "workflow_preflight_step": {
+          "conclusion": "skipped",
+          "unchanged_condition": "github.event_name == 'pull_request' && github.event.pull_request.base.ref == 'main'",
+          "actual_pr_base": "feature/owner-dtf-artwork-backup-20261116",
+          "workflow_modified": false
+        }
+      }
+    }
+  ],
+  "resolved_publication_blocker": {
+    "prior_observation": {
+      "code": "EXECUTOR_UNAVAILABLE_IN_CURRENT_CONVERSATION",
+      "observed_failure": "failed to query executor configuration capabilities",
+      "provider_status_observation": "RUNNING_CONNECTED_NO_FAILURE_REPORTED",
+      "command_observation": "No usable execution environment is available",
+      "diagnostic_capture_history": "NOT_FOUND",
+      "root_cause": "NOT_ESTABLISHED",
+      "cloudflare_grants_changed": false,
+      "publication_authorization_already_present": true,
+      "next_action": "Reconnect the Codex execution environment, inspect and preserve the existing worktrees before checkout/fetch, recover the final local log or revalidate missing evidence, then reuse exact-head CI and run the existing controlled Auth/App release path after fresh native baseline and backup verification.",
+      "cloudflare_configuration_change_indicated": false
+    },
+    "resolved_at": "2026-11-17T00:54:04.350468+00:00",
+    "evidence": "Terminal restored; preserved clean worktree fast-forwarded from b343443 to9c94210; fresh exact build/preflight/backup and eight native cases passed."
+  },
+  "private_operational_backup_before_actual_publication": {
+    "schema": "dtf_private_d1_recovery_evidence_v1",
+    "recorded_at": "2026-11-17T00:46:14.650220+00:00",
+    "source": "SUPPORTED_D1_QUERY_API_SELECT_AND_PRAGMA_ONLY",
+    "scope": "LEGACY_OWNER_DTF_ONLY",
+    "atomic_snapshot": "ONE_SELECT_JSON_ROWSET_ALL_NINE_DTF_TABLES",
+    "private_backup_sha256": "35373b4fd451e9f857541aee12d512e033e82edb96b909af2ad129d4c387805c",
+    "row_counts": {
+      "production_dtf_audit": 0,
+      "production_dtf_batches": 0,
+      "production_dtf_guard": 1,
+      "production_dtf_lines": 1285,
+      "production_dtf_orders": 1204,
+      "production_dtf_reservations": 0,
+      "production_dtf_settings": 1,
+      "production_dtf_settings_audit": 1,
+      "production_dtf_sync_state": 1
+    },
+    "restore": "ISOLATED_SQLITE_ALL_ROWS_COLUMNS_HIDDEN_ROWIDS_EQUAL_INTEGRITY_OK",
+    "indexes_and_triggers_preserved": true,
+    "live_data_mutations": 0,
+    "rows_or_order_ids_in_public_evidence": false,
+    "not_a_local_artwork_pixel_backup": true
+  },
+  "publication_receipt": "docs/owner-operation/validation/publication-dtf-cycle-live-20261116.json",
+  "superseded_continuity_before_publication": {
+    "README.md": "<!-- OWNER_OPERATION_CURRENT -->\nPrioridade: operação própria. [Uso e estado](docs/owner-operation/README.md) · [checkpoint canônico](docs/MLS_COMMERCE_OS_CHECKPOINT.json) · [evidências](docs/owner-operation/validation/dtf-cycle.json).\n\nMontador DTF: composição explícita dos kits, exportação, impressão parcial, saldo, reimpressão, perda e correção auditada implementados. Candidato 7796836, [CI atual](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43984485294): CI do código aprovada:4.480 testes Node e67 Python; zero falhas, skips e cancelamentos nos testes. Publicação desta entrega não realizada: o executor desta conversa perdeu acesso ao terminal. Última Live verificada:2026-11-16.1; a candidata2026-11-16.2 não tem recibo de publicação.\n\nPróximo passo: reconectar o ambiente, preservar/conferir checkout e logs, reutilizar a CI compatível e publicar pelos scripts existentes após reconferir fontes/configurações/backup. Autorização já existente; nenhum novo grant Cloudflare foi solicitado. PNGs reais e confirmação física dos kits/impressão continuam necessários. Não inferir fabricação nem custos ausentes; não duplicar custos/receitas. Corte da fabricação sexta às 13h/Brasília, CSRF, permissões/tenant, seis agentes e gráficos permanecem preservados. Venda ADIADO_VENDA. [Regras de domínio e gates](AGENTS.md#regras-de-domínio-ativas). Históricos integrais seguem abaixo e nos recibos.\n<!-- END_OWNER_OPERATION_CURRENT -->",
+    "NEXT_CHAT_HANDOFF.txt": "<!-- OWNER_OPERATION_CURRENT -->\nPrioridade: operação própria. [Uso e estado](docs/owner-operation/README.md) · [checkpoint canônico](docs/MLS_COMMERCE_OS_CHECKPOINT.json) · [evidências](docs/owner-operation/validation/dtf-cycle.json).\n\nMontador DTF: composição explícita dos kits, exportação, impressão parcial, saldo, reimpressão, perda e correção auditada implementados. Candidato 7796836, [CI atual](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43984485294): CI do código aprovada:4.480 testes Node e67 Python; zero falhas, skips e cancelamentos nos testes. Publicação desta entrega não realizada: o executor desta conversa perdeu acesso ao terminal. Última Live verificada:2026-11-16.1; a candidata2026-11-16.2 não tem recibo de publicação.\n\nPróximo passo: reconectar o ambiente, preservar/conferir checkout e logs, reutilizar a CI compatível e publicar pelos scripts existentes após reconferir fontes/configurações/backup. Autorização já existente; nenhum novo grant Cloudflare foi solicitado. PNGs reais e confirmação física dos kits/impressão continuam necessários. Não inferir fabricação nem custos ausentes; não duplicar custos/receitas. Corte da fabricação sexta às 13h/Brasília, CSRF, permissões/tenant, seis agentes e gráficos permanecem preservados. Venda ADIADO_VENDA. [Regras de domínio e gates](AGENTS.md#regras-de-domínio-ativas). Históricos integrais seguem abaixo e nos recibos.\n<!-- END_OWNER_OPERATION_CURRENT -->",
+    "docs/RETOMADA.md": "<!-- OWNER_OPERATION_CURRENT -->\nPrioridade: operação própria. [Uso e estado](owner-operation/README.md) · [checkpoint canônico](MLS_COMMERCE_OS_CHECKPOINT.json) · [evidências](owner-operation/validation/dtf-cycle.json).\n\nMontador DTF: composição explícita dos kits, exportação, impressão parcial, saldo, reimpressão, perda e correção auditada implementados. Candidato 7796836, [CI atual](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43984485294): CI do código aprovada:4.480 testes Node e67 Python; zero falhas, skips e cancelamentos nos testes. Publicação desta entrega não realizada: o executor desta conversa perdeu acesso ao terminal. Última Live verificada:2026-11-16.1; a candidata2026-11-16.2 não tem recibo de publicação.\n\nPróximo passo: reconectar o ambiente, preservar/conferir checkout e logs, reutilizar a CI compatível e publicar pelos scripts existentes após reconferir fontes/configurações/backup. Autorização já existente; nenhum novo grant Cloudflare foi solicitado. PNGs reais e confirmação física dos kits/impressão continuam necessários. Não inferir fabricação nem custos ausentes; não duplicar custos/receitas. Corte da fabricação sexta às 13h/Brasília, CSRF, permissões/tenant, seis agentes e gráficos permanecem preservados. Venda ADIADO_VENDA. [Regras de domínio e gates](../AGENTS.md#regras-de-domínio-ativas). Históricos integrais seguem abaixo e nos recibos.\n<!-- END_OWNER_OPERATION_CURRENT -->",
+    "docs/ROADMAP_MLS_COMMERCE_OS.md": "<!-- OWNER_OPERATION_CURRENT -->\nPrioridade: operação própria. [Uso e estado](owner-operation/README.md) · [checkpoint canônico](MLS_COMMERCE_OS_CHECKPOINT.json) · [evidências](owner-operation/validation/dtf-cycle.json).\n\nMontador DTF: composição explícita dos kits, exportação, impressão parcial, saldo, reimpressão, perda e correção auditada implementados. Candidato 7796836, [CI atual](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43984485294): CI do código aprovada:4.480 testes Node e67 Python; zero falhas, skips e cancelamentos nos testes. Publicação desta entrega não realizada: o executor desta conversa perdeu acesso ao terminal. Última Live verificada:2026-11-16.1; a candidata2026-11-16.2 não tem recibo de publicação.\n\nPróximo passo: reconectar o ambiente, preservar/conferir checkout e logs, reutilizar a CI compatível e publicar pelos scripts existentes após reconferir fontes/configurações/backup. Autorização já existente; nenhum novo grant Cloudflare foi solicitado. PNGs reais e confirmação física dos kits/impressão continuam necessários. Não inferir fabricação nem custos ausentes; não duplicar custos/receitas. Corte da fabricação sexta às 13h/Brasília, CSRF, permissões/tenant, seis agentes e gráficos permanecem preservados. Venda ADIADO_VENDA. [Regras de domínio e gates](../AGENTS.md#regras-de-domínio-ativas). Históricos integrais seguem abaixo e nos recibos.\n<!-- END_OWNER_OPERATION_CURRENT -->",
+    "docs/MLS_CODEX_HANDOFF_2026_10_28.md": "<!-- OWNER_OPERATION_CURRENT -->\nPrioridade: operação própria. [Uso e estado](owner-operation/README.md) · [checkpoint canônico](MLS_COMMERCE_OS_CHECKPOINT.json) · [evidências](owner-operation/validation/dtf-cycle.json).\n\nMontador DTF: composição explícita dos kits, exportação, impressão parcial, saldo, reimpressão, perda e correção auditada implementados. Candidato 7796836, [CI atual](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43984485294): CI do código aprovada:4.480 testes Node e67 Python; zero falhas, skips e cancelamentos nos testes. Publicação desta entrega não realizada: o executor desta conversa perdeu acesso ao terminal. Última Live verificada:2026-11-16.1; a candidata2026-11-16.2 não tem recibo de publicação.\n\nPróximo passo: reconectar o ambiente, preservar/conferir checkout e logs, reutilizar a CI compatível e publicar pelos scripts existentes após reconferir fontes/configurações/backup. Autorização já existente; nenhum novo grant Cloudflare foi solicitado. PNGs reais e confirmação física dos kits/impressão continuam necessários. Não inferir fabricação nem custos ausentes; não duplicar custos/receitas. Corte da fabricação sexta às 13h/Brasília, CSRF, permissões/tenant, seis agentes e gráficos permanecem preservados. Venda ADIADO_VENDA. [Regras de domínio e gates](../AGENTS.md#regras-de-domínio-ativas). Históricos integrais seguem abaixo e nos recibos.\n<!-- END_OWNER_OPERATION_CURRENT -->"
+  },
+  "owner_readme_status_before_publication": "**Código implementado; CI do código aprovada:4.480 testes Node e67 Python; zero falhas, skips e cancelamentos nos testes. Publicação pendente por indisponibilidade do executor desta conversa.** A última Live verificada é2026-11-16.1. Reconectar o ambiente do Codex e recuperar o log local antes de publicar a candidata2026-11-16.2 pelo caminho autorizado. [Evidências, bloqueio e retomada](validation/dtf-cycle.json)."
 }
