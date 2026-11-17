@@ -2,7 +2,7 @@
   "schema": "mls_commerce_os_checkpoint_v1",
   "canonical_roadmap": "docs/ROADMAP_MLS_COMMERCE_OS.md",
   "legacy_roadmap": "docs/ROADMAP_BRAZACOMMERCE.md",
-  "updated_at": "2026-11-17T00:54:04.350468+00:00",
+  "updated_at": "2026-11-17T02:04:12.419697+00:00",
   "product": {
     "name": "MLS Commerce OS",
     "supervisor": "MLS Hermes",
@@ -29,9 +29,9 @@
     "pr": 10,
     "merge_commit": "9c418fd3010f46957d1ce52345baacd76041c788"
   },
-  "current_phase": "OWNER_OPERATION_U2_DTF_COMPLETE_PRINT_CYCLE",
-  "working_branch": "feature/owner-dtf-cycle-20261116",
-  "current_status": "DTF_PUBLISHED_VERIFIED_TECHNICAL_REAL_OWNER_ACCEPTANCE_PENDING",
+  "current_phase": "OWNER_OPERATION_U2_DTF_AUTOMATIC_PREVIEW",
+  "working_branch": "feature/owner-dtf-auto-layout-20261116",
+  "current_status": "DTF_AUTO_PREVIEW_PUBLISHED_VERIFIED_TECHNICAL_OWNER_ACCEPTANCE_PENDING",
   "completed_this_phase": [
     "Conciliação de liberações por pedido com estados VERIFIED, LOCATED_UNVERIFIED, AMBIGUOUS e NOT_LOCATED",
     "Repasse-base, ajuste, repasse após ajuste e liberação exibidos sem dupla dedução",
@@ -120,7 +120,7 @@
     }
   },
   "next_actions": [
-    "Owner: refresh Produção → Montador e fila DTF, import real PNGs, explicitly confirm kit composition, inspect preview/DPI and print at100%; only then confirm actual DTF quantities. Technical publication is verified; real manufacture/financial acceptance remains open.",
+    "Reload the same browser/origin with original PNGs and confirmed kit recipes, verify automatic preview, explicitly reserve/export and physically inspect print size before confirming real quantities.",
     "Owner actual acceptance: import original PNGs, verify dimensions/DPI in preview and print at100%; use physical confirmation only after checking complete DTF units.",
     "Never blind-rollback the old DTF server over partial/reversed physical facts; preserve compatible reader and complete append-only audit and use verified backups.",
     "Manufacture, actual costs, partial payments and returns continue by matrix dependencies. Printing/export is not garment manufacture; absent cost/source is unknown, never zero.",
@@ -133,56 +133,34 @@
     "Mission Control M1.1 (opção 3) integrado com 7 painéis independentes; conferir visual autenticado desktop/celular e retorno às telas antigas"
   ],
   "latest_increment": {
-    "task": "OP-012",
-    "source_commit": "457ddad95953f5b3b8b8c31e71499697ad39cac8",
-    "release_candidate": "2026-11-16.2",
+    "task": "OP-012_AUTOMATIC_LAYOUT",
+    "source_commit": "2c225f0b341c57b956baa1519f4b63344a4337a6",
+    "source_parent": "ab4ad7ff3fc92922633e096bd26653d12796ff1b",
+    "release_candidate": "2026-11-16.3",
     "implementation": true,
-    "local_validation": "RESUMED_AUTHENTICATED_NATIVE8_PASS_FULL4480_AND_PYTHON67_IN_EXACT_HEAD_CI",
+    "local_validation": "LOCAL4491_NODE_67_PYTHON_38_TARGETED_11_HELPER_PASS; CI4494_NODE_67_PYTHON_PASS",
     "published": true,
     "validated_operationally": false,
     "actual_financial_acceptance": false,
-    "receipt": "docs/owner-operation/validation/dtf-cycle.json",
-    "source_parent": "d27f85a67906002c9ac8be4bef101eb793f87358",
-    "previous_published_receipt": "docs/owner-operation/validation/publication-artwork-live-20261116.json",
-    "related_task": "OP-010_DTF_COMPOSITION_SUBSET",
-    "pull_request": 125,
-    "git_integration": "DRAFT_OPEN_NO_MERGE_OR_AUTO_MERGE",
-    "validation_head": "9c94210cbecb50c7d6a32f2937852b623c529032",
-    "ci_run": 43986753284,
-    "github_validation": {
-      "id": 43986753284,
-      "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43986753284",
-      "head_sha": "9c94210cbecb50c7d6a32f2937852b623c529032",
-      "conclusion": "success",
-      "node": {
-        "total": 4480,
-        "pass": 4480,
-        "fail": 0,
-        "skipped": 0,
-        "cancelled": 0,
-        "duration_ms": 549218.747989
-      },
-      "python": {
-        "total": 67,
-        "pass": 67
-      },
-      "compiled_hashes": {
-        "app": "af6b26b6a1fa1237f80d73fe3057ee74d0d2d005dfbc4eb10e92047895a119cf",
-        "auth": "aaafc3a6c16684949d8714f309ce1cf0525d71ac7223fed20d948347ff943182",
-        "finance": "ccce234f36f0a763942bf30e274360b9d1223b3594b6600adf3352fafd92efb4"
-      },
-      "workflow_preflight_step": "SKIPPED_BY_UNCHANGED_CONDITION_PR_BASE_IS_NOT_MAIN",
-      "local_preflight": "FRESH_RELEASE_LOCAL_PREFLIGHT_OK_BEFORE_CONTROLLED_PROMOTION"
+    "receipt": "docs/owner-operation/validation/dtf-auto-layout.json",
+    "previous_published_receipt": "docs/owner-operation/validation/publication-dtf-cycle-live-20261116.json",
+    "prior_ci_attempt": {
+      "id": 43995760978,
+      "conclusion": "failure",
+      "cause": "ONE_STALE_CDP_NODE_IN_WEEKLY_NAVIGATION_FIXTURE"
     },
-    "publication_blocker": null,
-    "publication_source_commit": "9c94210cbecb50c7d6a32f2937852b623c529032",
-    "publication_receipt": "docs/owner-operation/validation/publication-dtf-cycle-live-20261116.json",
+    "status": "PUBLISHED_VERIFIED_TECHNICAL_PUBLIC_ONLY",
+    "validation_head": "723bb3a67070c1604579de28f5992a7dc20c5e78",
+    "publication_source_commit": "723bb3a67070c1604579de28f5992a7dc20c5e78",
+    "ci_run": 43998220684,
+    "publication_receipt": "docs/owner-operation/validation/publication-dtf-auto-live-20261116.json",
+    "pull_request": 126,
+    "git_integration": "DRAFT_OPEN_NO_MERGE_OR_AUTO_MERGE",
     "workers": {
       "finance": "50b31451-c6cf-4456-bd09-be5d1956e0da",
-      "auth": "13669515-04e6-41e6-a821-f6b2d9b52d1d",
-      "app": "f4223bd8-ffe6-4a31-b36b-9063fba5fbc5"
-    },
-    "status": "PUBLISHED_VERIFIED_TECHNICAL_PUBLIC_ONLY"
+      "auth": "7cac31a0-ac48-49b2-9c60-0bf94ad6744f",
+      "app": "8652d67d-6ad8-4262-bdc7-e3f8775eb2fc"
+    }
   },
   "incident": {
     "id": "INCIDENT_2026_10_27_PANEL_AGENT_REGRESSION",
@@ -3545,25 +3523,25 @@
   "last_verified_live_release": {
     "status": "PUBLISHED_VERIFIED_TECHNICAL_PUBLIC_ONLY",
     "verification_scope": "TECHNICAL_PUBLIC_ONLY",
-    "release_id": "2026-11-16.2",
-    "release": "2026-11-16.2",
-    "source_commit": "9c94210cbecb50c7d6a32f2937852b623c529032",
-    "prepared_source_commit": "457ddad95953f5b3b8b8c31e71499697ad39cac8",
-    "ci_run": 43986753284,
-    "node_tests_pass": 4480,
+    "release_id": "2026-11-16.3",
+    "release": "2026-11-16.3",
+    "source_commit": "723bb3a67070c1604579de28f5992a7dc20c5e78",
+    "prepared_source_commit": "2c225f0b341c57b956baa1519f4b63344a4337a6",
+    "ci_run": 43998220684,
+    "node_tests_pass": 4494,
     "python_tests_pass": 67,
-    "receipt": "docs/owner-operation/validation/publication-dtf-cycle-live-20261116.json",
-    "verified_at": "2026-11-17T00:54:04.350468+00:00",
+    "receipt": "docs/owner-operation/validation/publication-dtf-auto-live-20261116.json",
+    "verified_at": "2026-11-17T02:04:12.419697+00:00",
     "published": true,
-    "pull_request": 125,
+    "pull_request": 126,
     "owner_live_qa": "NOT_PERFORMED",
     "account_financial_acceptance": false,
     "m2_closed": false,
     "m22_closed": false,
     "workers": {
       "finance": "50b31451-c6cf-4456-bd09-be5d1956e0da",
-      "auth": "13669515-04e6-41e6-a821-f6b2d9b52d1d",
-      "app": "f4223bd8-ffe6-4a31-b36b-9063fba5fbc5"
+      "auth": "7cac31a0-ac48-49b2-9c60-0bf94ad6744f",
+      "app": "8652d67d-6ad8-4262-bdc7-e3f8775eb2fc"
     },
     "git_integration": "DRAFT_OPEN_NO_MERGE_OR_AUTO_MERGE"
   },
@@ -7657,6 +7635,76 @@
         }
       },
       "publication_blocker": "EXECUTOR_UNAVAILABLE_IN_CURRENT_CONVERSATION"
+    },
+    {
+      "task": "OP-012",
+      "source_commit": "457ddad95953f5b3b8b8c31e71499697ad39cac8",
+      "release_candidate": "2026-11-16.2",
+      "implementation": true,
+      "local_validation": "RESUMED_AUTHENTICATED_NATIVE8_PASS_FULL4480_AND_PYTHON67_IN_EXACT_HEAD_CI",
+      "published": true,
+      "validated_operationally": false,
+      "actual_financial_acceptance": false,
+      "receipt": "docs/owner-operation/validation/dtf-cycle.json",
+      "source_parent": "d27f85a67906002c9ac8be4bef101eb793f87358",
+      "previous_published_receipt": "docs/owner-operation/validation/publication-artwork-live-20261116.json",
+      "related_task": "OP-010_DTF_COMPOSITION_SUBSET",
+      "pull_request": 125,
+      "git_integration": "DRAFT_OPEN_NO_MERGE_OR_AUTO_MERGE",
+      "validation_head": "9c94210cbecb50c7d6a32f2937852b623c529032",
+      "ci_run": 43986753284,
+      "github_validation": {
+        "id": 43986753284,
+        "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43986753284",
+        "head_sha": "9c94210cbecb50c7d6a32f2937852b623c529032",
+        "conclusion": "success",
+        "node": {
+          "total": 4480,
+          "pass": 4480,
+          "fail": 0,
+          "skipped": 0,
+          "cancelled": 0,
+          "duration_ms": 549218.747989
+        },
+        "python": {
+          "total": 67,
+          "pass": 67
+        },
+        "compiled_hashes": {
+          "app": "af6b26b6a1fa1237f80d73fe3057ee74d0d2d005dfbc4eb10e92047895a119cf",
+          "auth": "aaafc3a6c16684949d8714f309ce1cf0525d71ac7223fed20d948347ff943182",
+          "finance": "ccce234f36f0a763942bf30e274360b9d1223b3594b6600adf3352fafd92efb4"
+        },
+        "workflow_preflight_step": "SKIPPED_BY_UNCHANGED_CONDITION_PR_BASE_IS_NOT_MAIN",
+        "local_preflight": "FRESH_RELEASE_LOCAL_PREFLIGHT_OK_BEFORE_CONTROLLED_PROMOTION"
+      },
+      "publication_blocker": null,
+      "publication_source_commit": "9c94210cbecb50c7d6a32f2937852b623c529032",
+      "publication_receipt": "docs/owner-operation/validation/publication-dtf-cycle-live-20261116.json",
+      "workers": {
+        "finance": "50b31451-c6cf-4456-bd09-be5d1956e0da",
+        "auth": "13669515-04e6-41e6-a821-f6b2d9b52d1d",
+        "app": "f4223bd8-ffe6-4a31-b36b-9063fba5fbc5"
+      },
+      "status": "PUBLISHED_VERIFIED_TECHNICAL_PUBLIC_ONLY"
+    },
+    {
+      "task": "OP-012_AUTOMATIC_LAYOUT",
+      "source_commit": "2c225f0b341c57b956baa1519f4b63344a4337a6",
+      "source_parent": "ab4ad7ff3fc92922633e096bd26653d12796ff1b",
+      "release_candidate": "2026-11-16.3",
+      "implementation": true,
+      "local_validation": "4491_NODE_67_PYTHON_38_TARGETED_AND_11_HELPER_REGRESSIONS_PASS",
+      "published": false,
+      "validated_operationally": false,
+      "actual_financial_acceptance": false,
+      "receipt": "docs/owner-operation/validation/dtf-auto-layout.json",
+      "previous_published_receipt": "docs/owner-operation/validation/publication-dtf-cycle-live-20261116.json",
+      "prior_ci_attempt": {
+        "id": 43995760978,
+        "conclusion": "failure",
+        "cause": "ONE_STALE_CDP_NODE_IN_WEEKLY_NAVIGATION_FIXTURE"
+      }
     }
   ],
   "previous_last_verified_live_release_before_owner_dtf_cycle": {
@@ -7699,5 +7747,30 @@
     "publication_authorization_already_present": true,
     "next_action": "Reconnect the Codex execution environment, inspect and preserve the existing worktrees before checkout/fetch, recover the final local log or revalidate missing evidence, then reuse exact-head CI and run the existing controlled Auth/App release path after fresh native baseline and backup verification.",
     "cloudflare_configuration_change_indicated": false
+  },
+  "previous_last_verified_live_release_before_dtf_auto": {
+    "status": "PUBLISHED_VERIFIED_TECHNICAL_PUBLIC_ONLY",
+    "verification_scope": "TECHNICAL_PUBLIC_ONLY",
+    "release_id": "2026-11-16.2",
+    "release": "2026-11-16.2",
+    "source_commit": "9c94210cbecb50c7d6a32f2937852b623c529032",
+    "prepared_source_commit": "457ddad95953f5b3b8b8c31e71499697ad39cac8",
+    "ci_run": 43986753284,
+    "node_tests_pass": 4480,
+    "python_tests_pass": 67,
+    "receipt": "docs/owner-operation/validation/publication-dtf-cycle-live-20261116.json",
+    "verified_at": "2026-11-17T00:54:04.350468+00:00",
+    "published": true,
+    "pull_request": 125,
+    "owner_live_qa": "NOT_PERFORMED",
+    "account_financial_acceptance": false,
+    "m2_closed": false,
+    "m22_closed": false,
+    "workers": {
+      "finance": "50b31451-c6cf-4456-bd09-be5d1956e0da",
+      "auth": "13669515-04e6-41e6-a821-f6b2d9b52d1d",
+      "app": "f4223bd8-ffe6-4a31-b36b-9063fba5fbc5"
+    },
+    "git_integration": "DRAFT_OPEN_NO_MERGE_OR_AUTO_MERGE"
   }
 }

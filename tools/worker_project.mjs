@@ -5,6 +5,10 @@ import path from 'node:path';
 export const PROJECT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 export const TARGETS = Object.freeze({
   app: Object.freeze({name: 'brazacommerce-app', main: '../../dist/app-worker.mjs', baselineHashes: [
+    // Same-path automatic DTF preview dry package, preserving all release gates.
+    'd53172c56b430bf425db2c70debf919e0823e9a3bdcd6f38500b248f5d311e61',
+    // Exact automatic DTF preview candidate; source/config/CI and publication gates remain required.
+    '787d0435e9b6f4df169239687f501de7db402f1a2ab2b3a8a8fccc3879a13b0b',
     // Exact same-path dry package for the final owner kit composition candidate.
     'f1166d81a885f3f425d8fd95813b77e81b14b0cd3ee02250e9f8c40878d9c037',
     // Final kit composition candidate, including enabled newly reserved-lot export actions.
@@ -268,6 +272,10 @@ export const TARGETS = Object.freeze({
     '26612b7ea0edbea55e06f5fc817a18defd6b4fe65381e6d564b7d360b7b80278',
   ]}),
   auth: Object.freeze({name: 'brazacommerce-auth', main: '../../dist/auth-worker.mjs', baselineHashes: [
+    // Same-path automatic DTF preview dry package, preserving all release gates.
+    '5989c016d79b8eff799fda18d3eafe3c0ba457c728c5fb7fb31d67b18aa22181',
+    // Shared human release identity for the automatic DTF preview increment.
+    '0e4547e61441131c5ad8c5f955a64ac691c0d89ada8eb52bbfe0cad2fe485a45',
     // Same-path DTF lifecycle dry package; publication still requires CI and independent verification.
     '1a927c072c69b45670c83e8327e93b9eb68f001bfab748273063fd90244a6095',
     // Frozen DTF lifecycle candidate with audited correction; all predecessor hashes remain recognized.
