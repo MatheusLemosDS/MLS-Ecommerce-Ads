@@ -5,6 +5,9 @@ import path from 'node:path';
 export const PROJECT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 export const TARGETS = Object.freeze({
   app: Object.freeze({name: 'brazacommerce-app', main: '../../dist/app-worker.mjs', baselineHashes: [
+    // Exact shirt-cost editing layout and same-path dry package; existing gates retained.
+    'f86536f9f50606b2cf20a66b00ae16d25febe474cf4030f0abf791ec69a45f61',
+    '533d8c83a60d656f5854918a8de3e789a93d68f3ac47fdf27edde465c82913af',
     // Same-path automatic DTF preview dry package, preserving all release gates.
     'd53172c56b430bf425db2c70debf919e0823e9a3bdcd6f38500b248f5d311e61',
     // Exact automatic DTF preview candidate; source/config/CI and publication gates remain required.
@@ -272,6 +275,9 @@ export const TARGETS = Object.freeze({
     '26612b7ea0edbea55e06f5fc817a18defd6b4fe65381e6d564b7d360b7b80278',
   ]}),
   auth: Object.freeze({name: 'brazacommerce-auth', main: '../../dist/auth-worker.mjs', baselineHashes: [
+    // Exact shirt-cost editing layout and same-path dry package; existing gates retained.
+    '22540b94a52d0c8ad00959c100bb1319231dac8df17deb1d56c4399e9780dc48',
+    'b80e249991e4be8c2d34f7a1fcad7991132fd154e0818e076c37ab8bb9cf9feb',
     // Same-path automatic DTF preview dry package, preserving all release gates.
     '5989c016d79b8eff799fda18d3eafe3c0ba457c728c5fb7fb31d67b18aa22181',
     // Shared human release identity for the automatic DTF preview increment.
