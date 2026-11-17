@@ -169,6 +169,7 @@
     "web/cloudflare/tests/dtf-cycle-fixture.mjs",
     "web/cloudflare/tests/dtf-cycle.test.mjs",
     "web/cloudflare/tests/dtf-recipe-chrome.test.mjs",
+    "web/cloudflare/tests/dtf-recipe-fixture-clock.test.mjs",
     "web/cloudflare/tests/dtf-recipe-fixture.mjs",
     "web/cloudflare/tests/dtf-recipe.test.mjs",
     "web/cloudflare/tests/dtf-ui.test.mjs",
