@@ -32,17 +32,29 @@ async function runFinanceProductIndex(env,options={}){
   for(const [name,value] of Object.entries({partner_id:profile.partner_id,timestamp,access_token:tokens.access_token,shop_id:profile.shop_id,sign,...input}))url.searchParams.set(name,String(value));
   return new Request(url,{method:'GET',redirect:'manual',headers:{Accept:'application/json'}});
  },normalizeResponse:payload=>{
-  if(!plain(payload)||typeof payload.error!=='string')throw failure('RESPONSE_INVALID');
+  if(!plain(payload)||typeof payload.error!=='string')throw failure('RESPONSE_ENVELOPE');
   for(const row of [payload,plain(payload.response)?payload.response:{}])for(const field of ['partner_id','shop_id'])if(Object.hasOwn(row,field)&&row[field]!==profile[field])throw failure('IDENTITY_MISMATCH');
   if(payload.error!=='')throw failure(payload.error==='error_token'?'AUTH_REQUIRED':payload.error==='error_api_permission'?'PERMISSION_REQUIRED':['error_rate_limit','error_limit'].includes(payload.error)?'RATE_LIMIT':'API_ERROR',['error_rate_limit','error_limit'].includes(payload.error)?429:502);
-  const raw=payload.response;if(!plain(raw)||!Array.isArray(raw.item)||raw.item.length>input.page_size||typeof raw.has_next_page!=='boolean'||!Number.isSafeInteger(raw.total_count)||raw.total_count<0||raw.total_count>1000000)throw failure('RESPONSE_INVALID');
-  if(Object.hasOwn(raw,'next_offset')&&raw.next_offset!==null&&(!Number.isSafeInteger(raw.next_offset)||raw.next_offset<0||raw.next_offset>1000000))throw failure('RESPONSE_INVALID');
-  if(raw.has_next_page&&(!Number.isSafeInteger(raw.next_offset)||raw.next_offset<=input.offset||raw.next_offset>Math.min(1000000,input.offset+input.page_size)))throw failure('RESPONSE_INVALID');
-  const items=raw.item.map(row=>{
-   if(!plain(row))throw failure('RESPONSE_INVALID');const item_id=typeof row.item_id==='number'&&Number.isSafeInteger(row.item_id)?String(row.item_id):row.item_id;
-   return {item_id,item_status:row.item_status,source_update_time:Object.hasOwn(row,'update_time')?row.update_time:null};
+  const raw=payload.response;if(!plain(raw))throw failure('RESPONSE_OBJECT');
+  // Missing/null items remain errors. These two codes record only explicit
+  // zero-total, final-page shapes; they never normalize absence into success.
+  const emptyShape=Object.hasOwn(raw,'total_count')&&raw.total_count===0&&!Object.is(raw.total_count,-0)&&Object.hasOwn(raw,'has_next_page')&&raw.has_next_page===false;
+  if(!Array.isArray(raw.item))throw failure(emptyShape&&!Object.hasOwn(raw,'item')?'RESPONSE_EMPTY_ITEM_MISSING':emptyShape&&raw.item===null?'RESPONSE_EMPTY_ITEM_NULL':'RESPONSE_ITEM_TYPE');
+  if(raw.item.length>input.page_size)throw failure('RESPONSE_PAGE_SIZE');
+  if(!Number.isSafeInteger(raw.total_count)||Object.is(raw.total_count,-0)||raw.total_count<0||raw.total_count>1000000||raw.item.length>raw.total_count)throw failure('RESPONSE_TOTAL');
+  if(typeof raw.has_next_page!=='boolean'||Object.hasOwn(raw,'next_offset')&&raw.next_offset!==null&&(!Number.isSafeInteger(raw.next_offset)||raw.next_offset<0||raw.next_offset>1000000))throw failure('RESPONSE_PAGINATION');
+  if(raw.has_next_page&&(raw.item.length===0||!Number.isSafeInteger(raw.next_offset)||Object.is(raw.next_offset,-0)||raw.next_offset<=input.offset||raw.next_offset>Math.min(1000000,input.offset+input.page_size)))throw failure('RESPONSE_PAGINATION');
+  const seen=new Set(),items=raw.item.map(row=>{
+   if(!plain(row))throw failure('RESPONSE_ROW_OBJECT');const item_id=typeof row.item_id==='number'&&Number.isSafeInteger(row.item_id)?String(row.item_id):row.item_id;
+   if(typeof item_id!=='string'||!/^[1-9][0-9]{0,19}$/.test(item_id))throw failure('RESPONSE_ROW_ID');
+   if(seen.has(item_id))throw failure('RESPONSE_ROW_DUPLICATE');seen.add(item_id);
+   if(row.item_status!==input.item_status)throw failure('RESPONSE_ROW_STATUS');
+   const source_update_time=Object.hasOwn(row,'update_time')?row.update_time:null;
+   if(source_update_time!==null&&(!Number.isSafeInteger(source_update_time)||Object.is(source_update_time,-0)||source_update_time<0))throw failure('RESPONSE_ROW_TIME');
+   return {item_id,item_status:row.item_status,source_update_time};
   });
-  const frame=projectProductIndexFrameScoped({schema:'product_index_v1',status:'AVAILABLE',shop_id:profile.shop_id,checked_at:epoch(),...input,total_count:raw.total_count,has_more:raw.has_next_page,next_offset:raw.has_next_page?raw.next_offset:null,items});
+  const checked_at=epoch();if(items.some(row=>row.source_update_time!==null&&row.source_update_time>checked_at+60))throw failure('RESPONSE_ROW_TIME');
+  const frame=projectProductIndexFrameScoped({schema:'product_index_v1',status:'AVAILABLE',shop_id:profile.shop_id,checked_at,...input,total_count:raw.total_count,has_more:raw.has_next_page,next_offset:raw.has_next_page?raw.next_offset:null,items});
   if(!frame)throw failure('RESPONSE_INVALID');return frame;
  }});
 }

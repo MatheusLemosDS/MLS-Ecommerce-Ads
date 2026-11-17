@@ -5,6 +5,8 @@ import path from 'node:path';
 export const PROJECT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 export const TARGETS = Object.freeze({
   app: Object.freeze({name: 'brazacommerce-app', main: '../../dist/app-worker.mjs', baselineHashes: [
+    // Exact closed catalog-response diagnostic module; strict source/CI/publication gates retained.
+    'db0c20e75d6237de140cbacd3e256104336cc348e1af93cf6ce192b7e81d4239',
     // Exact reviewed stability module, emitted without rebundling; all CI/Live gates remain mandatory.
     '3633dfb963aca8e5f10d90b9427cc482adedf0070eed631929886160b9e7631b',
     // Exact shirt-cost editing layout and same-path dry package; existing gates retained.
@@ -277,6 +279,8 @@ export const TARGETS = Object.freeze({
     '26612b7ea0edbea55e06f5fc817a18defd6b4fe65381e6d564b7d360b7b80278',
   ]}),
   auth: Object.freeze({name: 'brazacommerce-auth', main: '../../dist/auth-worker.mjs', baselineHashes: [
+    // Exact closed catalog-response diagnostic module; strict source/CI/publication gates retained.
+    'e48e0dee32ee2d68c1523a716cd752e1df189f59d54e5f16c7899e45ae08b8a0',
     // Exact reviewed stability module, emitted without rebundling; all CI/Live gates remain mandatory.
     'f37c53b904ab5d083abb11d84298970b0b62315f54ac12da560d29e145c48347',
     // Exact shirt-cost editing layout and same-path dry package; existing gates retained.
@@ -361,6 +365,8 @@ export const TARGETS = Object.freeze({
     '47c83f87f191fd0e5ff503d9c4bcf4671cd986b0965e66e84f1a6ed952dac925',
   ]}),
   finance: Object.freeze({name: 'brazacommerce-finance', main: '../../dist/finance-worker.mjs', baselineHashes: [
+    // Exact closed catalog-response diagnostic module; strict source/CI/publication gates retained.
+    '522cd735b73157eee92f1859d87959f5e66a7b8070afb4b2c26cb92006a44bf0',
     // Exact reviewed stability module, emitted without rebundling; all CI/Live gates remain mandatory.
     '9b21fdf180e37a0bd0f4bb13929bafdcdad158c8de0ba0c66acd0f437bf6d83e',
     // Financial automation candidate: exact local build and same-path Wrangler dry run; CI/Live gates remain mandatory.

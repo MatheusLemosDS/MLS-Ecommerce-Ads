@@ -64,6 +64,7 @@ test('financial automation opens only the exact reviewed Finance delta and retai
   "web/finance/src/pending-income-scan.mjs",
   "web/finance/src/product-index-frame.mjs",
   "web/finance/src/product-index.mjs",
+  "web/finance/tests/product-index.test.mjs",
   "web/finance/src/production-orders-frame.mjs",
   "web/finance/src/production-orders.mjs",
   "web/finance/src/production-worker.mjs",

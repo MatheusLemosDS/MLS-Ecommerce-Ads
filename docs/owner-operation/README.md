@@ -4,15 +4,15 @@ A trilha ativa é **owner_operation**. Cadastro de outros clientes, e-mail comer
 
 [Checkpoint canônico](../MLS_COMMERCE_OS_CHECKPOINT.json) · [36 tarefas e dependências técnicas](EXECUCAO.json) · [21 contratos visuais e famílias preservadas](CATALOGO_GRAFICOS.json) · [inspeção atual](validation/reconciliation.json) · [validação do incremento](validation/owner-dtf-batches.json).
 
-## Estabilidade16.5 — publicada, conferência final bloqueada
+## Estabilidade16.5 — verificação técnica e pública concluída
 
-App/Auth/Finance foram publicados e verificados nativamente em100%, com bytes iguais aos da CI. [Recibo](../system-audit/publication-live.json) · [validação](../system-audit/validation.json) · [bloqueios](../system-audit/BLOCKERS.json). O executor desconectou durante a conferência pública; catálogo/histórico e aceite owner ainda precisam de leitura real.
+App/Auth/Finance seguem publicados nas mesmas versões, com bytes/configurações/tráfego e oito endpoints/oito assets públicos conferidos. [Recibo](../system-audit/publication-live.json) · [validação](../system-audit/validation.json) · [bloqueios reais restantes](../system-audit/BLOCKERS.json). O incidente do executor e do503 Envoy foi preservado no histórico; não houve redeploy nesta conferência. Aceite owner e recuperação integral de fontes permanecem pendentes.
 
 1. Em **Pedidos**, confira um pedido com receita DTF confirmada. No montador, confira PNGs, proporções, DPI e prévia automática antes de reservar/exportar. Isso não confirma fabricação física.
 2. Em **Produtos → Custos e regras**, edite os custos futuros comprovados e use **Salvar custos de produção**. Regras independentes mantêm sua precedência; lotes, CMV e fechamentos históricos não são reescritos.
-3. Após reconectar o mesmo ambiente, observe diagnóstico e recuperação pelo cron existente, preservando filtros, cooldown e auditoria. Ausência não é zero; fila executada não basta para COMPLETE ou lucro real.
+3. Observe diagnóstico e recuperação pelo cron existente, preservando filtros, cooldown e auditoria. Ausência não é zero; fila executada não basta para COMPLETE ou lucro real.
 
-Nenhum custo real, pagamento ou fabricação foi alterado para teste. Gráficos, seis agentes, sexta13h/Brasília, permissões, confirmações e não duplicação preservados. OP-014 segue independente; venda ADIADO_VENDA.
+Nenhum custo real, pagamento ou fabricação foi alterado manualmente para teste. Writes naturais dos coletores não são declarados zero. Gráficos, seis agentes, sexta13h/Brasília, permissões, confirmações e não duplicação preservados. OP-014 segue independente; venda ADIADO_VENDA.
 
 ## Editar camisetas — publicada 2026-11-16.4
 

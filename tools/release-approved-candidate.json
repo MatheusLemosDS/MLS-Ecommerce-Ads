@@ -1,13 +1,13 @@
 {
   "schema": "mls_release_candidate_v1",
   "base_commit": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
-  "prepared_source_commit": "1ac7b79c7ac38b6bd09ac8ed38d593ec40bad080",
+  "prepared_source_commit": "a2d7943e517cab181d39ffe9729346bd51168e8c",
   "owner_authorization": "OWNER_REQUESTED_OWN_OPERATION_FIRST_LIVE_2026_11_16",
   "commercial_writes_allowed": false,
   "expected_hashes": {
-    "app": "3633dfb963aca8e5f10d90b9427cc482adedf0070eed631929886160b9e7631b",
-    "auth": "f37c53b904ab5d083abb11d84298970b0b62315f54ac12da560d29e145c48347",
-    "finance": "9b21fdf180e37a0bd0f4bb13929bafdcdad158c8de0ba0c66acd0f437bf6d83e"
+    "app": "db0c20e75d6237de140cbacd3e256104336cc348e1af93cf6ce192b7e81d4239",
+    "auth": "e48e0dee32ee2d68c1523a716cd752e1df189f59d54e5f16c7899e45ae08b8a0",
+    "finance": "522cd735b73157eee92f1859d87959f5e66a7b8070afb4b2c26cb92006a44bf0"
   },
   "expected_live_flags": {
     "MLS_V36_OWNER_PREVIEW": "ENABLED",
@@ -91,9 +91,12 @@
     "docs/system-audit/BASELINE.json",
     "docs/system-audit/BLOCKERS.json",
     "docs/system-audit/README.md",
+    "docs/system-audit/catalog-diagnostics-20261117.json",
     "docs/system-audit/history/continuity-before-16-5.json",
     "docs/system-audit/history/previous-operational-delivery.json",
     "docs/system-audit/history/release-candidate-before-16-5.json",
+    "docs/system-audit/history/release-candidate-before-catalog-diagnostics.json",
+    "docs/system-audit/publication-catalog-diagnostics-live.json",
     "docs/system-audit/publication-live.json",
     "docs/system-audit/validation.json",
     "package-lock.json",
@@ -256,6 +259,7 @@
     "web/cloudflare/tests/owner-dtf-batches-fixture.mjs",
     "web/cloudflare/tests/owner-dtf-batches.test.mjs",
     "web/cloudflare/tests/owner-report-browser-fixture.mjs",
+    "web/cloudflare/tests/product-index-shape-chain.test.mjs",
     "web/cloudflare/tests/product-registry-diagnostics.test.mjs",
     "web/cloudflare/tests/production-dtf-routes.test.mjs",
     "web/cloudflare/tests/receipt-click-refresh.test.mjs",
@@ -286,6 +290,7 @@
     "web/finance/src/financial-source-frame.mjs",
     "web/finance/src/financial-source-worker.mjs",
     "web/finance/src/product-index-frame.mjs",
+    "web/finance/src/product-index.mjs",
     "web/finance/src/production-worker.mjs",
     "web/finance/tests/business-period-missing-run.test.mjs",
     "web/finance/tests/external-cash-allocation-guard.test.mjs",
@@ -306,10 +311,11 @@
     "web/finance/tests/financial-source-events.test.mjs",
     "web/finance/tests/financial-source-original-items-v3.test.mjs",
     "web/finance/tests/financial-source-worker.test.mjs",
+    "web/finance/tests/product-index.test.mjs",
     "workers/app/browser-assets-published.json"
   ],
   "previous_candidate_manifest": "docs/owner-operation/history/release-candidate-before-owner-first.json",
-  "candidate_scope": "OWNER_OPERATION_SYSTEM_STABILITY_16_5_REPRODUCED_DEFECTS_ONLY",
+  "candidate_scope": "CATALOG_FINITE_RESPONSE_DIAGNOSTICS_STRICT_502_UNKNOWN_PRESERVED",
   "production_approved": false,
-  "previous_manifest": "docs/system-audit/history/release-candidate-before-16-5.json"
+  "previous_manifest": "docs/system-audit/history/release-candidate-before-catalog-diagnostics.json"
 }

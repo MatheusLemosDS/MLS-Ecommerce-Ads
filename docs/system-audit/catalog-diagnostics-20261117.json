@@ -1,0 +1,44 @@
+{
+  "schema": "catalog_response_shape_diagnostics_v1",
+  "status": "IMPLEMENTED_TARGETED_PASS_FULL_GATES_RUNNING",
+  "recorded_at": "2026-11-17T19:54:15.723217+00:00",
+  "prepared_source_commit": "2c1764b607ab719f5109688b9ad6559e69ce979c",
+  "implementation_commit": "a2d7943e517cab181d39ffe9729346bd51168e8c",
+  "base_main": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
+  "branch": "fix/system-stability-20261116",
+  "pull_request": 128,
+  "release_candidate": "2026-11-17.1",
+  "implemented": true,
+  "targeted": {
+    "pass": 75,
+    "fail": 0,
+    "skipped": 0
+  },
+  "full_local_node": "RUNNING",
+  "exact_head_ci": "PENDING",
+  "published": false,
+  "actual_catalog_problem_resolved": false,
+  "actual_financial_acceptance": false,
+  "new_diagnostic_codes": 13,
+  "contracts": "Same frame/request validators, HTTP502, cursor, backoff, authentication, identity, DTO and source clock semantics. No missing/null array normalized into empty success. No schema/permission/workflow change.",
+  "observed_real_failure": {
+    "code": "FINANCE_PRODUCT_INDEX_RESPONSE_INVALID",
+    "item_status": "BANNED",
+    "offset": 0,
+    "checked_at_utc": "2026-11-17T19:38:51Z",
+    "next_due_utc": "2026-11-17T20:08:53Z"
+  },
+  "expected_hashes": {
+    "app": "db0c20e75d6237de140cbacd3e256104336cc348e1af93cf6ce192b7e81d4239",
+    "auth": "e48e0dee32ee2d68c1523a716cd752e1df189f59d54e5f16c7899e45ae08b8a0",
+    "finance": "522cd735b73157eee92f1859d87959f5e66a7b8070afb4b2c26cb92006a44bf0"
+  },
+  "bytes": {
+    "app": 3753165,
+    "auth": 579502,
+    "finance": 895222
+  },
+  "previous_live_receipt": "publication-live.json",
+  "publication_receipt": "publication-catalog-diagnostics-live.json",
+  "remaining": "Observe next eligible natural attempt to identify actual rejected structure; no forced scan/reset/provider call or zero inference."
+}

@@ -1,6 +1,6 @@
 # Varredura de estabilidade — operação própria
 
-**Estabilidade16.5 publicada e verificada nativamente; conferência final bloqueada pelo executor.** [Recibo](publication-live.json), [validação](validation.json) e [bloqueios](BLOCKERS.json). CI661,4593 Node/67 Python e três Builds aprovados no código publicado. O smoke público não terminou; recuperação real de fontes e aceite operacional não foram comprovados.
+**Estabilidade16.5 publicada e verificada técnica e publicamente.** [Recibo](publication-live.json), [validação](validation.json) e [bloqueios restantes](BLOCKERS.json). Fonte ed651fa/CI661 e registro documental0315e454/CI662 aprovados, com os mesmos hashes. Executor recuperado; oito endpoints e oito assets conferidos sem redeploy. Incidente anterior preservado; recuperação integral de fontes e aceite operacional/financeiro continuam pendentes.
 
 Base de código preservada: `f78b503`, PR127, Live16.4. Main reconfirmada pelo conector GitHub em `346f30f`. A CI660 da própria base terminou aprovada; falhas de rodadas anteriores não são tratadas como falhas atuais sem reprodução. [Base e escopo](BASELINE.json).
 
