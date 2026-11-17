@@ -1,12 +1,12 @@
 {
   "schema": "mls_release_candidate_v1",
   "base_commit": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
-  "prepared_source_commit": "457ddad95953f5b3b8b8c31e71499697ad39cac8",
+  "prepared_source_commit": "ab4ad7ff3fc92922633e096bd26653d12796ff1b",
   "owner_authorization": "OWNER_REQUESTED_OWN_OPERATION_FIRST_LIVE_2026_11_16",
   "commercial_writes_allowed": false,
   "expected_hashes": {
-    "app": "af6b26b6a1fa1237f80d73fe3057ee74d0d2d005dfbc4eb10e92047895a119cf",
-    "auth": "aaafc3a6c16684949d8714f309ce1cf0525d71ac7223fed20d948347ff943182",
+    "app": "787d0435e9b6f4df169239687f501de7db402f1a2ab2b3a8a8fccc3879a13b0b",
+    "auth": "0e4547e61441131c5ad8c5f955a64ac691c0d89ada8eb52bbfe0cad2fe485a45",
     "finance": "ccce234f36f0a763942bf30e274360b9d1223b3594b6600adf3352fafd92efb4"
   },
   "expected_live_flags": {
@@ -44,11 +44,13 @@
     "docs/owner-operation/CATALOGO_GRAFICOS.json",
     "docs/owner-operation/EXECUCAO.json",
     "docs/owner-operation/README.md",
+    "docs/owner-operation/history/browser-assets-before-dtf-auto-20261116.json",
     "docs/owner-operation/history/browser-assets-before-op012-20261116.json",
     "docs/owner-operation/history/browser-assets-before-op013-20261116.json",
     "docs/owner-operation/history/browser-assets-published-before-dtf.json",
     "docs/owner-operation/history/continuity-before-op012-20261116.json",
     "docs/owner-operation/history/continuity-before-op013-20261116.json",
+    "docs/owner-operation/history/release-candidate-before-dtf-auto-20261116.json",
     "docs/owner-operation/history/release-candidate-before-op012-20261116.json",
     "docs/owner-operation/history/release-candidate-before-op013-20261116.json",
     "docs/owner-operation/history/release-candidate-before-owner-first.json",
@@ -67,12 +69,14 @@
     "docs/owner-operation/validation/build-triggers.json",
     "docs/owner-operation/validation/dtf-after-app.json",
     "docs/owner-operation/validation/dtf-after-auth.json",
+    "docs/owner-operation/validation/dtf-auto-layout.json",
     "docs/owner-operation/validation/dtf-cycle.json",
     "docs/owner-operation/validation/dtf-github-ci.json",
     "docs/owner-operation/validation/dtf-public-after.json",
     "docs/owner-operation/validation/owner-dtf-artwork-backup.json",
     "docs/owner-operation/validation/owner-dtf-batches.json",
     "docs/owner-operation/validation/publication-artwork-live-20261116.json",
+    "docs/owner-operation/validation/publication-dtf-auto-live-20261116.json",
     "docs/owner-operation/validation/publication-dtf-cycle-live-20261116.json",
     "docs/owner-operation/validation/publication-live-20261116.json",
     "docs/owner-operation/validation/reconciliation.json",
@@ -87,6 +91,7 @@
     "tools/worker_project.mjs",
     "web/cloudflare/browser-assets-published/04ae3166780be18f31754212640b0887abe9e20830ac4309a6e31109398e4eeb.js",
     "web/cloudflare/browser-assets-published/0d6250f5888258fa29664eac45b2cd821d3872b1c96ac47dda46bd7fd10e6a0c.js",
+    "web/cloudflare/browser-assets-published/1f0ca4ce395126c895b9e79afff57f1ca0ed74c3df31c6b7b0a1ac6dd0673026.js",
     "web/cloudflare/browser-assets-published/33922f2dc0e2aeba1720e667071eb1a701b1043425e5978193a761818570eb28.js",
     "web/cloudflare/browser-assets-published/347a294216d16151105c5b5074174af01c01a9bc398e713aaf2c9184a48b1db2.js",
     "web/cloudflare/browser-assets-published/4415116e2b1d7f3118501dc009aa5cd2fa3e3ff280e96a82a867da4d9e4e3c33.js",
@@ -153,6 +158,7 @@
     "web/cloudflare/tests/commercial-route-policy.test.mjs",
     "web/cloudflare/tests/dtf-artwork-backup-chrome.test.mjs",
     "web/cloudflare/tests/dtf-artwork-backup.test.mjs",
+    "web/cloudflare/tests/dtf-auto-layout-chrome.test.mjs",
     "web/cloudflare/tests/dtf-cycle-chrome.test.mjs",
     "web/cloudflare/tests/dtf-cycle-fixture.mjs",
     "web/cloudflare/tests/dtf-cycle.test.mjs",
@@ -243,7 +249,7 @@
     "workers/app/browser-assets-published.json"
   ],
   "previous_candidate_manifest": "docs/owner-operation/history/release-candidate-before-owner-first.json",
-  "candidate_scope": "OWNER_OPERATION_OP010_EXPLICIT_KIT_RECIPE_OP012_PRINT_CYCLE_NOT_PHYSICAL_OR_FINANCIAL_ACCEPTANCE",
+  "candidate_scope": "OWNER_OPERATION_OP012_AUTOMATIC_PREVIEW_WITH_EXPLICIT_RESERVATION_AND_PHYSICAL_CONFIRMATION",
   "production_approved": false,
-  "previous_manifest": "docs/owner-operation/history/release-candidate-before-op012-20261116.json"
+  "previous_manifest": "docs/owner-operation/history/release-candidate-before-dtf-auto-20261116.json"
 }
