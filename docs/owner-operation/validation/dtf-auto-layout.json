@@ -27,9 +27,30 @@
     ],
     "normal_and_minified": true,
     "source_scope": "COMPILED_AUTHENTICATED_APP_SYNTHETIC_SQLITE_AND_DECODED_PNG_ONLY",
-    "full_node": "PENDING",
-    "python": "PENDING",
-    "github_ci": "PENDING"
+    "full_node": {
+      "head": "efefe753064699b687ba0f3aede3b5096b26aaf5",
+      "local": {
+        "total": 4491,
+        "pass": 4491,
+        "fail": 0,
+        "skipped": 0,
+        "cancelled": 0
+      },
+      "runtime_hashes_unchanged_in_test_only_followup": true
+    },
+    "python": {
+      "total": 67,
+      "pass": 67
+    },
+    "github_ci": "PENDING_TEST_ONLY_FOLLOWUP",
+    "helper_followup": {
+      "total": 11,
+      "pass": 11,
+      "fail": 0,
+      "skipped": 0,
+      "cancelled": 0,
+      "scope": "REAL_CHROMIUM_STALE_SCROLL_AND_QUADS_SINGLE_ACTIVATION,NEGATIVE_PROTOCOL_GUARD,WEEKLY4_AND_DTF_AUTO4"
+    }
   },
   "published": false,
   "operational_acceptance": false,
@@ -69,5 +90,21 @@
     "docs/ROADMAP_MLS_COMMERCE_OS.md": "<!-- OWNER_OPERATION_CURRENT -->\nOperação própria: **montador DTF 2026-11-16.2 publicado e verificado tecnicamente**. [Como usar](owner-operation/README.md) · [checkpoint canônico](MLS_COMMERCE_OS_CHECKPOINT.json) · [recibo](owner-operation/validation/publication-dtf-cycle-live-20261116.json).\n\nKits têm composição explícita por variação/SKU de origem; impressão parcial, saldo, liberação confirmada de EXPORTED, reimpressão por parte, perda e correção auditada preservam fatos. Fonte 9c94210, CI 43986753284: 4.480 Node/67 Python, mais8 casos locais autenticados após recuperar o executor. App/Auth novos com 100% do tráfego, Finance retido; bytes/configurações/rotas/cron, 8 verificações HTTP e 8 arquivos públicos conferidos. PR #125 permanece rascunho, sem merge/auto-merge; main 346f30f preservada.\n\nPróximo passo do proprietário: abra Produção → Montador e fila DTF, importe os PNGs reais, confirme as artes/larguras dos kits e confira uma folha em tamanho real antes de registrar impressão. Aceite físico/financeiro ainda pendente. Próximo desenvolvimento independente: OP-014, fabricação/custos/pagamentos conforme a matriz. Impressão não comprova fabricação; ausência de fonte/custo não é zero; não duplicar custos/receitas. [Regras ativas e gates](../AGENTS.md#regras-de-domínio-ativas): sexta às 13h/Brasília, confirmações e auditoria permanecem. Gráficos e seis agentes preservados; venda ADIADO_VENDA. Históricos integrais seguem abaixo e nos recibos.\n<!-- END_OWNER_OPERATION_CURRENT -->",
     "docs/MLS_CODEX_HANDOFF_2026_10_28.md": "<!-- OWNER_OPERATION_CURRENT -->\nOperação própria: **montador DTF 2026-11-16.2 publicado e verificado tecnicamente**. [Como usar](owner-operation/README.md) · [checkpoint canônico](MLS_COMMERCE_OS_CHECKPOINT.json) · [recibo](owner-operation/validation/publication-dtf-cycle-live-20261116.json).\n\nKits têm composição explícita por variação/SKU de origem; impressão parcial, saldo, liberação confirmada de EXPORTED, reimpressão por parte, perda e correção auditada preservam fatos. Fonte 9c94210, CI 43986753284: 4.480 Node/67 Python, mais8 casos locais autenticados após recuperar o executor. App/Auth novos com 100% do tráfego, Finance retido; bytes/configurações/rotas/cron, 8 verificações HTTP e 8 arquivos públicos conferidos. PR #125 permanece rascunho, sem merge/auto-merge; main 346f30f preservada.\n\nPróximo passo do proprietário: abra Produção → Montador e fila DTF, importe os PNGs reais, confirme as artes/larguras dos kits e confira uma folha em tamanho real antes de registrar impressão. Aceite físico/financeiro ainda pendente. Próximo desenvolvimento independente: OP-014, fabricação/custos/pagamentos conforme a matriz. Impressão não comprova fabricação; ausência de fonte/custo não é zero; não duplicar custos/receitas. [Regras ativas e gates](../AGENTS.md#regras-de-domínio-ativas): sexta às 13h/Brasília, confirmações e auditoria permanecem. Gráficos e seis agentes preservados; venda ADIADO_VENDA. Históricos integrais seguem abaixo e nos recibos.\n<!-- END_OWNER_OPERATION_CURRENT -->"
   },
-  "next_independent_task": "Complete exact-candidate local and GitHub gates, then controlled Auth/App promotion and source/config/traffic/public verification. Owner real PNG/print acceptance remains separate."
+  "next_independent_task": "Complete exact-candidate local and GitHub gates, then controlled Auth/App promotion and source/config/traffic/public verification. Owner real PNG/print acceptance remains separate.",
+  "validation_attempts": [
+    {
+      "head": "efefe753064699b687ba0f3aede3b5096b26aaf5",
+      "ci": {
+        "id": 43995760978,
+        "conclusion": "failure",
+        "total": 4491,
+        "pass": 4490,
+        "fail": 1,
+        "skipped": 0,
+        "cancelled": 0
+      },
+      "failure": "weekly-context-navigation-chrome320minified: CDP DOM.scrollIntoViewIfNeeded referenced an element replaced during rendering.",
+      "fix": "Reacquire selector/document on each existing bounded native-hover attempt; retry only the exact stale-node protocol failure before mouse press. Preserve trusted hover,44px,visibility,occlusion and geometry assertions. Never replay activation."
+    }
+  ]
 }

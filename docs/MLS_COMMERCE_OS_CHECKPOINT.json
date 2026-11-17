@@ -31,7 +31,7 @@
   },
   "current_phase": "OWNER_OPERATION_U2_DTF_AUTOMATIC_PREVIEW",
   "working_branch": "feature/owner-dtf-auto-layout-20261116",
-  "current_status": "DTF_AUTO_PREVIEW_IMPLEMENTED_TARGETED_PASS_FULL_GATES_PENDING",
+  "current_status": "DTF_AUTO_LOCAL_FULL_PASS_CI_TEST_HELPER_REVALIDATION_PENDING",
   "completed_this_phase": [
     "Conciliação de liberações por pedido com estados VERIFIED, LOCATED_UNVERIFIED, AMBIGUOUS e NOT_LOCATED",
     "Repasse-base, ajuste, repasse após ajuste e liberação exibidos sem dupla dedução",
@@ -138,12 +138,17 @@
     "source_parent": "ab4ad7ff3fc92922633e096bd26653d12796ff1b",
     "release_candidate": "2026-11-16.3",
     "implementation": true,
-    "local_validation": "38_TARGETED_PASS_FULL_GATES_PENDING",
+    "local_validation": "4491_NODE_67_PYTHON_38_TARGETED_AND_11_HELPER_REGRESSIONS_PASS",
     "published": false,
     "validated_operationally": false,
     "actual_financial_acceptance": false,
     "receipt": "docs/owner-operation/validation/dtf-auto-layout.json",
-    "previous_published_receipt": "docs/owner-operation/validation/publication-dtf-cycle-live-20261116.json"
+    "previous_published_receipt": "docs/owner-operation/validation/publication-dtf-cycle-live-20261116.json",
+    "prior_ci_attempt": {
+      "id": 43995760978,
+      "conclusion": "failure",
+      "cause": "ONE_STALE_CDP_NODE_IN_WEEKLY_NAVIGATION_FIXTURE"
+    }
   },
   "incident": {
     "id": "INCIDENT_2026_10_27_PANEL_AGENT_REGRESSION",
