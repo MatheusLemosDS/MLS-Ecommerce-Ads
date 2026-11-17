@@ -550,21 +550,109 @@
       "estado_desta_especificacao": "ESPECIFICADO_PARA_CODEX",
       "codigo": "IMPLEMENTADO_BACKUP_ZIP_LOCAL_PNG_MANIFESTO_HASHES_E_RESTORE_ATOMICO",
       "testes_novo_incremento": "CI43919859561_NO_HEAD98a5808_4452_NODE_67_PYTHON_PASS_SEM_SKIP_CANCEL",
-      "publicacao_novo_incremento": "APP_AUTH_PUBLICADOS_FINANCE_RETIDO_FONTE_CONFIG_ROTAS_CRON_EXATOS_HTTP_ASSETS_NAO_CONFERIDOS_POR_503_ENVOY",
+      "publicacao_novo_incremento": "PUBLICADO_VERIFICADO_TECNICO_FONTE_CONFIG_HTTP_ASSETS",
       "aceite_operacional_novo_incremento": "PENDENTE_ARTES_E_IMPRESSAO_REAIS_DO_PROPRIETARIO",
       "evidencias": [
         "validation/owner-dtf-artwork-backup.json",
-        "validation/publication-artwork-live-20261116.json"
+        "validation/publication-artwork-live-20261116.json",
+        "../system-audit/publication-live.json",
+        "../system-audit/publication-catalog-diagnostics-live.json"
       ],
       "bloqueios": [
-        "Leitura pública das7 URLs de assets e smoke completa: proxy do ambiente devolve503 com98 bytes Envoy remote connection failure. Mesma falha no GitHub CLI; não é prova de falha da aplicação. Não ampliar permissões nem alterar Live para contornar.",
-        "Ledger de publicação dos assets mantém geração aprovada anterior até leitura independente dos bytes; concluir esse gate antes de outra publicação de assets.",
         "Aceite real requer backup privado e restauração das artes reais pelo proprietário."
       ],
       "regra_especial": null,
       "codigo_da_especificacao": "RECONFERIR_REUTILIZAR_EXISTENTE_E_COMPLETAR_LACUNAS",
-      "estado_execucao": "PUBLICADO_FONTE_CONFIG_EXATAS_HTTP_ASSETS_BLOQUEADOS_TRANSPORTE_ACEITE_REAL_PENDENTE",
-      "bloqueia_tarefas_independentes": false
+      "estado_execucao": "PUBLICADO_TECNICO_HTTP_ASSETS_VERIFICADOS_ACEITE_REAL_PENDENTE",
+      "bloqueia_tarefas_independentes": false,
+      "technical_verification_followup": {
+        "recorded_at": "2026-11-17T21:30:53.282498+00:00",
+        "scope": "PUBLIC_TLS_HTTP_ROUTING_ASSETS_AND_ANONYMOUS_AUTHORIZATION_ONLY",
+        "original_release_followup": {
+          "receipt": "validation/publication-artwork-live-20261116.json",
+          "release": "2026-11-16.1",
+          "public_verified_at": "2026-11-16T22:16:34.970986+00:00",
+          "public_endpoints": 8,
+          "exact_public_browser_assets": 7,
+          "scope": "PUBLIC_TLS_HTTP_ROUTING_ASSETS_AND_ANONYMOUS_AUTHORIZATION_ONLY"
+        },
+        "later_release_evidence": [
+          {
+            "path": "docs/system-audit/publication-live.json",
+            "sha256": "9721784d842209831f4348d5771bffab4c213714b81da3b638120d4f8348487c",
+            "release": "2026-11-16.5",
+            "source_commit": "ed651fa7a5bd949519c37d287bcaab9c31cb464a",
+            "native_verified_at": "2026-11-17T19:42:35.705887+00:00",
+            "public_verified_at": "2026-11-17T19:42:38.070197+00:00",
+            "public_endpoints": 8,
+            "exact_public_browser_assets": 8,
+            "scope": "PUBLIC_TLS_HTTP_ROUTING_ASSETS_AND_ANONYMOUS_AUTHORIZATION_ONLY",
+            "authenticated_owner_live_qa": "NOT_PERFORMED",
+            "actual_png_backup_restore_operational_acceptance": false
+          },
+          {
+            "path": "docs/system-audit/publication-catalog-diagnostics-live.json",
+            "sha256": "c8b478aba0103fa33da766ffdca0da92e700714e675e73900268313414642d84",
+            "release": "2026-11-17.1",
+            "source_commit": "e26357dd23b7c488b803481099b2da0af66eb6b6",
+            "native_verified_at": "2026-11-17T20:19:33.202389+00:00",
+            "public_verified_at": "2026-11-17T20:19:35.191279+00:00",
+            "public_endpoints": 8,
+            "exact_public_browser_assets": 8,
+            "scope": "PUBLIC_TLS_HTTP_ROUTING_ASSETS_AND_ANONYMOUS_AUTHORIZATION_ONLY",
+            "authenticated_owner_live_qa": "NOT_PERFORMED",
+            "actual_png_backup_restore_operational_acceptance": false
+          }
+        ],
+        "resolved_blockers": "Falha de transporte HTTP/assets e hold técnico do ledger registrados anteriormente; a leitura pública dos7 assets da16.1 foi concluída em16/11 e verificações posteriores16.5/17.1 conferiram suas próprias8 URLs de assets e8 endpoints.",
+        "not_asserted": "As8 URLs de assets são scripts públicos do navegador; não são os PNGs privados da biblioteca DTF. Download/restauração sintéticos em perfil limpo comprovam o mecanismo implementado, sem comprovar backup persistente, recuperação ou impressão das artes reais do proprietário.",
+        "owner_live_authenticated_qa": "NOT_PERFORMED",
+        "actual_png_backup_restore_operational_acceptance": false,
+        "physical_acceptance": false,
+        "financial_acceptance": false,
+        "original_validation_and_receipts_preserved": true
+      },
+      "state_history": [
+        {
+          "recorded_at": "2026-11-17T21:30:53.282498+00:00",
+          "reason": "RECONCILE_STALE_HTTP_ASSETS_BLOCKERS_ONLY; ORIGINAL_TASK_PRESERVED_IN_FULL",
+          "task_before_reconciliation": {
+            "id": "OP-013",
+            "fase": "U2",
+            "titulo": "Proteger e restaurar artes",
+            "prioridade": "P1_OPERACIONAL",
+            "instrucoes": "OP-013 — Proteger e restaurar artes. Preserve o armazenamento local existente e entregue backup/exportação que inclua os pixels necessários, manifesto, identidades/hashes e associações, além de restauração verificável em outro perfil/navegador. Manifesto sozinho não recupera imagem perdida. Biblioteca privada em nuvem pode ser preparada como interface opcional; contratar storage comercial não deve impedir o backup local funcional. Não torne artes privadas públicas.",
+            "dependencias_tecnicas": [
+              "OP-004",
+              "OP-005"
+            ],
+            "dependencias_comerciais": [],
+            "fin_auto": [],
+            "aceites": [
+              "Backup inclui PNGs/pixels, manifesto e vínculos; restauração em perfil limpo reproduz hashes.",
+              "Troca de arte não altera lote reservado silenciosamente."
+            ],
+            "estado_desta_especificacao": "ESPECIFICADO_PARA_CODEX",
+            "codigo": "IMPLEMENTADO_BACKUP_ZIP_LOCAL_PNG_MANIFESTO_HASHES_E_RESTORE_ATOMICO",
+            "testes_novo_incremento": "CI43919859561_NO_HEAD98a5808_4452_NODE_67_PYTHON_PASS_SEM_SKIP_CANCEL",
+            "publicacao_novo_incremento": "APP_AUTH_PUBLICADOS_FINANCE_RETIDO_FONTE_CONFIG_ROTAS_CRON_EXATOS_HTTP_ASSETS_NAO_CONFERIDOS_POR_503_ENVOY",
+            "aceite_operacional_novo_incremento": "PENDENTE_ARTES_E_IMPRESSAO_REAIS_DO_PROPRIETARIO",
+            "evidencias": [
+              "validation/owner-dtf-artwork-backup.json",
+              "validation/publication-artwork-live-20261116.json"
+            ],
+            "bloqueios": [
+              "Leitura pública das7 URLs de assets e smoke completa: proxy do ambiente devolve503 com98 bytes Envoy remote connection failure. Mesma falha no GitHub CLI; não é prova de falha da aplicação. Não ampliar permissões nem alterar Live para contornar.",
+              "Ledger de publicação dos assets mantém geração aprovada anterior até leitura independente dos bytes; concluir esse gate antes de outra publicação de assets.",
+              "Aceite real requer backup privado e restauração das artes reais pelo proprietário."
+            ],
+            "regra_especial": null,
+            "codigo_da_especificacao": "RECONFERIR_REUTILIZAR_EXISTENTE_E_COMPLETAR_LACUNAS",
+            "estado_execucao": "PUBLICADO_FONTE_CONFIG_EXATAS_HTTP_ASSETS_BLOQUEADOS_TRANSPORTE_ACEITE_REAL_PENDENTE",
+            "bloqueia_tarefas_independentes": false
+          }
+        }
+      ]
     },
     {
       "id": "OP-014",
@@ -5719,7 +5807,7 @@
     "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/346f30f200e5cbd3d9efd26663a483c625d9c6e7/docs/financial-automation/publication-live-20261113.json"
   ],
   "source_specification": "input/ROADMAP_EXECUTAVEL_USO_PROPRIO_MLS.json",
-  "updated_at": "2026-11-17T15:22:35.648886+00:00",
+  "updated_at": "2026-11-17T23:23:08.071280+00:00",
   "canonical_checkpoint": "docs/MLS_COMMERCE_OS_CHECKPOINT.json",
   "specification_initial_checkpoint_historical": {
     "fase_corrente": "U0",
@@ -5731,48 +5819,222 @@
     "aceites_reais_nesta_entrega": []
   },
   "operational_delivery": {
-    "branch": "feature/owner-dtf-auto-layout-20261116",
-    "source_commit": "2c225f0b341c57b956baa1519f4b63344a4337a6",
-    "source_parent": "ab4ad7ff3fc92922633e096bd26653d12796ff1b",
+    "task": "CATALOG_EXPLICIT_ZERO_OMITTED_FIRST_PAGE_COMPATIBILITY_17_3",
+    "release_candidate": "2026-11-17.3",
+    "release_id": "2026-11-17.3",
+    "branch": "fix/system-stability-20261116",
+    "source_commit": "ad7f991295ca7b326f0428b5eeb744a88572cdd9",
+    "source_commit_scope": "REMOTE_R_PUBLISHED_EXACT_BYTES; LOCAL_L_SAME_FULL_TREE_DIFFERENT_SHA",
+    "source_reconciliation": {
+      "schema": "mls_supported_gitdata_full_tree_equivalence_v1",
+      "local_head": "760d1b7440186919071e131048921bd83458f0e6",
+      "local_archive_branch": "archive/catalog-empty-native-before-connector-20261117",
+      "remote_head": "ad7f991295ca7b326f0428b5eeb744a88572cdd9",
+      "tree": "f7671e24963b58394b476cf4a618caaa61322bbb",
+      "local_remote_same_sha": false,
+      "full_tree_identical_confirmed_by_github_create_tree": true,
+      "remote_parent": "81e3ed0f5563a3921da868f3d4a6dba391ed467e",
+      "local_base": "f7fb319745b8f7acd03356902fb0aa91407aac5e",
+      "base_tree_identical": "357c4f23f5c5314c1a5a4d30a888810906e8acef",
+      "native_fetch_blocked_503": true,
+      "native_remote_object_not_imported": true,
+      "local_source_preserved": true,
+      "force_push": false,
+      "main_modified": false,
+      "branch_updated_yet": true,
+      "expected_remote_parent_lease": "81e3ed0f5563a3921da868f3d4a6dba391ed467e",
+      "prior_ci666_completed_before_branch_update": true
+    },
     "base_main": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
-    "release_candidate": "2026-11-16.3",
-    "current_track": "owner_operation",
-    "sale_track": "ADIADO_VENDA",
     "code": true,
-    "tested_locally": "88_TARGETED_4_DARK_10_RELEASE_CLOCK_19_ENVIRONMENT_RECOVERY_67_PYTHON_PASS",
-    "published": true,
-    "operationally_accepted": false,
-    "receipt": "validation/dtf-auto-layout.json",
-    "next_independent_task": "OP-014",
-    "publication_source_commit": "c39c57217f059f2aed62cd694cd556d06a12617a",
-    "validation_head": "c39c57217f059f2aed62cd694cd556d06a12617a",
-    "github_ci": {
-      "id": 44110296190,
-      "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/44110296190",
-      "head_sha": "c39c57217f059f2aed62cd694cd556d06a12617a",
+    "tested_locally": "4679_NODE_FULL_LOCAL_L;67_PYTHON_REUSED_IDENTICAL_FILES;CI_EXACT_REMOTE_R_SAME_TREE_DIFFERENT_SHA",
+    "exact_head_github_ci": {
+      "id": 44185929362,
+      "run_number": 667,
+      "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/44185929362",
+      "head_sha": "ad7f991295ca7b326f0428b5eeb744a88572cdd9",
+      "status": "completed",
       "conclusion": "success",
       "node": {
-        "total": 4500,
-        "pass": 4500,
+        "tests": 4679,
+        "pass": 4679,
         "fail": 0,
-        "skipped": 0,
-        "cancelled": 0
+        "cancelled": 0,
+        "skipped": 0
       },
       "python": {
-        "total": 67,
-        "pass": 67
+        "pass": 67,
+        "fail": 0
       },
       "compiled_hashes": {
-        "app": "f86536f9f50606b2cf20a66b00ae16d25febe474cf4030f0abf791ec69a45f61",
-        "auth": "22540b94a52d0c8ad00959c100bb1319231dac8df17deb1d56c4399e9780dc48",
-        "finance": "ccce234f36f0a763942bf30e274360b9d1223b3594b6600adf3352fafd92efb4"
+        "app": "b0aa9cc1009d9d7ea276d406d0d87ecb90feda73ae3db77fe85ff64173e456e4",
+        "auth": "e3b7aecfeda1109fbe98d9fa6f8ee1ab55dcc5a70ae32fc4a5bc70c48b286a5c",
+        "finance": "f6c8a5daa307cdecb60c0c722c89aa2de02d3afe12940f315973446070561f33"
       },
-      "workflow_preflight_step": "SKIPPED_BY_EXISTING_STACKED_PR_CONDITION",
-      "local_preflight": "FRESH_RELEASE_LOCAL_PREFLIGHT_OK_REQUIRED_BEFORE_PROMOTION"
+      "cloudflare_checks": [
+        {
+          "name": "Workers Builds: brazacommerce-auth",
+          "head_sha": "ad7f991295ca7b326f0428b5eeb744a88572cdd9",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 134402687155,
+          "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-auth/production/previews/fix-system-stability-20261116/builds/4ff86218-cbfd-4e00-8389-8b050cc2e891"
+        },
+        {
+          "name": "Workers Builds: brazacommerce-app",
+          "head_sha": "ad7f991295ca7b326f0428b5eeb744a88572cdd9",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 134402647019,
+          "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-app/production/previews/fix-system-stability-20261116/builds/72f9d144-324c-4879-86e8-8c2618b0b323"
+        },
+        {
+          "name": "Workers Builds: brazacommerce-finance",
+          "head_sha": "ad7f991295ca7b326f0428b5eeb744a88572cdd9",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 134402554516,
+          "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-finance/production/previews/fix-system-stability-20261116/builds/b9caf5ed-1b01-4cd8-a188-7cac1a184bf5"
+        }
+      ],
+      "workflow_preflight_step": "SKIPPED_BY_EXISTING_STACKED_PR_CONDITION; LOCAL_PREFLIGHT_PASS"
     },
-    "publication_receipt": "validation/publication-shirt-cost-live-20261116.json",
-    "release_id": "2026-11-16.4",
-    "task": "OP-015_SHIRT_COST_EDITOR_PARTIAL"
+    "published": true,
+    "operationally_accepted": false,
+    "actual_catalog_problem_resolved": true,
+    "actual_catalog_diagnostic_validated": true,
+    "actual_financial_acceptance": false,
+    "status": "KNOWN_CATALOG_FAILURE_FIXED_LIVE17_3_DISCOVERY_CYCLE_COMPLETE_ACCEPTANCE_PENDING",
+    "receipt": "../system-audit/catalog-empty-20261117.json",
+    "previous_published_receipt": "../system-audit/publication-monthly-continuation-live.json",
+    "pull_request": 128,
+    "sale_track": "ADIADO_VENDA",
+    "next_independent_task": "OP-014",
+    "required_gates": {
+      "full_local_node": "PASS_LOCAL_L_SAME_FULL_TREE_AS_REMOTE_R_DIFFERENT_SHA",
+      "local_python": "PASS67_REUSED_BYTE_IDENTICAL_PYTHON_FILES_FROM_RECORDED_SOURCE",
+      "exact_remote_ci": "PASS_EXACT_REMOTE_R",
+      "three_external_cloudflare_checks": "PASS_EXACT_REMOTE_R",
+      "exact_wire_dry_run": "PASS_EXACT_WIRE_MODULES",
+      "authenticated_generated_ui": "FULL_LOCAL_SUITE_PASS_SYNTHETIC_GENERATED_UI; NOT_OWNER_LIVE_BOOTSTRAP_OR_FINANCIAL_ACCEPTANCE",
+      "fresh_backup_and_local_restore": "PASS_SCOPED_SNAPSHOT_AND_LOCAL_RESTORE",
+      "public17_2_transport_gate": "COMPLETED_ACTUAL_PUBLIC_FOLLOWUP_BEFORE17_3_PUBLICATION",
+      "publication17_3": true,
+      "native_verification17_3": true,
+      "public_verification17_3": true,
+      "previous_documentary_ci666_before_push17_3": "COMPLETED_SUCCESS_BEFORE17_3_BRANCH_UPDATE; NO_CANCEL_OR_WORKFLOW_CHANGE"
+    },
+    "compatible_targeted_evidence": {
+      "validation": "../system-audit/catalog-empty-20261117.json",
+      "isolated_port_commit": "28394c8a6a6012d161a886dadbd8b4503caa1f2a",
+      "isolated_port_base": "eac37aab4c2a776843f560e294dfdb742238207b",
+      "source_evidence_sha256": "19a479299aa229a0057f035cad120ee84c68e938ff16faae03840e0c27a0ce20",
+      "pass": 104,
+      "scope": "COMPATIBLE_ISOLATED_PORT; NOT_FINAL17_3_EXACT_TREE_FULL_GATE",
+      "full_current_gate": "COMPLETED_SEPARATE_FULL_LOCAL_L_AND_REMOTE_CI_R_ON_PROVED_IDENTICAL_FULL_TREE; HISTORICAL104_SCOPE_PRESERVED"
+    },
+    "local_validated_commit": "760d1b7440186919071e131048921bd83458f0e6",
+    "source_tree": "f7671e24963b58394b476cf4a618caaa61322bbb",
+    "local_remote_same_sha": false,
+    "full_local_node": {
+      "tests": 4679,
+      "pass": 4679,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "duration_ms": 756797.754309,
+      "log_sha256": "562b848314a357cb55961693bdb389602b187ceb3430a79f393e814ca98c5a47",
+      "local_source_commit": "760d1b7440186919071e131048921bd83458f0e6",
+      "source_tree": "f7671e24963b58394b476cf4a618caaa61322bbb",
+      "remote_ci_commit": "ad7f991295ca7b326f0428b5eeb744a88572cdd9",
+      "local_remote_same_sha": false,
+      "scope": "FULL_LOCAL_L_AND_REMOTE_CI_R_SHARE_EXACT_FULL_TREE; DIFFERENT_COMMIT_SHAS"
+    },
+    "local_python": {
+      "pass": 67,
+      "fail": 0,
+      "log_sha256": "50c4b8785a85801d84762330e8d879687be87c8a900599a536df0487222719f3",
+      "execution_source_commit": "a4993a3fb7e4832c1536b004a7eb097b2ecbca83",
+      "same_sha_as_final_candidate": false,
+      "scope": "REUSED_REAL67_TEST_RUN; ALL_TRACKED_PYTHON_FILES_BYTE_IDENTICAL_BETWEEN_RECORDED_SOURCE_AND_LOCAL_FINAL_CANDIDATE",
+      "verified_local_final_commit": "760d1b7440186919071e131048921bd83458f0e6",
+      "entrypoint_sha256": {
+        "web/bridge/test_hermes_bridge.py": "3f3a034907f5ddc581de552307f6831d9f5773fc0a35072eb2ad1c54d8a328b8",
+        "tools/test_install_hermes_web_bridge.py": "fdea82761431adc54faea6c110002320acc143118632b04af0bc35ce5b8c52f4",
+        "tools/test_build_hermes_web_bridge_install.py": "f13fe1e2d73350446083e3149b5bbb6f92db178d1b1397609cc5619f33d9f9ab",
+        "tools/test_activate_hermes_web_bridge.py": "3d1005148743469b9f0104586f4c33b67dc8184ef433b5dde8fa8227ae5529da",
+        "tools/test_build_hermes_web_bridge_activation.py": "32dacd366091c9936cefd8bcf8125864213ee4e4453fa5aa4c6e9e550b7b27e9"
+      }
+    },
+    "native_verified": true,
+    "public_smoke_complete": true,
+    "publication_receipt": "../system-audit/publication-catalog-empty-live.json",
+    "workers": {
+      "finance": "d41571a9-0089-4b12-b774-e540fbd27f5c",
+      "auth": "fb3925e2-ed08-4b92-8c77-7fa5e2af5b00",
+      "app": "b09080a7-b93d-4c97-96e0-be14b1676084"
+    },
+    "publication_blocker": {
+      "status": "RESOLVED_BY_ACTUAL_CANONICAL17_2_PUBLIC_FOLLOWUP_BEFORE17_3_PUBLICATION",
+      "followup_recorded_at": "2026-11-17T22:27:52.785370+00:00",
+      "followup_receipt": "docs/system-audit/publication-catalog-empty-live.json",
+      "prior17_2_receipt_preserved_unchanged": true,
+      "scope": "Old98-byte transport failures remain historical; actual8HTTP8assets followup passed without credentials/CA/proxy/security/grant modifications."
+    },
+    "prior_native17_2_pagination_followup": {
+      "source_release": "2026-11-17.2",
+      "source_commit": "eac37aab4c2a776843f560e294dfdb742238207b",
+      "scope": "PRIOR_ACTUAL_NATIVE17_2_REAL_SOURCE_PAGE_STEP; NOT_CANDIDATE17_3_OR_FULL_FINANCIAL_ACCEPTANCE",
+      "file_name": "history-real-replacement-step-live17-2-proof.json",
+      "sha256": "4c93fbd6d397ebf0c1134a7eb617370713397df5a5d091abb01b1281eb423c5e",
+      "actual_source_pagination_progress_validated": true,
+      "source_pagination_complete": false,
+      "financial_coverage_complete": false,
+      "owner_operational_acceptance": false,
+      "validation": "../system-audit/catalog-empty-20261117.json"
+    },
+    "catalog_runtime_followup": {
+      "receipt": "../system-audit/publication-catalog-empty-live.json",
+      "validation": "../system-audit/catalog-empty-20261117.json",
+      "observation_file": "catalog-post173-recovery-proof.json",
+      "observation_sha256": "e3b980129d4751864b1bfa1bea19647a4265dde06d1fe31e5b999fa19b24aa92",
+      "actual_catalog_problem_resolved": true,
+      "actual_catalog_problem_resolved_scope": "OBSERVED_PRIOR_EMPTY_ITEM_MISSING_BANNED_OFFSET0_FIXED_AND_SIX_STATUS_DISCOVERY_CYCLE_COMPLETE; NOT_CLASSIFICATION_FINANCIAL_OWNER_OR_ALL_SYSTEM_ERRORS",
+      "catalog_scan_complete": true,
+      "catalog_scan_complete_scope": "ONE_BOUNDED_SIX_STATUS_DISCOVERY_CYCLE_ONLY; NOT_CLASSIFICATION_FINANCIAL_OR_GLOBAL_ACCEPTANCE",
+      "catalog_six_status_scan_complete": true,
+      "catalog_coverage": "SIX_STATUS_TRAVERSAL_COMPLETE",
+      "owner_operational_acceptance": false,
+      "all_system_errors_resolved": false
+    },
+    "actual_catalog_problem_resolved_scope": "OBSERVED_PRIOR_EMPTY_ITEM_MISSING_BANNED_OFFSET0_FIXED_AND_SIX_STATUS_DISCOVERY_CYCLE_COMPLETE; NOT_CLASSIFICATION_FINANCIAL_OWNER_OR_ALL_SYSTEM_ERRORS",
+    "catalog_scan_complete": true,
+    "catalog_scan_complete_scope": "ONE_BOUNDED_SIX_STATUS_DISCOVERY_CYCLE_ONLY; NOT_CLASSIFICATION_FINANCIAL_OR_GLOBAL_ACCEPTANCE",
+    "catalog_six_status_scan_complete": true,
+    "all_errors_resolved": false,
+    "limited_owner_ui_confirmation": {
+      "receipt": "../system-audit/publication-catalog-empty-live.json",
+      "file_name": "owner-ui-confirmation.json",
+      "sha256": "cbd40a04232d52283c64ade79d8f3d796537c15fd58bbda1bcb0a9a62db3c628",
+      "shirt_fields_reported_editable": true,
+      "actual_cost_save_or_value_change_observed": false,
+      "global_operational_or_financial_acceptance": false
+    },
+    "native_runtime_reverification_followup": {
+      "receipt": "../system-audit/publication-catalog-empty-live.json",
+      "validation": "../system-audit/catalog-empty-20261117.json",
+      "file_name": "runtime-stage-app-auth-finance.json",
+      "sha256": "ec4a89f01ea4c232509bad78e8b23c828f926120cde7fa621a4bae4a9d41af66",
+      "verified_at": "2026-11-17T23:19:59.105815+00:00",
+      "three_sources_config_routing_active_latest100_unchanged": true
+    },
+    "observer_and_application_write_scope": {
+      "observer_provider_calls": 0,
+      "observer_remote_writes": 0,
+      "actual_application_collector_provider_reads_and_real_cache_updates": true,
+      "application_total_calls_or_writes_asserted_zero": false,
+      "no_real_cost_save_or_value_change_observed": true
+    }
   },
   "latest_owner_constraints": {
     "production_friday_13_brasilia": true,
@@ -5962,6 +6224,894 @@
       },
       "publication_receipt": "validation/publication-dtf-auto-live-20261116.json",
       "release_id": "2026-11-16.3"
+    },
+    {
+      "branch": "feature/owner-dtf-auto-layout-20261116",
+      "source_commit": "2c225f0b341c57b956baa1519f4b63344a4337a6",
+      "source_parent": "ab4ad7ff3fc92922633e096bd26653d12796ff1b",
+      "base_main": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
+      "release_candidate": "2026-11-16.3",
+      "current_track": "owner_operation",
+      "sale_track": "ADIADO_VENDA",
+      "code": true,
+      "tested_locally": "88_TARGETED_4_DARK_10_RELEASE_CLOCK_19_ENVIRONMENT_RECOVERY_67_PYTHON_PASS",
+      "published": true,
+      "operationally_accepted": false,
+      "receipt": "validation/dtf-auto-layout.json",
+      "next_independent_task": "OP-014",
+      "publication_source_commit": "c39c57217f059f2aed62cd694cd556d06a12617a",
+      "validation_head": "c39c57217f059f2aed62cd694cd556d06a12617a",
+      "github_ci": {
+        "id": 44110296190,
+        "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/44110296190",
+        "head_sha": "c39c57217f059f2aed62cd694cd556d06a12617a",
+        "conclusion": "success",
+        "node": {
+          "total": 4500,
+          "pass": 4500,
+          "fail": 0,
+          "skipped": 0,
+          "cancelled": 0
+        },
+        "python": {
+          "total": 67,
+          "pass": 67
+        },
+        "compiled_hashes": {
+          "app": "f86536f9f50606b2cf20a66b00ae16d25febe474cf4030f0abf791ec69a45f61",
+          "auth": "22540b94a52d0c8ad00959c100bb1319231dac8df17deb1d56c4399e9780dc48",
+          "finance": "ccce234f36f0a763942bf30e274360b9d1223b3594b6600adf3352fafd92efb4"
+        },
+        "workflow_preflight_step": "SKIPPED_BY_EXISTING_STACKED_PR_CONDITION",
+        "local_preflight": "FRESH_RELEASE_LOCAL_PREFLIGHT_OK_REQUIRED_BEFORE_PROMOTION"
+      },
+      "publication_receipt": "validation/publication-shirt-cost-live-20261116.json",
+      "release_id": "2026-11-16.4",
+      "task": "OP-015_SHIRT_COST_EDITOR_PARTIAL"
+    },
+    {
+      "task": "SYSTEM_STABILITY_16_5",
+      "branch": "fix/system-stability-20261116",
+      "source_commit": "1ac7b79c7ac38b6bd09ac8ed38d593ec40bad080",
+      "source_parent": "f78b503f5580f5545b4edc19447da63a78925b5f",
+      "base_main": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
+      "release_candidate": "2026-11-16.5",
+      "current_track": "owner_operation",
+      "sale_track": "ADIADO_VENDA",
+      "code": true,
+      "tested_locally": "36_RECOVERY_COMPACTION_PASS; 67_PYTHON_PASS; FULL_LOCAL_GATES_RUNNING",
+      "full_local_gates": "PENDING_FINAL_RESULT",
+      "exact_head_github_ci": "PENDING",
+      "published": false,
+      "operationally_accepted": false,
+      "actual_financial_acceptance": false,
+      "real_data_mutations": 0,
+      "receipt": "../system-audit/validation.json",
+      "next_independent_task": "OP-014",
+      "status": "GATES_PENDING",
+      "compiled_hashes": {
+        "app": "3633dfb963aca8e5f10d90b9427cc482adedf0070eed631929886160b9e7631b",
+        "auth": "f37c53b904ab5d083abb11d84298970b0b62315f54ac12da560d29e145c48347",
+        "finance": "9b21fdf180e37a0bd0f4bb13929bafdcdad158c8de0ba0c66acd0f437bf6d83e"
+      }
+    },
+    {
+      "task": "SYSTEM_STABILITY_16_5",
+      "branch": "fix/system-stability-20261116",
+      "source_commit": "ed651fa7a5bd949519c37d287bcaab9c31cb464a",
+      "source_parent": "f78b503f5580f5545b4edc19447da63a78925b5f",
+      "base_main": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
+      "release_candidate": "2026-11-16.5",
+      "current_track": "owner_operation",
+      "sale_track": "ADIADO_VENDA",
+      "code": true,
+      "tested_locally": "4593_NODE_AND_67_PYTHON_PASS",
+      "full_local_gates": "PASS",
+      "exact_head_github_ci": {
+        "id": 44154590335,
+        "head_sha": "ed651fa7a5bd949519c37d287bcaab9c31cb464a",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/44154590335",
+        "run_number": 661,
+        "node": {
+          "tests": 4593,
+          "pass": 4593,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0
+        },
+        "python": {
+          "pass": 67,
+          "fail": 0
+        },
+        "compiled_hashes": {
+          "app": "3633dfb963aca8e5f10d90b9427cc482adedf0070eed631929886160b9e7631b",
+          "auth": "f37c53b904ab5d083abb11d84298970b0b62315f54ac12da560d29e145c48347",
+          "finance": "9b21fdf180e37a0bd0f4bb13929bafdcdad158c8de0ba0c66acd0f437bf6d83e"
+        },
+        "cloudflare_checks": [
+          {
+            "name": "Workers Builds: brazacommerce-finance",
+            "status": "completed",
+            "conclusion": "success",
+            "id": 134292021267,
+            "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-finance/production/previews/fix-system-stability-20261116/builds/409b35a8-b541-4f7d-8456-84a90a249f0d"
+          },
+          {
+            "name": "Workers Builds: brazacommerce-app",
+            "status": "completed",
+            "conclusion": "success",
+            "id": 134292013971,
+            "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-app/production/previews/fix-system-stability-20261116/builds/52eeab86-4829-4487-a0b5-2c1acbf1441b"
+          },
+          {
+            "name": "Workers Builds: brazacommerce-auth",
+            "status": "completed",
+            "conclusion": "success",
+            "id": 134291980524,
+            "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-auth/production/previews/fix-system-stability-20261116/builds/fcceee7c-bd4f-47e7-9a60-80dd98c2b3e5"
+          }
+        ],
+        "workflow_preflight_step": "SKIPPED_BY_UNCHANGED_STACKED_PR_CONDITION; LOCAL_PREFLIGHT_OK"
+      },
+      "published": true,
+      "operationally_accepted": false,
+      "actual_financial_acceptance": false,
+      "receipt": "../system-audit/validation.json",
+      "next_independent_task": "OP-014",
+      "status": "NATIVE_PUBLISHED_PUBLIC_AND_OPERATIONAL_VERIFICATION_BLOCKED_ENVIRONMENT",
+      "compiled_hashes": {
+        "app": "3633dfb963aca8e5f10d90b9427cc482adedf0070eed631929886160b9e7631b",
+        "auth": "f37c53b904ab5d083abb11d84298970b0b62315f54ac12da560d29e145c48347",
+        "finance": "9b21fdf180e37a0bd0f4bb13929bafdcdad158c8de0ba0c66acd0f437bf6d83e"
+      },
+      "prepared_source_commit": "1ac7b79c7ac38b6bd09ac8ed38d593ec40bad080",
+      "validation_head": "ed651fa7a5bd949519c37d287bcaab9c31cb464a",
+      "publication_source_commit": "ed651fa7a5bd949519c37d287bcaab9c31cb464a",
+      "release_id": "2026-11-16.5",
+      "native_verified": true,
+      "publication_receipt": "../system-audit/publication-live.json",
+      "blockers": "../system-audit/BLOCKERS.json",
+      "workers": {
+        "app": "556565ec-a630-42a7-9b43-a5f24867497c",
+        "auth": "63f8176d-47da-4371-adf8-f9c72733247e",
+        "finance": "cb1d47af-7683-4426-b56e-9b68a8604eee"
+      },
+      "pull_request": 128,
+      "git_integration": "DRAFT_OPEN_NO_MERGE_OR_AUTO_MERGE",
+      "manual_real_business_mutations_by_audit": false,
+      "natural_collector_progress": {
+        "status": "NOT_OBSERVED_AFTER_PUBLICATION",
+        "attempt": "Observer failed before process creation",
+        "provider_requests_by_observer": 0,
+        "source_start_step_reset_by_audit": 0,
+        "scope": "Natural cron may have progressed or written. No assertion of zero total D1 writes, full source recovery, catalogue completeness or financial closure."
+      },
+      "public_verification": "INCOMPLETE_BLOCKED_ENVIRONMENT"
+    },
+    {
+      "task": "SYSTEM_STABILITY_16_5",
+      "branch": "fix/system-stability-20261116",
+      "source_commit": "ed651fa7a5bd949519c37d287bcaab9c31cb464a",
+      "source_parent": "f78b503f5580f5545b4edc19447da63a78925b5f",
+      "base_main": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
+      "release_candidate": "2026-11-16.5",
+      "current_track": "owner_operation",
+      "sale_track": "ADIADO_VENDA",
+      "code": true,
+      "tested_locally": "4593_NODE_AND_67_PYTHON_PASS",
+      "full_local_gates": "PASS",
+      "exact_head_github_ci": {
+        "id": 44154590335,
+        "head_sha": "ed651fa7a5bd949519c37d287bcaab9c31cb464a",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/44154590335",
+        "run_number": 661,
+        "node": {
+          "tests": 4593,
+          "pass": 4593,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0
+        },
+        "python": {
+          "pass": 67,
+          "fail": 0
+        },
+        "compiled_hashes": {
+          "app": "3633dfb963aca8e5f10d90b9427cc482adedf0070eed631929886160b9e7631b",
+          "auth": "f37c53b904ab5d083abb11d84298970b0b62315f54ac12da560d29e145c48347",
+          "finance": "9b21fdf180e37a0bd0f4bb13929bafdcdad158c8de0ba0c66acd0f437bf6d83e"
+        },
+        "cloudflare_checks": [
+          {
+            "name": "Workers Builds: brazacommerce-finance",
+            "status": "completed",
+            "conclusion": "success",
+            "id": 134292021267,
+            "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-finance/production/previews/fix-system-stability-20261116/builds/409b35a8-b541-4f7d-8456-84a90a249f0d"
+          },
+          {
+            "name": "Workers Builds: brazacommerce-app",
+            "status": "completed",
+            "conclusion": "success",
+            "id": 134292013971,
+            "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-app/production/previews/fix-system-stability-20261116/builds/52eeab86-4829-4487-a0b5-2c1acbf1441b"
+          },
+          {
+            "name": "Workers Builds: brazacommerce-auth",
+            "status": "completed",
+            "conclusion": "success",
+            "id": 134291980524,
+            "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-auth/production/previews/fix-system-stability-20261116/builds/fcceee7c-bd4f-47e7-9a60-80dd98c2b3e5"
+          }
+        ],
+        "workflow_preflight_step": "SKIPPED_BY_UNCHANGED_STACKED_PR_CONDITION; LOCAL_PREFLIGHT_OK"
+      },
+      "published": true,
+      "operationally_accepted": false,
+      "actual_financial_acceptance": false,
+      "receipt": "../system-audit/validation.json",
+      "next_independent_task": "OP-014",
+      "status": "PUBLISHED_VERIFIED_TECHNICAL_PUBLIC_ONLY",
+      "compiled_hashes": {
+        "app": "3633dfb963aca8e5f10d90b9427cc482adedf0070eed631929886160b9e7631b",
+        "auth": "f37c53b904ab5d083abb11d84298970b0b62315f54ac12da560d29e145c48347",
+        "finance": "9b21fdf180e37a0bd0f4bb13929bafdcdad158c8de0ba0c66acd0f437bf6d83e"
+      },
+      "prepared_source_commit": "1ac7b79c7ac38b6bd09ac8ed38d593ec40bad080",
+      "validation_head": "ed651fa7a5bd949519c37d287bcaab9c31cb464a",
+      "publication_source_commit": "ed651fa7a5bd949519c37d287bcaab9c31cb464a",
+      "release_id": "2026-11-16.5",
+      "native_verified": true,
+      "publication_receipt": "../system-audit/publication-live.json",
+      "blockers": "../system-audit/BLOCKERS.json",
+      "workers": {
+        "app": "556565ec-a630-42a7-9b43-a5f24867497c",
+        "auth": "63f8176d-47da-4371-adf8-f9c72733247e",
+        "finance": "cb1d47af-7683-4426-b56e-9b68a8604eee"
+      },
+      "pull_request": 128,
+      "git_integration": "DRAFT_OPEN_NO_MERGE_OR_AUTO_MERGE",
+      "manual_real_business_mutations_by_audit": false,
+      "natural_collector_progress": {
+        "status": "READ_ONLY_NATURAL_OBSERVATION_RECORDED",
+        "recorded_at": "2026-11-17T19:42:20.393262+00:00",
+        "evidence": {
+          "at": "2026-11-17T19:42:20.393262+00:00",
+          "release_confirmed_by_root": "2026-11-16.5",
+          "catalog_diagnostic_observed_after_publication": true,
+          "history_attempt_observed_after_publication": false,
+          "provider_requests": 0,
+          "remote_writes": 0,
+          "query_calls": 18,
+          "run_ids_in_artifact": false,
+          "sidecars_present": [
+            "business_history_sync_fairness",
+            "business_month_source_recoveries",
+            "product_registry_source_diagnostics"
+          ],
+          "read_errors": {},
+          "registry": [
+            {
+              "revision": 755,
+              "status": "RETRY_WAIT",
+              "status_index": 1,
+              "offset": 0,
+              "pages_read": 1,
+              "last_attempt_at": 1794944331,
+              "last_success_at": null,
+              "next_run_at": 1794946133,
+              "failure_count": 752,
+              "last_error": "PRODUCT_REGISTRY_SOURCE_UNAVAILABLE",
+              "lease_active": 0
+            }
+          ],
+          "catalog_diagnostic": [
+            {
+              "item_status": "BANNED",
+              "offset": 0,
+              "code": "FINANCE_PRODUCT_INDEX_RESPONSE_INVALID",
+              "http": null,
+              "checked_at": 1794944333
+            }
+          ],
+          "history": [
+            {
+              "month": "2026-10",
+              "status": "RUNNING",
+              "next_run_at": 1794613737,
+              "failure_count": 0,
+              "last_attempt_at": 1794613672,
+              "last_success_at": 1794563336,
+              "last_error": null
+            }
+          ],
+          "recovery_audit_counts": [],
+          "historical_reference_existence": [
+            {
+              "scope": "active",
+              "month": "2026-10",
+              "slot_index": 0,
+              "app_status": "COMPLETE",
+              "same_period_finance_run_exists": false
+            },
+            {
+              "scope": "active",
+              "month": "2026-10",
+              "slot_index": 1,
+              "app_status": "COMPLETE",
+              "same_period_finance_run_exists": false
+            },
+            {
+              "scope": "active",
+              "month": "2026-10",
+              "slot_index": 2,
+              "app_status": "RUNNING",
+              "same_period_finance_run_exists": false
+            },
+            {
+              "scope": "publication",
+              "month": "2026-10",
+              "slot_index": 0,
+              "app_status": "COMPLETE",
+              "same_period_finance_run_exists": false
+            },
+            {
+              "scope": "publication",
+              "month": "2026-10",
+              "slot_index": 1,
+              "app_status": "COMPLETE",
+              "same_period_finance_run_exists": false
+            },
+            {
+              "scope": "publication",
+              "month": "2026-10",
+              "slot_index": 2,
+              "app_status": "COMPLETE",
+              "same_period_finance_run_exists": false
+            }
+          ]
+        },
+        "evidence_sha256": "76d73751371c6792f705a1da822da1b7ac9f2ca5a9cba1e8542738450ecb8e0e",
+        "source_start_step_reset_by_audit": 0,
+        "scope": "Remote writes0 applies only to this observer; existing natural cron may write. This observation does not prove source completeness, closure or owner acceptance."
+      },
+      "public_verification": "VERIFIED_HTTP_ROUTING_AND_EXACT_ASSETS",
+      "documentary_ci": {
+        "head_sha": "0315e454ea42a4ee477f7aed7deeeb7edd8845fd",
+        "id": 44159400083,
+        "run_number": 662,
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/44159400083",
+        "checks": [
+          {
+            "name": "Workers Builds: brazacommerce-finance",
+            "id": 134309598385,
+            "head_sha": "0315e454ea42a4ee477f7aed7deeeb7edd8845fd",
+            "status": "completed",
+            "conclusion": "success",
+            "completed_at": "2026-11-17T19:32:13Z",
+            "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/runs/134309598385"
+          },
+          {
+            "name": "Workers Builds: brazacommerce-auth",
+            "id": 134309522330,
+            "head_sha": "0315e454ea42a4ee477f7aed7deeeb7edd8845fd",
+            "status": "completed",
+            "conclusion": "success",
+            "completed_at": "2026-11-17T19:32:05Z",
+            "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/runs/134309522330"
+          },
+          {
+            "name": "Workers Builds: brazacommerce-app",
+            "id": 134309280508,
+            "head_sha": "0315e454ea42a4ee477f7aed7deeeb7edd8845fd",
+            "status": "completed",
+            "conclusion": "success",
+            "completed_at": "2026-11-17T19:31:43Z",
+            "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/runs/134309280508"
+          },
+          {
+            "name": "validate",
+            "id": 134308826489,
+            "head_sha": "0315e454ea42a4ee477f7aed7deeeb7edd8845fd",
+            "status": "completed",
+            "conclusion": "success",
+            "completed_at": "2026-11-17T19:41:48Z",
+            "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/44159400083/job/134308826489"
+          }
+        ],
+        "scope": "FOLLOWUP_DOCUMENTATION_ONLY; SOURCE_PUBLICATION_CI_REMAINS661_ED651FA",
+        "node": {
+          "tests": 4593,
+          "pass": 4593,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0
+        },
+        "python": {
+          "pass": 67,
+          "fail": 0
+        },
+        "compiled_hashes": {
+          "app": "3633dfb963aca8e5f10d90b9427cc482adedf0070eed631929886160b9e7631b",
+          "auth": "f37c53b904ab5d083abb11d84298970b0b62315f54ac12da560d29e145c48347",
+          "finance": "9b21fdf180e37a0bd0f4bb13929bafdcdad158c8de0ba0c66acd0f437bf6d83e"
+        }
+      },
+      "native_reverified_at": "2026-11-17T19:42:35.705887+00:00"
+    },
+    {
+      "task": "CATALOG_RESPONSE_DIAGNOSTICS_17_1",
+      "branch": "fix/system-stability-20261116",
+      "source_commit": "2c1764b607ab719f5109688b9ad6559e69ce979c",
+      "release_candidate": "2026-11-17.1",
+      "base_main": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
+      "code": true,
+      "tested_locally": "75_TARGETED_PASS_FULL_LOCAL_NODE_RUNNING",
+      "exact_head_github_ci": "PENDING",
+      "published": false,
+      "operationally_accepted": false,
+      "actual_catalog_problem_resolved": false,
+      "receipt": "../system-audit/catalog-diagnostics-20261117.json",
+      "previous_published_receipt": "../system-audit/publication-live.json",
+      "pull_request": 128,
+      "sale_track": "ADIADO_VENDA",
+      "next_independent_task": "OP-014"
+    },
+    {
+      "task": "CATALOG_RESPONSE_DIAGNOSTICS_17_1",
+      "branch": "fix/system-stability-20261116",
+      "source_commit": "e26357dd23b7c488b803481099b2da0af66eb6b6",
+      "release_candidate": "2026-11-17.1",
+      "base_main": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
+      "code": true,
+      "tested_locally": "4631_NODE_67_PYTHON_75_TARGETED_PASS_IDENTICAL_TREE",
+      "exact_head_github_ci": {
+        "id": 44164656045,
+        "run_number": 663,
+        "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/44164656045",
+        "status": "completed",
+        "conclusion": "success",
+        "head_sha": "e26357dd23b7c488b803481099b2da0af66eb6b6",
+        "node": {
+          "tests": 4631,
+          "pass": 4631,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0
+        },
+        "python": {
+          "pass": 67,
+          "fail": 0
+        },
+        "compiled_hashes": {
+          "app": "db0c20e75d6237de140cbacd3e256104336cc348e1af93cf6ce192b7e81d4239",
+          "auth": "e48e0dee32ee2d68c1523a716cd752e1df189f59d54e5f16c7899e45ae08b8a0",
+          "finance": "522cd735b73157eee92f1859d87959f5e66a7b8070afb4b2c26cb92006a44bf0"
+        },
+        "workflow_preflight_step": "SKIPPED_BY_EXISTING_STACKED_PR_CONDITION; LOCAL_PREFLIGHT_PASS",
+        "cloudflare_checks": [
+          {
+            "name": "Workers Builds: brazacommerce-app",
+            "status": "completed",
+            "conclusion": "success",
+            "id": 134328116832,
+            "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-app/production/previews/fix-system-stability-20261116/builds/2c406e8b-1f2e-479f-9cf0-ec69409d409a"
+          },
+          {
+            "name": "Workers Builds: brazacommerce-finance",
+            "status": "completed",
+            "conclusion": "success",
+            "id": 134328038598,
+            "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-finance/production/previews/fix-system-stability-20261116/builds/36ccef33-22d8-4914-8238-a74db2579c32"
+          },
+          {
+            "name": "Workers Builds: brazacommerce-auth",
+            "status": "completed",
+            "conclusion": "success",
+            "id": 134328001622,
+            "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-auth/production/previews/fix-system-stability-20261116/builds/084cc3bf-8482-42c8-ac6a-24964e329e24"
+          }
+        ]
+      },
+      "published": true,
+      "operationally_accepted": false,
+      "actual_catalog_problem_resolved": false,
+      "receipt": "../system-audit/catalog-diagnostics-20261117.json",
+      "previous_published_receipt": "../system-audit/publication-live.json",
+      "pull_request": 128,
+      "sale_track": "ADIADO_VENDA",
+      "next_independent_task": "OP-014",
+      "validation_head": "e26357dd23b7c488b803481099b2da0af66eb6b6",
+      "local_validated_commit": "f1b01f02bb8daf538d8c481c200d38d91e2cf8c9",
+      "source_tree": "fc7be331680f6724281c49110d9ade9b96a8b986",
+      "release_id": "2026-11-17.1",
+      "publication_receipt": "../system-audit/publication-catalog-diagnostics-live.json",
+      "actual_financial_acceptance": false,
+      "status": "PUBLISHED_VERIFIED_TECHNICAL_PUBLIC_ONLY",
+      "git_integration": "DRAFT_OPEN_NO_MERGE_OR_AUTO_MERGE",
+      "workers": {
+        "finance": "60259fca-980a-4255-8157-fb74b43023cf",
+        "auth": "5848d2d1-944f-4633-84ce-78886a701dc2",
+        "app": "078e9f9e-d6b3-4dee-8d4c-33a821d43288"
+      }
+    },
+    {
+      "task": "BOUNDED_MONTHLY_CONTINUATION_17_2",
+      "branch": "fix/system-stability-20261116",
+      "source_commit": "65283aad930bae2159fff6e579025a37097eaa87",
+      "release_candidate": "2026-11-17.2",
+      "base_main": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
+      "code": true,
+      "tested_locally": "21_TARGETED_PASS_FULL_GATES_PENDING",
+      "exact_head_github_ci": "PENDING",
+      "published": false,
+      "operationally_accepted": false,
+      "actual_catalog_problem_resolved": false,
+      "receipt": "../system-audit/monthly-continuation-20261117.json",
+      "previous_published_receipt": "../system-audit/publication-catalog-diagnostics-live.json",
+      "pull_request": 128,
+      "sale_track": "ADIADO_VENDA",
+      "next_independent_task": "OP-014"
+    },
+    {
+      "task": "BOUNDED_MONTHLY_CONTINUATION_17_2",
+      "branch": "fix/system-stability-20261116",
+      "source_commit": "eac37aab4c2a776843f560e294dfdb742238207b",
+      "release_candidate": "2026-11-17.2",
+      "base_main": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
+      "code": true,
+      "tested_locally": "4648_NODE_67_PYTHON_21_TARGETED_PASS_EXACT_SOURCE",
+      "exact_head_github_ci": {
+        "id": 44175286949,
+        "run_number": 665,
+        "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/44175286949",
+        "head_sha": "eac37aab4c2a776843f560e294dfdb742238207b",
+        "status": "completed",
+        "conclusion": "success",
+        "node": {
+          "tests": 4648,
+          "pass": 4648,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0
+        },
+        "python": {
+          "pass": 67,
+          "fail": 0
+        },
+        "compiled_hashes": {
+          "app": "10c324f14d0203f1453d36ec60b3d11d0250d40c446b0bc81c5578332ddac0f1",
+          "auth": "002bc90da88de19b968eda850dd668b4811c04506d2be9811f08140828eda6c4",
+          "finance": "522cd735b73157eee92f1859d87959f5e66a7b8070afb4b2c26cb92006a44bf0"
+        },
+        "workflow_preflight_step": "SKIPPED_BY_EXISTING_STACKED_PR_CONDITION; LOCAL_PREFLIGHT_PASS",
+        "cloudflare_checks": [
+          {
+            "name": "Workers Builds: brazacommerce-app",
+            "status": "completed",
+            "conclusion": "success",
+            "id": 134365725970,
+            "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-app/production/previews/fix-system-stability-20261116/builds/f135743c-32ff-42d4-a98e-3cd556e5c5c1"
+          },
+          {
+            "name": "Workers Builds: brazacommerce-finance",
+            "status": "completed",
+            "conclusion": "success",
+            "id": 134365521662,
+            "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-finance/production/previews/fix-system-stability-20261116/builds/b860cf70-3173-4b65-9ef7-10d6faadc0f0"
+          },
+          {
+            "name": "Workers Builds: brazacommerce-auth",
+            "status": "completed",
+            "conclusion": "success",
+            "id": 134365423384,
+            "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-auth/production/previews/fix-system-stability-20261116/builds/a59a46f5-951c-455b-8831-0553a2fead13"
+          }
+        ]
+      },
+      "published": true,
+      "operationally_accepted": false,
+      "actual_catalog_problem_resolved": false,
+      "receipt": "../system-audit/monthly-continuation-20261117.json",
+      "previous_published_receipt": "../system-audit/publication-catalog-diagnostics-live.json",
+      "pull_request": 128,
+      "sale_track": "ADIADO_VENDA",
+      "next_independent_task": "OP-014",
+      "validation_head": "eac37aab4c2a776843f560e294dfdb742238207b",
+      "local_validated_commit": "eac37aab4c2a776843f560e294dfdb742238207b",
+      "archived_pre_reconciliation_commit": "44d9f8057efb78c78852e796ab093a731b50587c",
+      "source_tree": "16d8404399f06e816ef144d669008bc9211c5947",
+      "release_id": "2026-11-17.2",
+      "native_verified": true,
+      "public_smoke_complete": false,
+      "publication_receipt": "../system-audit/publication-monthly-continuation-live.json",
+      "actual_monthly_source_progress_validated": false,
+      "actual_financial_acceptance": false,
+      "status": "NATIVE_PUBLISHED_PUBLIC_TRANSPORT_PENDING",
+      "git_integration": "DRAFT_OPEN_NO_MERGE_OR_AUTO_MERGE",
+      "workers": {
+        "finance": "60259fca-980a-4255-8157-fb74b43023cf",
+        "auth": "afb0a5aa-b442-4137-b27a-8dbc35152774",
+        "app": "36fa53b2-7917-4df4-80c2-14116046bfaa"
+      },
+      "actual_monthly_recovery_validated": true,
+      "source_page_progress": false,
+      "monthly_recovery_evidence": {
+        "receipt": "../system-audit/publication-monthly-continuation-live.json",
+        "evidence_file": "history-real-replacement-live17-2-proof-v2.json",
+        "evidence_sha256": "338396199dd264e4e14e2a9889e7eeb44624c54a70d5d7e491312b06b6d35359",
+        "evidence_canonical_sha256": "bd0b328c1e4ddbd35daeed555033b4ab02a6a566c980746de137f645ea4093b8",
+        "source_commit": "eac37aab4c2a776843f560e294dfdb742238207b",
+        "scope": "ONE_REAL_SAME_PERIOD_SOURCE_REPLACEMENT; ORIGINAL_AUDIT_FRAME_AND_OLD_PUBLICATION_PRESERVED; PAGE_PROGRESS_NOT_OBSERVED"
+      },
+      "actual_catalog_diagnostic_validated": true,
+      "catalog_diagnostic_evidence": {
+        "receipt": "../system-audit/publication-monthly-continuation-live.json",
+        "evidence_file": "observed-work-live17-2-pass4.json",
+        "evidence_sha256": "d64e6def4d2c6eeca04e65b263a8383a46c68a435879b1226e5d6ebe71220803",
+        "evidence_canonical_sha256": "e1d281f9597a15748ec5a66e03aee5b584845625fa2e412075ae2434bee0b139",
+        "source_commit": "eac37aab4c2a776843f560e294dfdb742238207b",
+        "diagnostic_code": "FINANCE_PRODUCT_INDEX_RESPONSE_EMPTY_ITEM_MISSING",
+        "scope": "REAL_FINITE_STRUCTURAL_CLASSIFIER_DIAGNOSTIC; CATALOG_RECOVERY_NOT_YET_PROVEN"
+      }
+    },
+    {
+      "task": "CATALOG_EXPLICIT_ZERO_OMITTED_FIRST_PAGE_COMPATIBILITY_17_3",
+      "release_candidate": "2026-11-17.3",
+      "release_id": "2026-11-17.3",
+      "branch": "fix/system-stability-20261116",
+      "source_commit": "21eae88262e9e5872e1c2ad40fede2d5d7561de0",
+      "source_commit_scope": "LOCAL_PREPARED_SOURCE; NOT_FINAL_REMOTE_CI_SHA",
+      "source_reconciliation": {
+        "prepared_source_commit": "21eae88262e9e5872e1c2ad40fede2d5d7561de0",
+        "prepared_source_tree": "ca1e54184766feb06b899f8d8e54b41d19ca7c65",
+        "local_head_at_document_preparation": "a4993a3fb7e4832c1536b004a7eb097b2ecbca83",
+        "local_implementation_commit": "25ef620f58a39a132250ca746a2808d2d19b19bd",
+        "remote_candidate_commit": null,
+        "local_full_validation_commit": null,
+        "local_full_validation_tree": null,
+        "remote_ci_validation_commit": null,
+        "local_and_remote_sha_same": false,
+        "tree_equivalence_for_future_full_validation": "REQUIRED_NOT_YET_RECORDED; SAME_TREE_IS_NOT_SAME_SHA",
+        "previous_documentary_reconciliation": {
+          "local_docs_commit": "f7fb319745b8f7acd03356902fb0aa91407aac5e",
+          "local_archive_branch": "archive/monthly-docs-native-before-17-3-20261117",
+          "remote_docs_commit": "81e3ed0f5563a3921da868f3d4a6dba391ed467e",
+          "same_full_tree": "357c4f23f5c5314c1a5a4d30a888810906e8acef",
+          "same_sha": false,
+          "remote_tree_proof_origin": "ROOT_CONFIRMED_GITHUB_GITDATA_RESULT",
+          "native_fetch_status": "503_NATIVE_FETCH_HTTP2_AND_HTTP1_1; API_METADATA_FOUR_CANONICAL_FORMS_DID_NOT_MATCH; NO_OBJECT_IMPORTED; LOCAL_COMMIT_PRESERVED; MAIN_UNTOUCHED"
+        }
+      },
+      "base_main": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
+      "code": true,
+      "tested_locally": "104_COMPATIBLE_ISOLATED_TARGETED_REUSED; EXACT17_3_FULL_PENDING",
+      "exact_head_github_ci": "PENDING_REMOTE17_3_CANDIDATE_SHA",
+      "published": false,
+      "operationally_accepted": false,
+      "actual_catalog_problem_resolved": false,
+      "actual_catalog_diagnostic_validated": true,
+      "actual_financial_acceptance": false,
+      "status": "IMPLEMENTED_COMPATIBLE_TARGETED_REUSED_FULL_EXACT_CANDIDATE_GATES_PENDING",
+      "receipt": "../system-audit/catalog-empty-20261117.json",
+      "previous_published_receipt": "../system-audit/publication-monthly-continuation-live.json",
+      "pull_request": 128,
+      "sale_track": "ADIADO_VENDA",
+      "next_independent_task": "OP-014",
+      "required_gates": {
+        "full_local_node": "PENDING_EXACT_FINAL_CANDIDATE",
+        "local_python": "PENDING_EXACT_FINAL_CANDIDATE",
+        "exact_remote_ci": "PENDING_REMOTE_CANDIDATE_SHA",
+        "three_external_cloudflare_checks": "PENDING_REMOTE_CANDIDATE_SHA",
+        "exact_wire_dry_run": "PENDING_FINAL_CANDIDATE",
+        "authenticated_generated_ui": "PENDING_EXACT_RELEASE_FULL_SUITE",
+        "fresh_backup_and_local_restore": "PENDING_BEFORE_ANY_NEXT_PUBLICATION",
+        "public17_2_transport_gate": "BLOCKED_EXACT98BYTE_ENVOY503; MUST_COMPLETE_BEFORE_NEXT_DEPLOY",
+        "publication17_3": false,
+        "native_verification17_3": false,
+        "public_verification17_3": false
+      },
+      "compatible_targeted_evidence": {
+        "validation": "../system-audit/catalog-empty-20261117.json",
+        "isolated_port_commit": "28394c8a6a6012d161a886dadbd8b4503caa1f2a",
+        "isolated_port_base": "eac37aab4c2a776843f560e294dfdb742238207b",
+        "source_evidence_sha256": "19a479299aa229a0057f035cad120ee84c68e938ff16faae03840e0c27a0ce20",
+        "pass": 104,
+        "scope": "COMPATIBLE_ISOLATED_PORT; NOT_FINAL17_3_EXACT_TREE_FULL_GATE"
+      }
+    },
+    {
+      "task": "CATALOG_EXPLICIT_ZERO_OMITTED_FIRST_PAGE_COMPATIBILITY_17_3",
+      "release_candidate": "2026-11-17.3",
+      "release_id": "2026-11-17.3",
+      "branch": "fix/system-stability-20261116",
+      "source_commit": "ad7f991295ca7b326f0428b5eeb744a88572cdd9",
+      "source_commit_scope": "REMOTE_R_PUBLISHED_EXACT_BYTES; LOCAL_L_SAME_FULL_TREE_DIFFERENT_SHA",
+      "source_reconciliation": {
+        "schema": "mls_supported_gitdata_full_tree_equivalence_v1",
+        "local_head": "760d1b7440186919071e131048921bd83458f0e6",
+        "local_archive_branch": "archive/catalog-empty-native-before-connector-20261117",
+        "remote_head": "ad7f991295ca7b326f0428b5eeb744a88572cdd9",
+        "tree": "f7671e24963b58394b476cf4a618caaa61322bbb",
+        "local_remote_same_sha": false,
+        "full_tree_identical_confirmed_by_github_create_tree": true,
+        "remote_parent": "81e3ed0f5563a3921da868f3d4a6dba391ed467e",
+        "local_base": "f7fb319745b8f7acd03356902fb0aa91407aac5e",
+        "base_tree_identical": "357c4f23f5c5314c1a5a4d30a888810906e8acef",
+        "native_fetch_blocked_503": true,
+        "native_remote_object_not_imported": true,
+        "local_source_preserved": true,
+        "force_push": false,
+        "main_modified": false,
+        "branch_updated_yet": true,
+        "expected_remote_parent_lease": "81e3ed0f5563a3921da868f3d4a6dba391ed467e",
+        "prior_ci666_completed_before_branch_update": true
+      },
+      "base_main": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
+      "code": true,
+      "tested_locally": "4679_NODE_FULL_LOCAL_L;67_PYTHON_REUSED_IDENTICAL_FILES;CI_EXACT_REMOTE_R_SAME_TREE_DIFFERENT_SHA",
+      "exact_head_github_ci": {
+        "id": 44185929362,
+        "run_number": 667,
+        "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/44185929362",
+        "head_sha": "ad7f991295ca7b326f0428b5eeb744a88572cdd9",
+        "status": "completed",
+        "conclusion": "success",
+        "node": {
+          "tests": 4679,
+          "pass": 4679,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0
+        },
+        "python": {
+          "pass": 67,
+          "fail": 0
+        },
+        "compiled_hashes": {
+          "app": "b0aa9cc1009d9d7ea276d406d0d87ecb90feda73ae3db77fe85ff64173e456e4",
+          "auth": "e3b7aecfeda1109fbe98d9fa6f8ee1ab55dcc5a70ae32fc4a5bc70c48b286a5c",
+          "finance": "f6c8a5daa307cdecb60c0c722c89aa2de02d3afe12940f315973446070561f33"
+        },
+        "cloudflare_checks": [
+          {
+            "name": "Workers Builds: brazacommerce-auth",
+            "head_sha": "ad7f991295ca7b326f0428b5eeb744a88572cdd9",
+            "status": "completed",
+            "conclusion": "success",
+            "id": 134402687155,
+            "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-auth/production/previews/fix-system-stability-20261116/builds/4ff86218-cbfd-4e00-8389-8b050cc2e891"
+          },
+          {
+            "name": "Workers Builds: brazacommerce-app",
+            "head_sha": "ad7f991295ca7b326f0428b5eeb744a88572cdd9",
+            "status": "completed",
+            "conclusion": "success",
+            "id": 134402647019,
+            "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-app/production/previews/fix-system-stability-20261116/builds/72f9d144-324c-4879-86e8-8c2618b0b323"
+          },
+          {
+            "name": "Workers Builds: brazacommerce-finance",
+            "head_sha": "ad7f991295ca7b326f0428b5eeb744a88572cdd9",
+            "status": "completed",
+            "conclusion": "success",
+            "id": 134402554516,
+            "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-finance/production/previews/fix-system-stability-20261116/builds/b9caf5ed-1b01-4cd8-a188-7cac1a184bf5"
+          }
+        ],
+        "workflow_preflight_step": "SKIPPED_BY_EXISTING_STACKED_PR_CONDITION; LOCAL_PREFLIGHT_PASS"
+      },
+      "published": true,
+      "operationally_accepted": false,
+      "actual_catalog_problem_resolved": false,
+      "actual_catalog_diagnostic_validated": true,
+      "actual_financial_acceptance": false,
+      "status": "PUBLISHED_VERIFIED_TECHNICAL_PUBLIC_ONLY",
+      "receipt": "../system-audit/catalog-empty-20261117.json",
+      "previous_published_receipt": "../system-audit/publication-monthly-continuation-live.json",
+      "pull_request": 128,
+      "sale_track": "ADIADO_VENDA",
+      "next_independent_task": "OP-014",
+      "required_gates": {
+        "full_local_node": "PASS_LOCAL_L_SAME_FULL_TREE_AS_REMOTE_R_DIFFERENT_SHA",
+        "local_python": "PASS67_REUSED_BYTE_IDENTICAL_PYTHON_FILES_FROM_RECORDED_SOURCE",
+        "exact_remote_ci": "PASS_EXACT_REMOTE_R",
+        "three_external_cloudflare_checks": "PASS_EXACT_REMOTE_R",
+        "exact_wire_dry_run": "PASS_EXACT_WIRE_MODULES",
+        "authenticated_generated_ui": "FULL_LOCAL_SUITE_PASS_SYNTHETIC_GENERATED_UI; NOT_OWNER_LIVE_BOOTSTRAP_OR_FINANCIAL_ACCEPTANCE",
+        "fresh_backup_and_local_restore": "PASS_SCOPED_SNAPSHOT_AND_LOCAL_RESTORE",
+        "public17_2_transport_gate": "COMPLETED_ACTUAL_PUBLIC_FOLLOWUP_BEFORE17_3_PUBLICATION",
+        "publication17_3": true,
+        "native_verification17_3": true,
+        "public_verification17_3": true,
+        "previous_documentary_ci666_before_push17_3": "COMPLETED_SUCCESS_BEFORE17_3_BRANCH_UPDATE; NO_CANCEL_OR_WORKFLOW_CHANGE"
+      },
+      "compatible_targeted_evidence": {
+        "validation": "../system-audit/catalog-empty-20261117.json",
+        "isolated_port_commit": "28394c8a6a6012d161a886dadbd8b4503caa1f2a",
+        "isolated_port_base": "eac37aab4c2a776843f560e294dfdb742238207b",
+        "source_evidence_sha256": "19a479299aa229a0057f035cad120ee84c68e938ff16faae03840e0c27a0ce20",
+        "pass": 104,
+        "scope": "COMPATIBLE_ISOLATED_PORT; NOT_FINAL17_3_EXACT_TREE_FULL_GATE",
+        "full_current_gate": "COMPLETED_SEPARATE_FULL_LOCAL_L_AND_REMOTE_CI_R_ON_PROVED_IDENTICAL_FULL_TREE; HISTORICAL104_SCOPE_PRESERVED"
+      },
+      "local_validated_commit": "760d1b7440186919071e131048921bd83458f0e6",
+      "source_tree": "f7671e24963b58394b476cf4a618caaa61322bbb",
+      "local_remote_same_sha": false,
+      "full_local_node": {
+        "tests": 4679,
+        "pass": 4679,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "duration_ms": 756797.754309,
+        "log_sha256": "562b848314a357cb55961693bdb389602b187ceb3430a79f393e814ca98c5a47",
+        "local_source_commit": "760d1b7440186919071e131048921bd83458f0e6",
+        "source_tree": "f7671e24963b58394b476cf4a618caaa61322bbb",
+        "remote_ci_commit": "ad7f991295ca7b326f0428b5eeb744a88572cdd9",
+        "local_remote_same_sha": false,
+        "scope": "FULL_LOCAL_L_AND_REMOTE_CI_R_SHARE_EXACT_FULL_TREE; DIFFERENT_COMMIT_SHAS"
+      },
+      "local_python": {
+        "pass": 67,
+        "fail": 0,
+        "log_sha256": "50c4b8785a85801d84762330e8d879687be87c8a900599a536df0487222719f3",
+        "execution_source_commit": "a4993a3fb7e4832c1536b004a7eb097b2ecbca83",
+        "same_sha_as_final_candidate": false,
+        "scope": "REUSED_REAL67_TEST_RUN; ALL_TRACKED_PYTHON_FILES_BYTE_IDENTICAL_BETWEEN_RECORDED_SOURCE_AND_LOCAL_FINAL_CANDIDATE",
+        "verified_local_final_commit": "760d1b7440186919071e131048921bd83458f0e6",
+        "entrypoint_sha256": {
+          "web/bridge/test_hermes_bridge.py": "3f3a034907f5ddc581de552307f6831d9f5773fc0a35072eb2ad1c54d8a328b8",
+          "tools/test_install_hermes_web_bridge.py": "fdea82761431adc54faea6c110002320acc143118632b04af0bc35ce5b8c52f4",
+          "tools/test_build_hermes_web_bridge_install.py": "f13fe1e2d73350446083e3149b5bbb6f92db178d1b1397609cc5619f33d9f9ab",
+          "tools/test_activate_hermes_web_bridge.py": "3d1005148743469b9f0104586f4c33b67dc8184ef433b5dde8fa8227ae5529da",
+          "tools/test_build_hermes_web_bridge_activation.py": "32dacd366091c9936cefd8bcf8125864213ee4e4453fa5aa4c6e9e550b7b27e9"
+        }
+      },
+      "native_verified": true,
+      "public_smoke_complete": true,
+      "publication_receipt": "../system-audit/publication-catalog-empty-live.json",
+      "workers": {
+        "finance": "d41571a9-0089-4b12-b774-e540fbd27f5c",
+        "auth": "fb3925e2-ed08-4b92-8c77-7fa5e2af5b00",
+        "app": "b09080a7-b93d-4c97-96e0-be14b1676084"
+      },
+      "publication_blocker": {
+        "status": "RESOLVED_BY_ACTUAL_CANONICAL17_2_PUBLIC_FOLLOWUP_BEFORE17_3_PUBLICATION",
+        "followup_recorded_at": "2026-11-17T22:27:52.785370+00:00",
+        "followup_receipt": "docs/system-audit/publication-catalog-empty-live.json",
+        "prior17_2_receipt_preserved_unchanged": true,
+        "scope": "Old98-byte transport failures remain historical; actual8HTTP8assets followup passed without credentials/CA/proxy/security/grant modifications."
+      },
+      "prior_native17_2_pagination_followup": {
+        "source_release": "2026-11-17.2",
+        "source_commit": "eac37aab4c2a776843f560e294dfdb742238207b",
+        "scope": "PRIOR_ACTUAL_NATIVE17_2_REAL_SOURCE_PAGE_STEP; NOT_CANDIDATE17_3_OR_FULL_FINANCIAL_ACCEPTANCE",
+        "file_name": "history-real-replacement-step-live17-2-proof.json",
+        "sha256": "4c93fbd6d397ebf0c1134a7eb617370713397df5a5d091abb01b1281eb423c5e",
+        "actual_source_pagination_progress_validated": true,
+        "source_pagination_complete": false,
+        "financial_coverage_complete": false,
+        "owner_operational_acceptance": false,
+        "validation": "../system-audit/catalog-empty-20261117.json"
+      },
+      "catalog_runtime_followup": {
+        "receipt": "../system-audit/publication-catalog-empty-live.json",
+        "validation": "../system-audit/catalog-empty-20261117.json",
+        "observation_file": "catalog-after-finance-173-observation-1.json",
+        "observation_sha256": "920bdf334d66e82d07721345956e6a5e6ceeaad88a2c9ee250320dc836f40af3",
+        "scope": "CURRENT_RETAINED_ERROR_IS_PRE_FIX; POST_FIX_RESULT_PENDING_BACKOFF",
+        "next_eligible_at_utc": "2026-11-17T22:55:53Z",
+        "display_timezone": "America/Sao_Paulo",
+        "actual_catalog_problem_resolved": false,
+        "owner_repeat_click_required": false
+      }
     }
   ]
 }

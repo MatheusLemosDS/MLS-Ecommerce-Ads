@@ -40,6 +40,8 @@ test('release preflight passes only an exact reviewed local build and leaves rem
 test('financial automation opens only the exact reviewed Finance delta and retains the existing account paths',()=>{
  assert.deepEqual(RELEASE_APPROVED_PROTECTED_FILES,[
   "web/finance/src/auth-router.mjs",
+  "web/finance/src/business-period-missing-run.mjs",
+  "web/finance/tests/business-period-missing-run.test.mjs",
   "web/finance/src/business-period.mjs",
   "web/finance/src/commercial-finance-worker.mjs",
   "web/finance/src/connection-store.mjs",
@@ -62,6 +64,9 @@ test('financial automation opens only the exact reviewed Finance delta and retai
   "web/finance/src/pending-income-scan.mjs",
   "web/finance/src/product-index-frame.mjs",
   "web/finance/src/product-index.mjs",
+  "web/finance/tests/product-index.test.mjs",
+  "web/finance/tests/monthly-source-throughput-fixture.mjs",
+  "web/finance/tests/monthly-source-throughput.test.mjs",
   "web/finance/src/production-orders-frame.mjs",
   "web/finance/src/production-orders.mjs",
   "web/finance/src/production-worker.mjs",

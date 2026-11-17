@@ -4,6 +4,72 @@ A trilha ativa é **owner_operation**. Cadastro de outros clientes, e-mail comer
 
 [Checkpoint canônico](../MLS_COMMERCE_OS_CHECKPOINT.json) · [36 tarefas e dependências técnicas](EXECUCAO.json) · [21 contratos visuais e famílias preservadas](CATALOGO_GRAFICOS.json) · [inspeção atual](validation/reconciliation.json) · [validação do incremento](validation/owner-dtf-batches.json).
 
+## Catálogo 17.3 — descoberta concluída e editor de camisetas confirmado
+
+[Recibo com confirmação real](../system-audit/publication-catalog-empty-live.json) · [validação](../system-audit/catalog-empty-20261117.json). A coleta concluiu seis status em seis páginas, limpou falhas/diagnóstico e chegou a IDLE em 17/11 às 20:12:45 (Brasília). São 78 identidades registradas entre os status, incluindo todas as 59 anteriores preservadas. Esse aceite funcional resolve a falha BANNED/offset0 e comprova o ciclo de descoberta, mantendo classificação, anúncios ativos, vendas e completude financeira em seus próprios escopos.
+
+O proprietário confirmou os campos P–GG/G1–G3 editáveis em **Produtos → Custos e regras → Editar custos das camisetas adultas**. Para aplicar valores futuros, use o editor e o salvamento auditado existentes; nenhum novo valor ou salvamento real foi observado nesta conferência. Fabricação, CMV e fechamentos históricos mantêm seus registros e confirmações.
+
+A coleta segue a programação normal, sem repetir clique, resetar, forçar fonte ou pular status. O observador fez somente leituras; a aplicação consultou o fornecedor e atualizou o cache real. Aceite owner/financeiro geral e backup/restauração dos PNGs reais permanecem pendentes. O fetch Git suportado recuperado foi registrado sem apagar as falhas anteriores.
+
+## Histórico da publicação e observações anteriores
+
+## Catálogo 17.3 — publicação técnica conferida
+
+[Recibo](../system-audit/publication-catalog-empty-live.json) · [validação](../system-audit/catalog-empty-20261117.json). Três Workers publicados com fontes/configurações/tráfego de 100% e HTTP/assets conferidos. A compatibilidade mantém filtros, cursor terminal, backoff, identidade, permissões e CAS; item nulo ou ausência incerta continuam erro.
+
+1. Em **Produtos**, acompanhe a atualização normal do catálogo. O proprietário já clicou uma vez; não é necessário repetir. O erro retido pertence à tentativa anterior à correção, e a próxima janela elegível começa por volta de 17/11 às 19h56 (Brasília), sujeita à fila e ao backoff. Não resete/force fonte nem pule BANNED.
+2. Confira o resultado real da próxima tentativa; a publicação técnica não comprova recuperação do catálogo ou completude financeira.
+3. Continue pedidos, DTF, produção, custos e pagamentos independentes pelos seus gates. Backup/restauração dos PNGs reais, fatos físicos e aceite owner permanecem separados.
+
+A leitura pública pendente da 17.2 foi concluída antes deste deploy. Seu recibo histórico permanece íntegro; nenhum erro de transporte foi tratado como sucesso. Venda ADIADO_VENDA; OP-014 independente.
+
+## Histórico da preparação da 17.3 e entregas anteriores
+
+## Catálogo 17.3 — correção preparada, gates pendentes
+
+[Contrato e validação da candidata](../system-audit/catalog-empty-20261117.json) · [Live nativa 17.2 preservada](../system-audit/publication-monthly-continuation-live.json). A 17.3 ainda não foi publicada; a conferência pública completa da 17.2 continua pendente de transporte.
+
+O erro real do primeiro offset BANNED foi identificado como `FINANCE_PRODUCT_INDEX_RESPONSE_EMPTY_ITEM_MISSING`. A compatibilidade preparada exige total próprio explícito +0, indicador próprio de página final falso, item omitido, offset inicial 0 e cursor terminal validado separadamente. Item nulo ou ausência genérica não vira sucesso; filtros, projectors, retenção, identidade, permissões, CAS e backoff são preservados.
+
+Os 104 testes direcionados reaproveitados são compatíveis com a implementação isolada na base 17.2; não substituem os novos gates completos da release 17.3 e de seu SHA remoto real. Depois da publicação validada, acompanhe a atualização local normal do catálogo respeitando cooldown e permissões. Nenhuma requisição forçada, reset, escrita comercial ou aceite real foi produzido por esta preparação.
+
+Catálogo operacional, avanço das páginas históricas, cobertura financeira e aceite owner continuam pendentes. OP-013 mantém o aceite das artes reais; demais tarefas independentes seguem seus gates.
+
+## Continuação mensal 17.2 — nativa publicada, HTTP/assets pendentes
+
+Diagnóstico real do catálogo observado: `FINANCE_PRODUCT_INDEX_RESPONSE_EMPTY_ITEM_MISSING`, na tentativa de 21:44:48 UTC. A compatibilidade estrita está em revisão isolada para 17.3, ainda sem integração ou publicação; o catálogo permanece não resolvido.
+
+Retomada real observada: uma fonte histórica foi substituída por uma nova fonte do mesmo período, preservando o frame original e a publicação anterior; páginas, cobertura financeira e aceite operacional permanecem pendentes.
+
+[Recibo 17.2](../system-audit/publication-monthly-continuation-live.json) · [validação](../system-audit/monthly-continuation-20261117.json) · [última conferência completa 17.1](../system-audit/publication-catalog-diagnostics-live.json). Auth→App 17.2 estão ativos e foram conferidos nativamente com Finance retido; fonte, configuração e tráfego de 100% exatos. A versão nativa atual é 17.2; 17.1 permanece somente o último registro integral fonte/configuração/HTTP/assets.
+
+A leitura de `/login` ainda recebeu 503 com 98 bytes Envoy em tentativas limitadas e curl da mesma URL. HTTP/assets da 17.2 não estão aprovados. Repetir esse gate quando o transporte permitir, sem mudar segurança, permissões ou publicar novamente para contornar. O recibo conserva hash, tentativas e ausência de cancelamento manual; não infere falha da aplicação.
+
+A continuação reservada atende apenas o mês anterior ativo válido, com intervalo mínimo de 900 s e uma AUX não mensal distinta; HISTORY ordinário mantém seu backoff. Pausa, leases, CAS, uma fonte por turno e publicação anterior permanecem protegidos. Acompanhe o avanço natural das páginas após a substituição observada; não force/reset coletores. A prova sintética de 421 pedidos não comprova cobertura, retenção ou aceite reais.
+
+**Catálogo não resolvido**; o botão **Atualizar catálogo local** apenas esclarece a ação existente. Aceite das artes/PNGs reais, produção, custos históricos e pagamentos continuam nos respectivos gates. Nenhum PARTIAL foi declarado COMPLETE; venda ADIADO_VENDA e OP-014 independente.
+
+## Diagnóstico do catálogo 17.1 — publicação técnica, causa real pendente
+
+A versão 17.1 preserva códigos estruturais finitos entre Finance/Auth/App, mantendo HTTP 502, cursor, filtro BANNED, backoff e permissões. Publicação não comprova recuperação do catálogo. [Recibo](../system-audit/publication-catalog-diagnostics-live.json) · [validação](../system-audit/catalog-diagnostics-20261117.json) · [histórico 16.5](../system-audit/publication-live.json).
+
+1. Observe a próxima tentativa natural elegível pelo cron existente e confira o código estrutural sanitizado. Não force start/step/reset ou pule BANNED/cooldown.
+2. Use o código efetivamente observado para reproduzir a estrutura rejeitada. Campo ausente/nulo continua erro/UNKNOWN, nunca uma lista vazia inventada.
+3. Pedidos, DTF, fabricação, custos e pagamentos independentes continuam pelos seus próprios gates. Prévia/exportação não confirma fabricação; fatos físicos, origem, custo histórico e pagamentos precisam das confirmações aplicáveis.
+
+Aceite owner/financeiro e correção real do catálogo permanecem pendentes; nenhum estado PARTIAL virou COMPLETE por esta publicação. OP-014 segue independente; venda ADIADO_VENDA.
+
+## Estabilidade16.5 — verificação técnica e pública concluída
+
+App/Auth/Finance seguem publicados nas mesmas versões, com bytes/configurações/tráfego e oito endpoints/oito assets públicos conferidos. [Recibo](../system-audit/publication-live.json) · [validação](../system-audit/validation.json) · [bloqueios reais restantes](../system-audit/BLOCKERS.json). O incidente do executor e do503 Envoy foi preservado no histórico; não houve redeploy nesta conferência. Aceite owner e recuperação integral de fontes permanecem pendentes.
+
+1. Em **Pedidos**, confira um pedido com receita DTF confirmada. No montador, confira PNGs, proporções, DPI e prévia automática antes de reservar/exportar. Isso não confirma fabricação física.
+2. Em **Produtos → Custos e regras**, edite os custos futuros comprovados e use **Salvar custos de produção**. Regras independentes mantêm sua precedência; lotes, CMV e fechamentos históricos não são reescritos.
+3. Observe diagnóstico e recuperação pelo cron existente, preservando filtros, cooldown e auditoria. Ausência não é zero; fila executada não basta para COMPLETE ou lucro real.
+
+Nenhum custo real, pagamento ou fabricação foi alterado manualmente para teste. Writes naturais dos coletores não são declarados zero. Gráficos, seis agentes, sexta13h/Brasília, permissões, confirmações e não duplicação preservados. OP-014 segue independente; venda ADIADO_VENDA.
+
 ## Editar camisetas — publicada 2026-11-16.4
 
 **Publicado e verificado tecnicamente.** A mudança coloca os campos das camisetas antes dos cartões de resumo. Os cálculos e o salvamento auditado existentes foram reutilizados.

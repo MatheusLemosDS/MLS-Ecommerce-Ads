@@ -4,6 +4,8 @@ import {execFileSync} from 'node:child_process';
 import {randomUUID} from 'node:crypto';
 import {PROJECT_ROOT, TARGETS, stableJson, sha256, error, uuid} from './worker_project.mjs';
 import {buildWorkers} from './build_workers.mjs';
+import {assertProductionDeploymentContext} from './isolated_preview.mjs';
+import {validateCompleteWorkerModule} from './complete_worker_module.mjs';
 import {verifyBrowserAssets} from './browser_assets.mjs';
 import {validateBrowserAssetsConfig} from './import_worker_config.mjs';
 
@@ -238,6 +240,7 @@ function writeGeneratedDeployment(verified) {
 }
 
 export function deployWorker(target, {root = PROJECT_ROOT, run = execFileSync, build = buildWorkers, dryRun = false} = {}) {
+  assertProductionDeploymentContext(target,root);
   const verified = validateDeployment(target, {root});
   if (target === 'auth') validateDeployment('finance', {root});
   build(target, {root});
@@ -248,11 +251,12 @@ export function deployWorker(target, {root = PROJECT_ROOT, run = execFileSync, b
     || deploymentAuthorizations.get(afterBuild) !== deploymentAuthorizations.get(verified)) throw error('WORKER_DEPLOYMENT_CONFIG_CHANGED');
   if (target === 'auth') validateDeployment('finance', {root});
   if(target==='app'&&verified.config.assets)verifyBrowserAssets(root);
+  validateCompleteWorkerModule(path.isAbsolute(verified.config.main)?verified.config.main:path.resolve(path.dirname(verified.configPath),verified.config.main));
   if (verified.generated) {
     writeGeneratedDeployment(verified);
   }
   const wrangler = path.join(root, 'node_modules/wrangler/bin/wrangler.js');
-  return run(process.execPath, [wrangler, 'deploy', '--config', verified.configPath,
+  return run(process.execPath, [wrangler, 'deploy', '--config', verified.configPath, '--no-bundle',
     ...(dryRun ? ['--dry-run'] : [])], {cwd: root, stdio: 'inherit',
     env: {...process.env, WRANGLER_SEND_METRICS: 'false'}});
 }

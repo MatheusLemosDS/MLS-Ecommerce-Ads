@@ -1,0 +1,208 @@
+{
+  "schema": "complete_worker_packaging_v1",
+  "status": "IMPLEMENTED_LOCAL_DRY_VALIDATION_NO_PUBLICATION",
+  "method": "PROJECT_DEPLOYWORKER_DRYRUN_SHADOW_ROOT_WITH_EXISTING_CLOSED_ARTIFACTS_BUILD_NOOP_AND_RUN_ADAPTER_ONLY",
+  "source_worktree": "/workspace/work/mls-owner-dtf-cycle",
+  "prototype_wrangler_version": "4.153.0",
+  "source_cap_bytes_unchanged": 4194304,
+  "production_configuration_bindings_exports_preserved": true,
+  "shared_worktree_files_written": 0,
+  "uploads_or_remote_mutations": 0,
+  "roles": [
+    {
+      "role": "app",
+      "source_bytes": 3746360,
+      "source_sha256": "a7e76aad9b0bea13d86c7987b5c7287dcc8e19cfb5a57ab99284227c5ef287ad",
+      "module_exports": [
+        "default"
+      ],
+      "static_imports": [],
+      "dynamic_import_or_require_calls": 0,
+      "profiles": {
+        "bundled": {
+          "bytes": 4190201,
+          "sha256": "02f0ee61196faf704cf18887003774b8bec7611d440563b5d808c9488d4d680c",
+          "identical_to_source": false,
+          "exports": [
+            "default"
+          ],
+          "imports": [],
+          "invocation": {
+            "args": [
+              "{shadow-root}/node_modules/wrangler/bin/wrangler.js",
+              "deploy",
+              "--config",
+              "{shadow-root}/workers/app/.wrangler/runtime.generated.json",
+              "--dry-run",
+              "--outdir",
+              "{evidence-root}/app-bundled"
+            ],
+            "dry_run": true,
+            "upload": false
+          }
+        },
+        "no-bundle": {
+          "bytes": 3746360,
+          "sha256": "a7e76aad9b0bea13d86c7987b5c7287dcc8e19cfb5a57ab99284227c5ef287ad",
+          "identical_to_source": true,
+          "exports": [
+            "default"
+          ],
+          "imports": [],
+          "invocation": {
+            "args": [
+              "{shadow-root}/node_modules/wrangler/bin/wrangler.js",
+              "deploy",
+              "--config",
+              "{shadow-root}/workers/app/.wrangler/runtime.generated.json",
+              "--dry-run",
+              "--outdir",
+              "{evidence-root}/app-no-bundle",
+              "--no-bundle"
+            ],
+            "dry_run": true,
+            "upload": false
+          }
+        }
+      }
+    },
+    {
+      "role": "auth",
+      "source_bytes": 577618,
+      "source_sha256": "d6534e8322589795bf5e470a5adc7187a09507b7e504e157df377f655d0dbf6b",
+      "module_exports": [
+        "default"
+      ],
+      "static_imports": [],
+      "dynamic_import_or_require_calls": 0,
+      "profiles": {
+        "bundled": {
+          "bytes": 656177,
+          "sha256": "264ba861159ebf52375a32c025ca50682180b53b2b57485ec8f6ddff756d022c",
+          "identical_to_source": false,
+          "exports": [
+            "default"
+          ],
+          "imports": [],
+          "invocation": {
+            "args": [
+              "{shadow-root}/node_modules/wrangler/bin/wrangler.js",
+              "deploy",
+              "--config",
+              "{shadow-root}/workers/auth/.wrangler/runtime.generated.json",
+              "--dry-run",
+              "--outdir",
+              "{evidence-root}/auth-bundled"
+            ],
+            "dry_run": true,
+            "upload": false
+          }
+        },
+        "no-bundle": {
+          "bytes": 577618,
+          "sha256": "d6534e8322589795bf5e470a5adc7187a09507b7e504e157df377f655d0dbf6b",
+          "identical_to_source": true,
+          "exports": [
+            "default"
+          ],
+          "imports": [],
+          "invocation": {
+            "args": [
+              "{shadow-root}/node_modules/wrangler/bin/wrangler.js",
+              "deploy",
+              "--config",
+              "{shadow-root}/workers/auth/.wrangler/runtime.generated.json",
+              "--dry-run",
+              "--outdir",
+              "{evidence-root}/auth-no-bundle",
+              "--no-bundle"
+            ],
+            "dry_run": true,
+            "upload": false
+          }
+        }
+      }
+    },
+    {
+      "role": "finance",
+      "source_bytes": 892310,
+      "source_sha256": "458c2ec993ba2a7ac157efa5add281e1d3a4280c7752e8d5b1679b0d4d9b3f72",
+      "module_exports": [
+        "commercialFinanceRequiredCapability",
+        "createCommercialFinanceWorker",
+        "default",
+        "resolveCommercialFinanceProviderEnvironment"
+      ],
+      "static_imports": [],
+      "dynamic_import_or_require_calls": 0,
+      "profiles": {
+        "bundled": {
+          "bytes": 934597,
+          "sha256": "4761179546d5772e4d17bad6e22c0c277ac5dae90197b0068acc347d2429d1eb",
+          "identical_to_source": false,
+          "exports": [
+            "commercialFinanceRequiredCapability",
+            "createCommercialFinanceWorker",
+            "default",
+            "resolveCommercialFinanceProviderEnvironment"
+          ],
+          "imports": [],
+          "invocation": {
+            "args": [
+              "{shadow-root}/node_modules/wrangler/bin/wrangler.js",
+              "deploy",
+              "--config",
+              "{shadow-root}/workers/finance/.wrangler/runtime.generated.json",
+              "--dry-run",
+              "--outdir",
+              "{evidence-root}/finance-bundled"
+            ],
+            "dry_run": true,
+            "upload": false
+          }
+        },
+        "no-bundle": {
+          "bytes": 892310,
+          "sha256": "458c2ec993ba2a7ac157efa5add281e1d3a4280c7752e8d5b1679b0d4d9b3f72",
+          "identical_to_source": true,
+          "exports": [
+            "commercialFinanceRequiredCapability",
+            "createCommercialFinanceWorker",
+            "default",
+            "resolveCommercialFinanceProviderEnvironment"
+          ],
+          "imports": [],
+          "invocation": {
+            "args": [
+              "{shadow-root}/node_modules/wrangler/bin/wrangler.js",
+              "deploy",
+              "--config",
+              "{shadow-root}/workers/finance/.wrangler/runtime.generated.json",
+              "--dry-run",
+              "--outdir",
+              "{evidence-root}/finance-no-bundle",
+              "--no-bundle"
+            ],
+            "dry_run": true,
+            "upload": false
+          }
+        }
+      }
+    }
+  ],
+  "focused_tests": {
+    "tests": 53,
+    "pass": 53,
+    "fail": 0,
+    "skipped": 0,
+    "wrangler_in_agent_worktree": "4.151.1",
+    "revalidation_with_consolidated_lock": "REQUIRED_BY_ROOT_FINAL_SUITE"
+  },
+  "structural_fix": "Generated modules are already closed ESM. Parser/metafile rejects residual imports, computed imports, CommonJS calls/aliases/free module globals, malformed source or missing default export before Wrangler. Every emitted module is sent with --no-bundle. No cap, captured config, binding, route, cron or CI guard is weakened.",
+  "provenance": "Compared project deployWorker dry-run in a shadow root using existing generated artifacts. All no-bundle output modules were byte-identical; App avoids443841 bytes of redundant bundling.",
+  "remaining_gates": [
+    "Consolidated exact-head full CI",
+    "Same-profile controlled publication if authorized",
+    "Native source/config/traffic and public asset checks"
+  ]
+}

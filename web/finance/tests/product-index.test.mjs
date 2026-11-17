@@ -33,8 +33,8 @@ test('the official reader signs one GET page and returns only IDs, exact status 
 
 test('malformed metadata, scope mismatches and nonprogressing pages never become a complete catalogue',async()=>{
  const f=await fixture(),base={item:[{item_id:101,item_status:'NORMAL',update_time:at}],total_count:2,has_next_page:true,next_offset:1};
- for(const patch of [{has_next_page:'true'},{total_count:-1},{next_offset:0},{next_offset:3},{item:[]},{shop_id:1},{item:[{item_id:0,item_status:'NORMAL'}]},{item:[{item_id:101,item_status:'BANNED'}]},{item:[{item_id:101,item_status:'NORMAL',update_time:at+61}]},{item:[{item_id:101,item_status:'NORMAL'},{item_id:101,item_status:'NORMAL'}]}]){
-  const fetchImpl=async()=>Response.json({error:'',response:{...base,...patch}});await assert.rejects(runFinanceProductIndex(f.env,{...request(),fetchImpl,now:f.now}),error=>['FINANCE_PRODUCT_INDEX_RESPONSE_INVALID','FINANCE_PRODUCT_INDEX_IDENTITY_MISMATCH'].includes(error.code));
+ for(const [patch,suffix] of [[{has_next_page:'true'},'RESPONSE_PAGINATION'],[{total_count:-1},'RESPONSE_TOTAL'],[{next_offset:0},'RESPONSE_PAGINATION'],[{next_offset:3},'RESPONSE_PAGINATION'],[{item:[]},'RESPONSE_PAGINATION'],[{shop_id:1},'IDENTITY_MISMATCH'],[{item:[{item_id:0,item_status:'NORMAL'}]},'RESPONSE_ROW_ID'],[{item:[{item_id:101,item_status:'BANNED'}]},'RESPONSE_ROW_STATUS'],[{item:[{item_id:101,item_status:'NORMAL',update_time:at+61}]},'RESPONSE_ROW_TIME'],[{item:[{item_id:101,item_status:'NORMAL'},{item_id:101,item_status:'NORMAL'}]},'RESPONSE_ROW_DUPLICATE']]){
+  const fetchImpl=async()=>Response.json({error:'',response:{...base,...patch}});await assert.rejects(runFinanceProductIndex(f.env,{...request(),fetchImpl,now:f.now}),error=>{assert.equal(error.status,502);assert.equal(error.code,'FINANCE_PRODUCT_INDEX_'+suffix);assert.equal(financeProductIndexDiagnostic(error).code,error.code);return true;});
  }
 });
 
@@ -45,4 +45,33 @@ test('authorization, rate and transport errors retain finite diagnostics without
  }
  await assert.rejects(runFinanceProductIndex(f.env,{...request(),fetchImpl:async()=>new Promise(()=>{}),now:f.now,timeoutMs:5}),error=>error.code==='FINANCE_PRODUCT_INDEX_TIMEOUT');assert.deepEqual(await f.store.readTokens(),before);
  let reads=0;await assert.rejects(runFinanceProductIndex(f.env,{...request(),shop_id:123,fetchImpl:async()=>{reads++;},now:f.now}));assert.equal(reads,0);
+});
+
+
+test('only omitted first-page items with explicit zero/final metadata are compatible; null or uncertain sources remain 502',async t=>{
+ const f=await fixture();t.after(()=>f.env.FINANCE_DB.db.close());let reads=0;
+ const run=response=>runFinanceProductIndex(f.env,{...request({item_status:'BANNED'}),fetchImpl:async()=>{reads++;return Response.json({error:'',response});},now:f.now});
+ const valid=await run({item:[],total_count:0,has_next_page:false});assert.equal(valid.status,'AVAILABLE');assert.deepEqual(valid.items,[]);assert.equal(valid.total_count,0);assert.equal(valid.has_more,false);
+ const omitted=await run({total_count:0,has_next_page:false});assert.deepEqual(omitted,valid);
+ for(const [response,suffix] of [[{item:null,total_count:0,has_next_page:false},'RESPONSE_EMPTY_ITEM_NULL'],[{total_count:1,has_next_page:false},'RESPONSE_ITEM_TYPE'],[{item:null,total_count:0,has_next_page:true,next_offset:1},'RESPONSE_ITEM_TYPE'],[{has_next_page:false},'RESPONSE_ITEM_TYPE'],[{item:null,total_count:0},'RESPONSE_ITEM_TYPE']])await assert.rejects(run(response),error=>{assert.equal(error.status,502);assert.equal(error.code,'FINANCE_PRODUCT_INDEX_'+suffix);assert.deepEqual(financeProductIndexDiagnostic(error),{code:error.code,http:null});return true;});
+ assert.equal(reads,7);assert.equal((await f.store.status()).status,'CONNECTED');
+});
+test('finite structural failure categories retain identity precedence, page bounds and exact row contracts',async t=>{
+ const f=await fixture();t.after(()=>f.env.FINANCE_DB.db.close());const good={item:[{item_id:101,item_status:'NORMAL',update_time:at}],total_count:1,has_next_page:false};
+ const cases=[[null,'RESPONSE_ENVELOPE'],[{error:0,response:good},'RESPONSE_ENVELOPE'],[{error:'',response:[]},'RESPONSE_OBJECT'],[{error:'',response:{...good,item:{}}},'RESPONSE_ITEM_TYPE'],[{error:'',response:{...good,item:[...good.item,...good.item,...good.item]}},'RESPONSE_PAGE_SIZE'],[{error:'',response:{...good,total_count:0}},'RESPONSE_TOTAL'],[{error:'',response:{...good,total_count:'1'}},'RESPONSE_TOTAL'],[{error:'',response:{...good,has_next_page:'false'}},'RESPONSE_PAGINATION'],[{error:'',response:{...good,item:[],has_next_page:true,next_offset:1}},'RESPONSE_PAGINATION'],[{error:'',response:{...good,has_next_page:true,next_offset:0}},'RESPONSE_PAGINATION'],[{error:'',response:{...good,item:[null]}},'RESPONSE_ROW_OBJECT'],[{error:'',response:{...good,item:[{item_id:0,item_status:'NORMAL'}]}},'RESPONSE_ROW_ID'],[{error:'',response:{...good,item:[{item_id:101,item_status:'BANNED'}]}},'RESPONSE_ROW_STATUS'],[{error:'',response:{...good,item:[{item_id:101,item_status:'NORMAL',update_time:at+61}]}},'RESPONSE_ROW_TIME'],[{error:'',response:{...good,item:[{item_id:101,item_status:'NORMAL'},{item_id:'101',item_status:'NORMAL'}],total_count:2}},'RESPONSE_ROW_DUPLICATE'],[{error:'',shop_id:1,response:{item:null,total_count:0,has_next_page:false}},'IDENTITY_MISMATCH']];
+ let calls=0;for(const [payload,suffix]of cases)await assert.rejects(runFinanceProductIndex(f.env,{...request(),fetchImpl:async()=>{calls++;return Response.json(payload);},now:f.now}),error=>{assert.equal(error.status,502);assert.equal(error.code,'FINANCE_PRODUCT_INDEX_'+suffix);assert.equal(financeProductIndexDiagnostic(error).code,error.code);assert.doesNotMatch(JSON.stringify(financeProductIndexDiagnostic(error)),/PRIVATE/);return true;});assert.equal(calls,cases.length);
+});
+
+
+test('omitted-list compatibility requires exact initial-page and metadata/cursor primitives, preserves source time, tokens and all six status filters',async t=>{
+ const f=await fixture();t.after(()=>f.env.FINANCE_DB.db.close());const before=await f.store.readTokens();let reads=0;
+ for(const item_status of PRODUCT_INDEX_STATUSES)for(const next_offset of [undefined,null,0]){
+  const body={total_count:0,has_next_page:false,...(next_offset===undefined?{}:{next_offset})};
+  const value=await runFinanceProductIndex(f.env,{...request({item_status}),fetchImpl:async req=>{reads++;assert.equal(new URL(req.url).searchParams.get('item_status'),item_status);return Response.json({error:'',request_id:'SYNTHETIC_OMITTED_REQUEST',response:body});},now:f.now});
+  assert.deepEqual(value,{schema:'product_index_v1',status:'AVAILABLE',shop_id:1178167501,checked_at:at,...request({item_status}),total_count:0,has_more:false,next_offset:null,items:[]});
+ }
+ const rejected=[[{total_count:0,has_next_page:false,next_offset:1},0,'RESPONSE_PAGINATION'],[{total_count:0,has_next_page:false,next_offset:'0'},0,'RESPONSE_PAGINATION'],[{total_count:0,has_next_page:false,next_offset:-1},0,'RESPONSE_PAGINATION'],[{total_count:0,has_next_page:false},1,'RESPONSE_EMPTY_ITEM_MISSING'],[{item:null,total_count:0,has_next_page:false},0,'RESPONSE_EMPTY_ITEM_NULL'],[{has_next_page:false},0,'RESPONSE_ITEM_TYPE'],[{total_count:0},0,'RESPONSE_ITEM_TYPE'],[{total_count:'0',has_next_page:false},0,'RESPONSE_ITEM_TYPE'],[{total_count:1,has_next_page:false},0,'RESPONSE_ITEM_TYPE'],[{total_count:0,has_next_page:true,next_offset:1},0,'RESPONSE_ITEM_TYPE']];
+ for(const [response,offset,suffix]of rejected)await assert.rejects(runFinanceProductIndex(f.env,{...request({offset,item_status:'BANNED'}),fetchImpl:async()=>{reads++;return Response.json({error:'',response});},now:f.now}),error=>{assert.equal(error.status,502);assert.equal(error.code,'FINANCE_PRODUCT_INDEX_'+suffix);return true;});
+ for(const response of ['{"error":"","response":{"total_count":-0,"has_next_page":false}}','{"error":"","response":{"total_count":0,"has_next_page":false,"next_offset":-0}}'])await assert.rejects(runFinanceProductIndex(f.env,{...request({item_status:'BANNED'}),fetchImpl:async()=>{reads++;return new Response(response,{headers:{'content-type':'application/json'}});},now:f.now}),error=>{assert.equal(error.status,502);return true;});
+ assert.equal(reads,30);assert.deepEqual(await f.store.readTokens(),before);
 });

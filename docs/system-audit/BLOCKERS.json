@@ -1,0 +1,186 @@
+{
+  "schema": "mls_system_stability_concrete_blockers_v1",
+  "recorded_at": "2026-11-17T19:47:28.393452+00:00",
+  "source_commit": "ed651fa7a5bd949519c37d287bcaab9c31cb464a",
+  "all_errors_resolved": false,
+  "blockers": [
+    {
+      "id": "EXECUTOR_UNAVAILABLE",
+      "status": "RESOLVED_VERIFIED_READ_ONLY",
+      "evidence": {
+        "same_environment_git_head": "0315e454ea42a4ee477f7aed7deeeb7edd8845fd",
+        "native_reverified_at": "2026-11-17T19:42:35.705887+00:00",
+        "public_reverified_at": "2026-11-17T19:42:38.070197+00:00",
+        "public_complete": true,
+        "public_endpoints": 8,
+        "exact_assets": 8,
+        "source_commit_still": "ed651fa7a5bd949519c37d287bcaab9c31cb464a",
+        "no_redeploy_or_config_change": true
+      },
+      "required_action": "Nenhuma ação adicional para este bloqueio; incidente e tentativa anterior preservados. Aceite real e fontes pendentes têm bloqueios próprios.",
+      "previous_blocked_evidence": "Environment declared unavailable; exec failed with transport disconnected/recovery timed out45s and then No usable execution environment. Control-plane running/connected status did not restore executor access.",
+      "resolved_at": "2026-11-17T19:47:28.393452+00:00"
+    },
+    {
+      "id": "PUBLIC_POST_DEPLOY_SMOKE",
+      "status": "RESOLVED_VERIFIED_READ_ONLY",
+      "evidence": {
+        "same_environment_git_head": "0315e454ea42a4ee477f7aed7deeeb7edd8845fd",
+        "native_reverified_at": "2026-11-17T19:42:35.705887+00:00",
+        "public_reverified_at": "2026-11-17T19:42:38.070197+00:00",
+        "public_complete": true,
+        "public_endpoints": 8,
+        "exact_assets": 8,
+        "source_commit_still": "ed651fa7a5bd949519c37d287bcaab9c31cb464a",
+        "no_redeploy_or_config_change": true
+      },
+      "required_action": "Nenhuma ação adicional para este bloqueio; incidente e tentativa anterior preservados. Aceite real e fontes pendentes têm bloqueios próprios.",
+      "previous_blocked_evidence": {
+        "status": "INCOMPLETE_BLOCKED",
+        "complete": false,
+        "first_attempt": {
+          "path": "/account/help",
+          "status": 503,
+          "response_sha256": "33fbc61ad080ef68dd7a6479f8c53f1bf864dba2930567dbbc4ceb47490a1909",
+          "classification": "KNOWN_ENVIRONMENT_ENVOY_TRANSPORT_RESET; NOT_ESTABLISHED_AS_APPLICATION_FAILURE",
+          "final_assertion": "PUBLIC_STATUS_MISMATCH; gate not waived"
+        },
+        "retry": {
+          "status": "DID_NOT_START",
+          "cause": "exec-server transport disconnected; recovery timed out after45s; later no usable execution environment"
+        },
+        "alternate_public_web_reader": {
+          "paths": [
+            "/account/help",
+            "/health",
+            "/login"
+          ],
+          "status": "TOOL_REPORTED_URL_NOT_ACCESSIBLE; DOES_NOT_ESTABLISH_SITE_HEALTH"
+        },
+        "routing_assets_final_verification": "PENDING",
+        "authenticated_owner_live_qa": "NOT_PERFORMED"
+      },
+      "resolved_at": "2026-11-17T19:47:28.393452+00:00"
+    },
+    {
+      "id": "CATALOG_SOURCE",
+      "status": "UNRESOLVED_REAL_DIAGNOSTIC_RESPONSE_INVALID",
+      "evidence": {
+        "observed_at": "2026-11-17T19:42:20.393262+00:00",
+        "diagnostic_observed_after_publication": true,
+        "registry": [
+          {
+            "revision": 755,
+            "status": "RETRY_WAIT",
+            "status_index": 1,
+            "offset": 0,
+            "pages_read": 1,
+            "last_attempt_at": 1794944331,
+            "last_success_at": null,
+            "next_run_at": 1794946133,
+            "failure_count": 752,
+            "last_error": "PRODUCT_REGISTRY_SOURCE_UNAVAILABLE",
+            "lease_active": 0
+          }
+        ],
+        "catalog_diagnostic": [
+          {
+            "item_status": "BANNED",
+            "offset": 0,
+            "code": "FINANCE_PRODUCT_INDEX_RESPONSE_INVALID",
+            "http": null,
+            "checked_at": 1794944333
+          }
+        ],
+        "cause_scope": "Actual finite RESPONSE_INVALID is now observed; the exact invalid provider structure remains unknown. No zero normalization, permission inference or filter bypass."
+      },
+      "required_action": "Diagnose the precise missing/invalid response structure with narrow sanitized structural evidence; preserve BANNED, offset, cooldown and permissions. Next eligible cron does not establish correctness until its actual result is observed.",
+      "research": "TypeScript SDK treats response fields as optional while Go treats them as required; raw schema lacks required metadata. This disagreement does not establish that an omitted item array proves an empty status.",
+      "sources": [
+        "https://github.com/congminh1254/shopee-sdk/blob/main/src/schemas/product.ts",
+        "https://open.shopee.com/documents/v2/v2.product.get_item_list?module=89&type=1"
+      ],
+      "previous_evidence_before_first_live_observation": "Prepublication registry retrying BANNED at offset0 with failure_count751 and generic SOURCE_UNAVAILABLE. Finite diagnostic retention is now implemented, tested and natively published. Postpublication diagnostic has not been read."
+    },
+    {
+      "id": "HISTORICAL_SOURCE_RECOVERY",
+      "status": "UNRESOLVED_REAL_PROGRESS_NOT_YET_OBSERVED",
+      "evidence": {
+        "observed_at": "2026-11-17T19:42:20.393262+00:00",
+        "attempt_observed_after_publication": false,
+        "history": [
+          {
+            "month": "2026-10",
+            "status": "RUNNING",
+            "next_run_at": 1794613737,
+            "failure_count": 0,
+            "last_attempt_at": 1794613672,
+            "last_success_at": 1794563336,
+            "last_error": null
+          }
+        ],
+        "recovery_audit_counts": [],
+        "historical_reference_existence": [
+          {
+            "scope": "active",
+            "month": "2026-10",
+            "slot_index": 0,
+            "app_status": "COMPLETE",
+            "same_period_finance_run_exists": false
+          },
+          {
+            "scope": "active",
+            "month": "2026-10",
+            "slot_index": 1,
+            "app_status": "COMPLETE",
+            "same_period_finance_run_exists": false
+          },
+          {
+            "scope": "active",
+            "month": "2026-10",
+            "slot_index": 2,
+            "app_status": "RUNNING",
+            "same_period_finance_run_exists": false
+          },
+          {
+            "scope": "publication",
+            "month": "2026-10",
+            "slot_index": 0,
+            "app_status": "COMPLETE",
+            "same_period_finance_run_exists": false
+          },
+          {
+            "scope": "publication",
+            "month": "2026-10",
+            "slot_index": 1,
+            "app_status": "COMPLETE",
+            "same_period_finance_run_exists": false
+          },
+          {
+            "scope": "publication",
+            "month": "2026-10",
+            "slot_index": 2,
+            "app_status": "COMPLETE",
+            "same_period_finance_run_exists": false
+          }
+        ],
+        "scope": "No16.5 recovery attempt observed in this read; referenced Finance sources remain absent. No claim of recovered data or COMPLETE."
+      },
+      "required_action": "Observe exact same-period source existence and recovery audit counts with readonly queries; preserve cooldown/leases and old publications. COMPLETE requires actual source coverage, not a test or queue execution.",
+      "previous_evidence_before_first_live_observation": "Three historical Finance references were absent before publication. New typed404/intention/same-period CAS recovery and fair scheduling passed real SQLite/generated Worker tests. Natural recovery has not been observed on16.5."
+    },
+    {
+      "id": "BUILDS_CONFIGURATION_READ",
+      "status": "READ_ACCESS_403;_CURRENT_HEAD_BUILDS_ALL_SUCCESS",
+      "evidence": "All3 external Cloudflare check-runs succeeded on sourceed651fa. Configuration/trigger reads previously returned403 code10000 and build log reads403 code12004; full external configuration remains unverified.",
+      "required_action": "Reuse current successful check evidence. Read configuration/logs only through already supported authorized access when available; do not widen grants or treat production/builds URL as deployment proof."
+    },
+    {
+      "id": "OWNER_FINANCIAL_ACCEPTANCE",
+      "status": "PENDING_REAL_SOURCES_AND_OPERATOR_CONFIRMATION",
+      "evidence": "Native publication, synthetic Chrome and4593 tests do not prove physical fabrication, historical costs, complete returns, bank/payout coverage or actual profit. Existing PARTIAL/UNKNOWN and external dependencies remain in the owner matrix.",
+      "required_action": "Owner confirms applicable physical/source/cost facts and audited reconciliations. Sale-only matters remain ADIADO_VENDA; continue independent OP-014 work after access recovery."
+    }
+  ],
+  "documentary_head_verified": "0315e454ea42a4ee477f7aed7deeeb7edd8845fd"
+}

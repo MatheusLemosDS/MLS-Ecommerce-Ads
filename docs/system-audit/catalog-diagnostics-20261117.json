@@ -1,0 +1,174 @@
+{
+  "schema": "catalog_response_shape_diagnostics_v1",
+  "status": "PUBLISHED_VERIFIED_TECHNICAL_PUBLIC_ONLY",
+  "recorded_at": "2026-11-17T19:54:15.723217+00:00",
+  "prepared_source_commit": "2c1764b607ab719f5109688b9ad6559e69ce979c",
+  "implementation_commit": "a2d7943e517cab181d39ffe9729346bd51168e8c",
+  "base_main": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
+  "branch": "fix/system-stability-20261116",
+  "pull_request": 128,
+  "release_candidate": "2026-11-17.1",
+  "implemented": true,
+  "targeted": {
+    "pass": 75,
+    "fail": 0,
+    "skipped": 0
+  },
+  "full_local_node": {
+    "tests": 4631,
+    "pass": 4631,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0,
+    "duration_ms": 744542.353108,
+    "log_sha256": "c86004665e6716e2367958f3703575bb996e2f7949d5c674278032a43e1c0e64",
+    "source_commit_at_execution": "f1b01f02bb8daf538d8c481c200d38d91e2cf8c9",
+    "source_tree": "fc7be331680f6724281c49110d9ade9b96a8b986",
+    "scope": "LOCAL_F1_TREE_IDENTICAL_TO_EXACT_REMOTE_E263_CI_CANDIDATE"
+  },
+  "exact_head_ci": {
+    "id": 44164656045,
+    "run_number": 663,
+    "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/44164656045",
+    "status": "completed",
+    "conclusion": "success",
+    "head_sha": "e26357dd23b7c488b803481099b2da0af66eb6b6",
+    "node": {
+      "tests": 4631,
+      "pass": 4631,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0
+    },
+    "python": {
+      "pass": 67,
+      "fail": 0
+    },
+    "compiled_hashes": {
+      "app": "db0c20e75d6237de140cbacd3e256104336cc348e1af93cf6ce192b7e81d4239",
+      "auth": "e48e0dee32ee2d68c1523a716cd752e1df189f59d54e5f16c7899e45ae08b8a0",
+      "finance": "522cd735b73157eee92f1859d87959f5e66a7b8070afb4b2c26cb92006a44bf0"
+    },
+    "workflow_preflight_step": "SKIPPED_BY_EXISTING_STACKED_PR_CONDITION; LOCAL_PREFLIGHT_PASS",
+    "cloudflare_checks": [
+      {
+        "name": "Workers Builds: brazacommerce-app",
+        "status": "completed",
+        "conclusion": "success",
+        "id": 134328116832,
+        "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-app/production/previews/fix-system-stability-20261116/builds/2c406e8b-1f2e-479f-9cf0-ec69409d409a"
+      },
+      {
+        "name": "Workers Builds: brazacommerce-finance",
+        "status": "completed",
+        "conclusion": "success",
+        "id": 134328038598,
+        "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-finance/production/previews/fix-system-stability-20261116/builds/36ccef33-22d8-4914-8238-a74db2579c32"
+      },
+      {
+        "name": "Workers Builds: brazacommerce-auth",
+        "status": "completed",
+        "conclusion": "success",
+        "id": 134328001622,
+        "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-auth/production/previews/fix-system-stability-20261116/builds/084cc3bf-8482-42c8-ac6a-24964e329e24"
+      }
+    ]
+  },
+  "published": true,
+  "actual_catalog_problem_resolved": false,
+  "actual_financial_acceptance": false,
+  "new_diagnostic_codes": 13,
+  "contracts": "Same frame/request validators, HTTP502, cursor, backoff, authentication, identity, DTO and source clock semantics. No missing/null array normalized into empty success. No schema/permission/workflow change.",
+  "observed_real_failure": {
+    "code": "FINANCE_PRODUCT_INDEX_RESPONSE_INVALID",
+    "item_status": "BANNED",
+    "offset": 0,
+    "checked_at_utc": "2026-11-17T19:38:51Z",
+    "next_due_utc": "2026-11-17T20:08:53Z"
+  },
+  "expected_hashes": {
+    "app": "db0c20e75d6237de140cbacd3e256104336cc348e1af93cf6ce192b7e81d4239",
+    "auth": "e48e0dee32ee2d68c1523a716cd752e1df189f59d54e5f16c7899e45ae08b8a0",
+    "finance": "522cd735b73157eee92f1859d87959f5e66a7b8070afb4b2c26cb92006a44bf0"
+  },
+  "bytes": {
+    "app": 3753165,
+    "auth": 579502,
+    "finance": 895222
+  },
+  "previous_live_receipt": "publication-live.json",
+  "publication_receipt": "publication-catalog-diagnostics-live.json",
+  "remaining": "Observe the next eligible natural attempt and diagnose the actual finite structural code. Keep BANNED/offset/cooldown and strict502; no forced scan, zero normalization, permission inference, or COMPLETE claim.",
+  "candidate_validation_before_publication": {
+    "schema": "catalog_response_shape_diagnostics_v1",
+    "status": "IMPLEMENTED_TARGETED_PASS_FULL_GATES_RUNNING",
+    "recorded_at": "2026-11-17T19:54:15.723217+00:00",
+    "prepared_source_commit": "2c1764b607ab719f5109688b9ad6559e69ce979c",
+    "implementation_commit": "a2d7943e517cab181d39ffe9729346bd51168e8c",
+    "base_main": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
+    "branch": "fix/system-stability-20261116",
+    "pull_request": 128,
+    "release_candidate": "2026-11-17.1",
+    "implemented": true,
+    "targeted": {
+      "pass": 75,
+      "fail": 0,
+      "skipped": 0
+    },
+    "full_local_node": "RUNNING",
+    "exact_head_ci": "PENDING",
+    "published": false,
+    "actual_catalog_problem_resolved": false,
+    "actual_financial_acceptance": false,
+    "new_diagnostic_codes": 13,
+    "contracts": "Same frame/request validators, HTTP502, cursor, backoff, authentication, identity, DTO and source clock semantics. No missing/null array normalized into empty success. No schema/permission/workflow change.",
+    "observed_real_failure": {
+      "code": "FINANCE_PRODUCT_INDEX_RESPONSE_INVALID",
+      "item_status": "BANNED",
+      "offset": 0,
+      "checked_at_utc": "2026-11-17T19:38:51Z",
+      "next_due_utc": "2026-11-17T20:08:53Z"
+    },
+    "expected_hashes": {
+      "app": "db0c20e75d6237de140cbacd3e256104336cc348e1af93cf6ce192b7e81d4239",
+      "auth": "e48e0dee32ee2d68c1523a716cd752e1df189f59d54e5f16c7899e45ae08b8a0",
+      "finance": "522cd735b73157eee92f1859d87959f5e66a7b8070afb4b2c26cb92006a44bf0"
+    },
+    "bytes": {
+      "app": 3753165,
+      "auth": 579502,
+      "finance": 895222
+    },
+    "previous_live_receipt": "publication-live.json",
+    "publication_receipt": "publication-catalog-diagnostics-live.json",
+    "remaining": "Observe next eligible natural attempt to identify actual rejected structure; no forced scan/reset/provider call or zero inference."
+  },
+  "updated_at": "2026-11-17T20:20:27.302813+00:00",
+  "validation_head": "e26357dd23b7c488b803481099b2da0af66eb6b6",
+  "publication_source_commit": "e26357dd23b7c488b803481099b2da0af66eb6b6",
+  "local_validated_commit": "f1b01f02bb8daf538d8c481c200d38d91e2cf8c9",
+  "source_tree": "fc7be331680f6724281c49110d9ade9b96a8b986",
+  "git_reconciliation": {
+    "local_original": "f1b01f02bb8daf538d8c481c200d38d91e2cf8c9",
+    "archive_branch": "archive/system-stability-native-pre-connector-20261117",
+    "remote_head": "e26357dd23b7c488b803481099b2da0af66eb6b6",
+    "same_working_tree_and_index": true,
+    "tree": "fc7be331680f6724281c49110d9ade9b96a8b986",
+    "source_files_modified_during_reconciliation": false,
+    "method": "SUPPORTED_GITHUB_GITDATA_UPLOAD_THEN_NATIVE_READ_ONLY_FETCH; ARCHIVE_AND_REF_RECONCILIATION_WITH_IDENTICAL_TREES",
+    "force_push": false
+  },
+  "local_python": {
+    "pass": 67,
+    "fail": 0
+  },
+  "publication": {
+    "release": "2026-11-17.1",
+    "receipt": "publication-catalog-diagnostics-live.json",
+    "scope": "EXACT_NATIVE_SOURCE_CONFIGURATION_100_PERCENT_TRAFFIC_PUBLIC_TLS_HTTP_ROUTING_AND_EXACT_ASSETS; OWNER_ACCEPTANCE_PENDING"
+  },
+  "natural_collector_progress": {
+    "status": "NOT_YET_OBSERVED_ON_RELEASE_17_1",
+    "scope": "Observe the next eligible natural catalog attempt. No manual start/step/reset/force-run; natural collector writes are not declared zero."
+  }
+}

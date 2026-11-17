@@ -18,6 +18,7 @@ const invalid = 'WORKER_COMMERCIAL_ACCOUNT_CONFIG_INVALID';
 function fixture(t) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'mls-account-deployment-'));
   t.after(() => fs.rmSync(root, {recursive: true, force: true}));
+  fs.mkdirSync(path.join(root,'dist'));for(const role of ['app','auth','finance'])fs.writeFileSync(path.join(root,'dist',role+'-worker.mjs'),"export default {fetch(){return new Response('synthetic')}};\n");
   const file = (name, filename) => path.join(root, 'workers', name, filename);
   const config = name => ({name: TARGETS[name].name, main: TARGETS[name].main,
     compatibility_date: '2026-10-12', keep_vars: true,
@@ -65,7 +66,7 @@ test('three hash-bound authorizations add exactly ACCOUNT_DB without rewriting a
     assert.equal(observed.configPath, f.file(name, '.wrangler/runtime.generated.json'));assert.equal(fs.existsSync(observed.configPath), false, 'validation is read-only');
     assert.equal(deployWorker(name, {...f, dryRun: true}), 'OK');
     assert.deepEqual(JSON.parse(fs.readFileSync(observed.configPath)), expected);
-    const call = f.calls.at(-1);assert.deepEqual(call[1], [path.join(f.root, 'node_modules/wrangler/bin/wrangler.js'), 'deploy', '--config', observed.configPath, '--dry-run']);
+    const call = f.calls.at(-1);assert.deepEqual(call[1], [path.join(f.root, 'node_modules/wrangler/bin/wrangler.js'), 'deploy', '--config', observed.configPath, '--no-bundle', '--dry-run']);
     assert.equal(call[2].env.WRANGLER_SEND_METRICS, 'false');
     assert.equal(Object.hasOwn(expected, 'vars'), false);assert.equal(Object.hasOwn(expected, 'env'), false);
   }

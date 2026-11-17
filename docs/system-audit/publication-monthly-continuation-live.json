@@ -1,0 +1,902 @@
+{
+  "schema": "mls_monthly_continuation_native_public_transport_pending_v1",
+  "status": "NATIVE_PUBLISHED_PUBLIC_TRANSPORT_PENDING",
+  "release": "2026-11-17.2",
+  "source_commit": "eac37aab4c2a776843f560e294dfdb742238207b",
+  "local_implementation_commit": "c7bd321",
+  "prepared_source_commit": "65283aad930bae2159fff6e579025a37097eaa87",
+  "local_validated_commit": "eac37aab4c2a776843f560e294dfdb742238207b",
+  "archived_pre_reconciliation_commit": "44d9f8057efb78c78852e796ab093a731b50587c",
+  "source_tree": "16d8404399f06e816ef144d669008bc9211c5947",
+  "git_reconciliation": {
+    "local_original": "44d9f8057efb78c78852e796ab093a731b50587c",
+    "archive_branch": "archive/monthly-continuation-native-pre-connector-20261117",
+    "remote_head": "eac37aab4c2a776843f560e294dfdb742238207b",
+    "same_working_tree_and_index": true,
+    "tree": "16d8404399f06e816ef144d669008bc9211c5947",
+    "source_files_modified_during_reconciliation": false
+  },
+  "base_main": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
+  "branch": "fix/system-stability-20261116",
+  "pull_request": 128,
+  "pull_request_base": "fix/owner-shirt-cost-editing-20261116",
+  "pull_request_url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/128",
+  "git_integration": "DRAFT_OPEN_NO_MERGE_OR_AUTO_MERGE",
+  "recorded_at_utc": "2026-11-17T21:39:56.676706+00:00",
+  "native_verified_at": "2026-11-17T21:32:27.409194+00:00",
+  "public_verified_at": null,
+  "implemented": true,
+  "published": true,
+  "native_verified": true,
+  "public_smoke_complete": false,
+  "verification_scope": "EXACT_NATIVE_SOURCE_CONFIGURATION_AND_100_PERCENT_TRAFFIC_ONLY; PUBLIC_GATE_PENDING_TRANSPORT",
+  "ci": {
+    "id": 44175286949,
+    "run_number": 665,
+    "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/44175286949",
+    "head_sha": "eac37aab4c2a776843f560e294dfdb742238207b",
+    "status": "completed",
+    "conclusion": "success",
+    "node": {
+      "tests": 4648,
+      "pass": 4648,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0
+    },
+    "python": {
+      "pass": 67,
+      "fail": 0
+    },
+    "compiled_hashes": {
+      "app": "10c324f14d0203f1453d36ec60b3d11d0250d40c446b0bc81c5578332ddac0f1",
+      "auth": "002bc90da88de19b968eda850dd668b4811c04506d2be9811f08140828eda6c4",
+      "finance": "522cd735b73157eee92f1859d87959f5e66a7b8070afb4b2c26cb92006a44bf0"
+    },
+    "workflow_preflight_step": "SKIPPED_BY_EXISTING_STACKED_PR_CONDITION; LOCAL_PREFLIGHT_PASS",
+    "cloudflare_checks": [
+      {
+        "name": "Workers Builds: brazacommerce-app",
+        "status": "completed",
+        "conclusion": "success",
+        "id": 134365725970,
+        "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-app/production/previews/fix-system-stability-20261116/builds/f135743c-32ff-42d4-a98e-3cd556e5c5c1"
+      },
+      {
+        "name": "Workers Builds: brazacommerce-finance",
+        "status": "completed",
+        "conclusion": "success",
+        "id": 134365521662,
+        "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-finance/production/previews/fix-system-stability-20261116/builds/b860cf70-3173-4b65-9ef7-10d6faadc0f0"
+      },
+      {
+        "name": "Workers Builds: brazacommerce-auth",
+        "status": "completed",
+        "conclusion": "success",
+        "id": 134365423384,
+        "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-auth/production/previews/fix-system-stability-20261116/builds/a59a46f5-951c-455b-8831-0553a2fead13"
+      }
+    ]
+  },
+  "local_full_node": {
+    "tests": 4648,
+    "pass": 4648,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0,
+    "duration_ms": 754057.208251,
+    "log_sha256": "577b2c73caee65b7921fb93d88534f175478820808e77fa44d968faeb0219535",
+    "source_commit_at_execution": "eac37aab4c2a776843f560e294dfdb742238207b",
+    "source_tree": "16d8404399f06e816ef144d669008bc9211c5947",
+    "local_full_session": 66328,
+    "archived_pre_reconciliation_commit": "44d9f8057efb78c78852e796ab093a731b50587c",
+    "scope": "LOCAL_FULL_SUITE_RESTARTED_AFTER_EXECUTOR_INTERRUPTION_ON_UNCHANGED_EXACT_REMOTE_EAC37AA"
+  },
+  "prior_local_executor_interruption": {
+    "source_commit": "eac37aab4c2a776843f560e294dfdb742238207b",
+    "status": "INTERRUPTED_NO_FINAL_TAP_RESULT",
+    "cause_evidence": "Executor key changed during session recovery; old unified session75073 unknown, no Nodefulltestprocess remains, lastlog21:08:31UTC. Root cause of platform interruption not inferred.",
+    "manual_cancellation": false,
+    "prior_failed_tests_in_partial_log": false,
+    "required_action": "Repeat missing local full gate on unchanged exactcandidate; preserve partial log and green full CI independently.",
+    "interrupted_session": 75073,
+    "restart_session": 66328,
+    "partial_log_name": "full-node-interrupted-runtime-recovery.log",
+    "partial_log_sha256": "977686db5e420748af392024d7bd235783e69bdbde501f6b27f8246d85a3278d",
+    "partial_log_bytes": 712770,
+    "source_tree": "16d8404399f06e816ef144d669008bc9211c5947",
+    "same_unchanged_exact_source_for_restart": true
+  },
+  "local_python": {
+    "pass": 67,
+    "fail": 0
+  },
+  "targeted": {
+    "pass": 21,
+    "fail": 0,
+    "skipped": 0
+  },
+  "synthetic_proof": {
+    "schema": "monthly_continuation_cadence_local_proof_v1",
+    "test_commit": "0106b91 (same test content as7751dee)",
+    "runtime_base": "ddf1630da2e5c25a042ffc2f462cf8a1daceaa8d",
+    "environment": "LOCAL_SYNTHETIC_SQLITE_AND_GENERATED_APP",
+    "external_queries": 0,
+    "remote_writes": 0,
+    "external_provider_calls": 0,
+    "tests_passed": 7,
+    "test_command": "node --test web/cloudflare/tests/monthly-continuation-cadence.test.mjs web/finance/tests/monthly-source-throughput.test.mjs",
+    "generated_profiles": [
+      {
+        "minify": false,
+        "pass": true
+      },
+      {
+        "minify": true,
+        "pass": true
+      }
+    ],
+    "scenario": {
+      "orders": 421,
+      "statuses": "all synthetic CANCELLED to isolate scheduler/retention throughput; no payment calls",
+      "final_day": "explicitly empty synthetic day, not a claim about Live",
+      "november_turnover_interval_minutes": 13,
+      "control_windows": "alternating two November windows outside unchanged900s same-window RUNNING reuse",
+      "current_month": "real saved RUNNING Finance source read only; no current provider step",
+      "cron_reserved_minutes_modulo10": [
+        0,
+        2,
+        5,
+        7
+      ],
+      "protected_scan_returns_bootstrap": "controlled always-due cues; count work-budget opportunities, not verified operational financial results"
+    },
+    "observed_local_result": {
+      "finished_after_minutes": 518,
+      "monthly_turns_after_initial_start": 25,
+      "total_monthly_source_turns": 26,
+      "maximum_monthly_gap_minutes": 22,
+      "eligible_aux_after_cooldown_at_most": 2,
+      "at_least_one_other_aux_between_monthly_turns": true,
+      "all_three_sources_present_at_publication": true,
+      "maximum_source_count": 45,
+      "source_cap_unchanged": 60,
+      "lane_opportunities": {
+        "FINANCE": 228,
+        "RESERVED_MINUTE": 200,
+        "SCAN_BUDGET": 20,
+        "MONTHLY": 25,
+        "RETURNS_BUDGET": 10,
+        "BOOTSTRAP_BUDGET": 10,
+        "PRODUCTION": 2,
+        "COSTS": 2,
+        "CATALOG": 2,
+        "REGISTRY": 1,
+        "ORDINARY_HISTORY": 1
+      }
+    },
+    "limits": [
+      "No real-world retention lifetime or completion deadline is guaranteed by this synthetic run.",
+      "Payment latency, provider errors, D1 latency and long competing leases can add work and delays.",
+      "The model records protected budget opportunities; it does not fabricate Pending/Returns/coverage acceptance."
+    ],
+    "post_fix_regression_command": "node --test web/cloudflare/tests/business-history-continuation.test.mjs",
+    "post_fix_regressions_passed": 10,
+    "initial_evidence_preserved_at": "/workspace/work/integration-audit-evidence/monthly-continuation-cadence-proof-initial.json",
+    "mandatory_yield_fix": {
+      "commit": "ddf1630da2e5c25a042ffc2f462cf8a1daceaa8d",
+      "condition": "same-revision monthly work retains AUXILIARY; only a later non-monthly auxiliary revision resets MONTHLY",
+      "regression_passed": true
+    }
+  },
+  "rpc_budget": {
+    "acquire": "same UPDATE RETURNING/one RPC; adds one bounded active-cohort metadata scalar and current health fields; financial frame bodies are not aggregated",
+    "run_history": "one additional validation SELECT only for eligible/active continuation; one private source maximum",
+    "finish": "same batch/one RPC; monthly lost-offer cooldown prepended under active lease+parent CAS, release restores original changes() chain, monthly fairness statement last",
+    "finance_scheduled_combined_rpc_max": 49,
+    "cold_finance_combined_rpc_max": 48,
+    "new_monthly_phase_combined_rpc": 26,
+    "combined_rpc_cap_unchanged": 50
+  },
+  "compiled_hashes": {
+    "app": "10c324f14d0203f1453d36ec60b3d11d0250d40c446b0bc81c5578332ddac0f1",
+    "auth": "002bc90da88de19b968eda850dd668b4811c04506d2be9811f08140828eda6c4",
+    "finance": "522cd735b73157eee92f1859d87959f5e66a7b8070afb4b2c26cb92006a44bf0"
+  },
+  "workers": {
+    "finance": {
+      "active_version_id": "60259fca-980a-4255-8157-fb74b43023cf",
+      "latest_version_id": "60259fca-980a-4255-8157-fb74b43023cf",
+      "active_percentage": 100,
+      "retrieved_raw_sha256": "522cd735b73157eee92f1859d87959f5e66a7b8070afb4b2c26cb92006a44bf0",
+      "raw_bytes": 895222,
+      "effective_config_sha256": "1e5de4eba866ec7c8ca85fc37c7969d61dc513a26336879e2753e506c6711ab2",
+      "action": "RETAINED",
+      "source_matches_expected": true
+    },
+    "auth": {
+      "active_version_id": "afb0a5aa-b442-4137-b27a-8dbc35152774",
+      "latest_version_id": "afb0a5aa-b442-4137-b27a-8dbc35152774",
+      "active_percentage": 100,
+      "retrieved_raw_sha256": "002bc90da88de19b968eda850dd668b4811c04506d2be9811f08140828eda6c4",
+      "raw_bytes": 579491,
+      "effective_config_sha256": "304c9c4615acdfc3a8222e00449e5bceabcf2dd9bd574587538183a935003361",
+      "action": "UPDATED",
+      "source_matches_expected": true
+    },
+    "app": {
+      "active_version_id": "36fa53b2-7917-4df4-80c2-14116046bfaa",
+      "latest_version_id": "36fa53b2-7917-4df4-80c2-14116046bfaa",
+      "active_percentage": 100,
+      "retrieved_raw_sha256": "10c324f14d0203f1453d36ec60b3d11d0250d40c446b0bc81c5578332ddac0f1",
+      "raw_bytes": 3763106,
+      "effective_config_sha256": "72c1ffdf88e61e4d2b1b7d78545c3d8d9a5b903cc32cf4ed83ee87d5c19a32b9",
+      "action": "UPDATED",
+      "source_matches_expected": true
+    }
+  },
+  "native_verification": {
+    "schema": "owner_artwork_controlled_stage_verification_v1",
+    "recorded_at": "2026-11-17T21:32:27.409194+00:00",
+    "updated_workers": [
+      "app",
+      "auth"
+    ],
+    "workers": {
+      "finance": {
+        "active_version_id": "60259fca-980a-4255-8157-fb74b43023cf",
+        "latest_version_id": "60259fca-980a-4255-8157-fb74b43023cf",
+        "active_percentage": 100,
+        "retrieved_raw_sha256": "522cd735b73157eee92f1859d87959f5e66a7b8070afb4b2c26cb92006a44bf0",
+        "raw_bytes": 895222,
+        "effective_config_sha256": "1e5de4eba866ec7c8ca85fc37c7969d61dc513a26336879e2753e506c6711ab2",
+        "action": "RETAINED",
+        "source_matches_expected": true
+      },
+      "auth": {
+        "active_version_id": "afb0a5aa-b442-4137-b27a-8dbc35152774",
+        "latest_version_id": "afb0a5aa-b442-4137-b27a-8dbc35152774",
+        "active_percentage": 100,
+        "retrieved_raw_sha256": "002bc90da88de19b968eda850dd668b4811c04506d2be9811f08140828eda6c4",
+        "raw_bytes": 579491,
+        "effective_config_sha256": "304c9c4615acdfc3a8222e00449e5bceabcf2dd9bd574587538183a935003361",
+        "action": "UPDATED",
+        "source_matches_expected": true
+      },
+      "app": {
+        "active_version_id": "36fa53b2-7917-4df4-80c2-14116046bfaa",
+        "latest_version_id": "36fa53b2-7917-4df4-80c2-14116046bfaa",
+        "active_percentage": 100,
+        "retrieved_raw_sha256": "10c324f14d0203f1453d36ec60b3d11d0250d40c446b0bc81c5578332ddac0f1",
+        "raw_bytes": 3763106,
+        "effective_config_sha256": "72c1ffdf88e61e4d2b1b7d78545c3d8d9a5b903cc32cf4ed83ee87d5c19a32b9",
+        "action": "UPDATED",
+        "source_matches_expected": true
+      }
+    },
+    "all_configs_preserved": true,
+    "owner_flags_preserved": true,
+    "all_source_bytes_exact": true,
+    "all_active_latest_100": true
+  },
+  "public_verification": {
+    "status": "BLOCKED_TRANSPORT_PUBLIC_GATE_NOT_COMPLETE",
+    "all_exact": false,
+    "release": "2026-11-17.2",
+    "scope": "PUBLIC_TLS_HTTP_ROUTING_ASSETS_NOT_YET_VERIFIED_FOR_17_2",
+    "failure": {
+      "schema": "mls_public_transport_failure_preserved_v1",
+      "release_native_confirmed": "2026-11-17.2",
+      "source_commit": "eac37aab4c2a776843f560e294dfdb742238207b",
+      "native_verified_at": "2026-11-17T21:32:27.409194+00:00",
+      "public_gate": "NOT_COMPLETE",
+      "url": "https://app.brazacommerce.com.br/login",
+      "expected_http": 200,
+      "actual_http": 503,
+      "body_bytes": 98,
+      "body_sha256": "33fbc61ad080ef68dd7a6479f8c53f1bf864dba2930567dbbc4ceb47490a1909",
+      "reported_server": "envoy",
+      "application_failure_inferred": false,
+      "manual_cancellation": false,
+      "client_checks": [
+        "Python urllib: initial pass3 bounded retries",
+        "Python urllib: delayed retry3 bounded retries",
+        "curl: samecanonicalURL inheritedproxy/CA unchanged"
+      ],
+      "failure_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "warnings": [
+        [
+          {
+            "url": "https://app.brazacommerce.com.br/login",
+            "attempt": 1,
+            "status": 503,
+            "body_sha256": "33fbc61ad080ef68dd7a6479f8c53f1bf864dba2930567dbbc4ceb47490a1909",
+            "cause": "ENVIRONMENT_ENVOY_UPSTREAM_REMOTE_CONNECTION_FAILURE_IDENTICAL_TO_GITHUB_TRANSPORT_ERROR"
+          },
+          {
+            "url": "https://app.brazacommerce.com.br/login",
+            "attempt": 2,
+            "status": 503,
+            "body_sha256": "33fbc61ad080ef68dd7a6479f8c53f1bf864dba2930567dbbc4ceb47490a1909",
+            "cause": "ENVIRONMENT_ENVOY_UPSTREAM_REMOTE_CONNECTION_FAILURE_IDENTICAL_TO_GITHUB_TRANSPORT_ERROR"
+          },
+          {
+            "url": "https://app.brazacommerce.com.br/login",
+            "attempt": 3,
+            "status": 503,
+            "body_sha256": "33fbc61ad080ef68dd7a6479f8c53f1bf864dba2930567dbbc4ceb47490a1909",
+            "cause": "ENVIRONMENT_ENVOY_UPSTREAM_REMOTE_CONNECTION_FAILURE_IDENTICAL_TO_GITHUB_TRANSPORT_ERROR"
+          }
+        ],
+        [
+          {
+            "url": "https://app.brazacommerce.com.br/login",
+            "attempt": 1,
+            "status": 503,
+            "body_sha256": "33fbc61ad080ef68dd7a6479f8c53f1bf864dba2930567dbbc4ceb47490a1909",
+            "cause": "ENVIRONMENT_ENVOY_UPSTREAM_REMOTE_CONNECTION_FAILURE_IDENTICAL_TO_GITHUB_TRANSPORT_ERROR"
+          },
+          {
+            "url": "https://app.brazacommerce.com.br/login",
+            "attempt": 2,
+            "status": 503,
+            "body_sha256": "33fbc61ad080ef68dd7a6479f8c53f1bf864dba2930567dbbc4ceb47490a1909",
+            "cause": "ENVIRONMENT_ENVOY_UPSTREAM_REMOTE_CONNECTION_FAILURE_IDENTICAL_TO_GITHUB_TRANSPORT_ERROR"
+          },
+          {
+            "url": "https://app.brazacommerce.com.br/login",
+            "attempt": 3,
+            "status": 503,
+            "body_sha256": "33fbc61ad080ef68dd7a6479f8c53f1bf864dba2930567dbbc4ceb47490a1909",
+            "cause": "ENVIRONMENT_ENVOY_UPSTREAM_REMOTE_CONNECTION_FAILURE_IDENTICAL_TO_GITHUB_TRANSPORT_ERROR"
+          }
+        ]
+      ],
+      "network_environment_observation": {
+        "network_policy_mode": "unrestricted",
+        "state": "enforced",
+        "observations_current": true,
+        "same_selected_environment": true
+      },
+      "credentials_security_configuration_changes": false,
+      "web_read_separate_service": "CANONICAL_URL_NOT_ACCESSIBLE_VIA_TOOL; NO_STATUS_OR_BYTE_PROOF",
+      "recorded_at": "2026-11-17T21:39:49.845096+00:00",
+      "python_full_probe_attempts": 3,
+      "bounded_login_tries_per_attempt": 3,
+      "additional_warning_sets": [
+        [
+          {
+            "url": "https://app.brazacommerce.com.br/login",
+            "attempt": 1,
+            "status": 503,
+            "body_sha256": "33fbc61ad080ef68dd7a6479f8c53f1bf864dba2930567dbbc4ceb47490a1909",
+            "cause": "ENVIRONMENT_ENVOY_UPSTREAM_REMOTE_CONNECTION_FAILURE_IDENTICAL_TO_GITHUB_TRANSPORT_ERROR"
+          },
+          {
+            "url": "https://app.brazacommerce.com.br/login",
+            "attempt": 2,
+            "status": 503,
+            "body_sha256": "33fbc61ad080ef68dd7a6479f8c53f1bf864dba2930567dbbc4ceb47490a1909",
+            "cause": "ENVIRONMENT_ENVOY_UPSTREAM_REMOTE_CONNECTION_FAILURE_IDENTICAL_TO_GITHUB_TRANSPORT_ERROR"
+          },
+          {
+            "url": "https://app.brazacommerce.com.br/login",
+            "attempt": 3,
+            "status": 503,
+            "body_sha256": "33fbc61ad080ef68dd7a6479f8c53f1bf864dba2930567dbbc4ceb47490a1909",
+            "cause": "ENVIRONMENT_ENVOY_UPSTREAM_REMOTE_CONNECTION_FAILURE_IDENTICAL_TO_GITHUB_TRANSPORT_ERROR"
+          }
+        ]
+      ],
+      "additional_same_canonical_checks": {
+        "curl_health_http": 503,
+        "curl_account_login_http": 503
+      },
+      "stderr_observed_in_tool_result": "AssertionError: PUBLIC_STATUS_MISMATCH_/login_503_33fbc61ad080ef68dd7a6479f8c53f1bf864dba2930567dbbc4ceb47490a1909",
+      "stdout_log_scope": "Original stdout file empty; the assertion was emitted on stderr in the tool result. The separately captured98-byte curl body and Envoy headers support transport classification.",
+      "curl_body_sha256": "33fbc61ad080ef68dd7a6479f8c53f1bf864dba2930567dbbc4ceb47490a1909",
+      "curl_headers_sha256": "f1a7073ae61e8b0f4a987c2cf1a4c1541feebf5cf11748b8cf326a929a97da7d"
+    },
+    "authenticated_owner_live_qa": "NOT_PERFORMED",
+    "application_failure_inferred": false,
+    "manual_cancellation": false,
+    "next_action": "Retry the same canonical public endpoints/assets with bounded retries and unchanged credentials, CA, proxy and security configuration. A transport failure does not count as an application pass. Preserve this pending record when later evidence completes the gate."
+  },
+  "backup_and_local_restore": {
+    "capture": {
+      "at": "2026-11-17T21:28:20.388401+00:00",
+      "snapshot_sha256": "90da55bdfa58ddd5fecbda6897bec249bb5cbb20223515825b9dfc7f40b0783a",
+      "bytes": 3917975,
+      "tables": 44,
+      "rows": 4256,
+      "rows_written": 0,
+      "app_atomic_select": true,
+      "cross_database_atomicity": false,
+      "bookmarks_read": 6,
+      "export_started": false,
+      "restored_live": false
+    },
+    "restore": {
+      "schema": "mls_private_isolated_restore_proof_v1",
+      "at": "2026-11-17T21:28:33.936383+00:00",
+      "snapshot_sha256": "90da55bdfa58ddd5fecbda6897bec249bb5cbb20223515825b9dfc7f40b0783a",
+      "snapshot_tables": 44,
+      "restored_rows": 4256,
+      "integrity_check": "ok",
+      "existing_schema_identical": true,
+      "existing_rows_identical": true,
+      "new_control_tables": [
+        "business_history_sync_fairness",
+        "business_month_source_recoveries",
+        "product_registry_source_diagnostics"
+      ],
+      "new_ddl_sha256": {
+        "business_history_sync_fairness": "b725e92e86e0419c13fe2e94166f3b0712cff4025f2e4a18cc86b45413aff4db",
+        "product_registry_source_diagnostics": "da1ed5edab0d7d6b2290f703a047dfae64c3a827e6cfd5047b9bec8a85451271",
+        "business_month_source_recoveries": "471034df8cb531f15fd039c8aa50a696f8451d85496dfbf439aae239f4383a6b"
+      },
+      "candidate_ddl_source_sha256": {
+        "web/cloudflare/src/business-history-sync.mjs": "d4dd37390b590c9ea1aee2fb65f2574a7f12a77de00c3f67ad729dce204f879a",
+        "web/cloudflare/src/product-registry.mjs": "e4bbba3d659a605188507798bb1fdd12393fc82b14bc56b83a548936b872d80f",
+        "web/cloudflare/src/business-month-source-recovery.mjs": "dbd5520e290cb9527c52bfe0560758f18a0804c8e23209e7dcda83e812bdd4dc"
+      },
+      "app_old_append_only_history": "NOT_COPIED_BY_DEFAULT; TIME_TRAVEL_BOOKMARKS_ONLY",
+      "auth_finance": "SCHEMA_AND_BOOKMARKS_ONLY; NO_ROWS_RESTORED_OR_DDL_APPLIED",
+      "remote_writes": 0,
+      "remote_restores": 0,
+      "provider_requests": 0,
+      "financial_coverage_complete": false,
+      "candidate_head": "eac37aab4c2a776843f560e294dfdb742238207b"
+    },
+    "scope": "SCOPED_ATOMIC_APP_SNAPSHOT_AND_ISOLATED_LOCAL_RESTORE; NOT_FULL_DB_BACKUP; AUTH_FINANCE_SCHEMA_AND_BOOKMARKS_ONLY; NO_LIVE_RESTORE"
+  },
+  "previous_publication_receipt": "publication-catalog-diagnostics-live.json",
+  "last_fully_native_public_verified_release": {
+    "status": "PUBLISHED_VERIFIED_TECHNICAL_PUBLIC_ONLY",
+    "release_id": "2026-11-17.1",
+    "release": "2026-11-17.1",
+    "source_commit": "e26357dd23b7c488b803481099b2da0af66eb6b6",
+    "prepared_source_commit": "2c1764b607ab719f5109688b9ad6559e69ce979c",
+    "receipt": "docs/system-audit/publication-catalog-diagnostics-live.json",
+    "verified_at": "2026-11-17T20:20:27.302813+00:00",
+    "published": true,
+    "native_verified": true,
+    "public_smoke_complete": true,
+    "verification_scope": "EXACT_NATIVE_SOURCE_CONFIGURATION_100_PERCENT_TRAFFIC_PUBLIC_TLS_HTTP_ROUTING_AND_EXACT_ASSETS; OWNER_ACCEPTANCE_PENDING",
+    "ci_run": 44164656045,
+    "node_tests_pass": 4631,
+    "python_tests_pass": 67,
+    "workers": {
+      "finance": "60259fca-980a-4255-8157-fb74b43023cf",
+      "auth": "5848d2d1-944f-4633-84ce-78886a701dc2",
+      "app": "078e9f9e-d6b3-4dee-8d4c-33a821d43288"
+    },
+    "pull_request": 128,
+    "git_integration": "DRAFT_OPEN_NO_MERGE_OR_AUTO_MERGE",
+    "account_financial_acceptance": false,
+    "owner_live_qa": "NOT_PERFORMED",
+    "actual_catalog_problem_resolved": false,
+    "m2_closed": false,
+    "m22_closed": false
+  },
+  "workers_deployed": [
+    "auth",
+    "app"
+  ],
+  "finance_retained": true,
+  "actual_monthly_source_progress_validated": false,
+  "catalog_scope": "ACTUAL_FINITE_STRUCTURAL_CODE_PROVEN; STRICT_COMPATIBILITY_CANDIDATE17_3_UNINTEGRATED_UNPUBLISHED; CATALOG_UNRESOLVED",
+  "actual_catalog_problem_resolved": false,
+  "catalog_root_cause_proven": true,
+  "natural_collector_progress": {
+    "status": "ACTUAL_ONE_SAME_PERIOD_SOURCE_REPLACEMENT_OBSERVED_PAGE_PROGRESS_UNPROVEN",
+    "actual_monthly_recovery_validated": true,
+    "source_page_progress": false,
+    "actual_monthly_source_progress_validated": false,
+    "financial_coverage_complete": false,
+    "actual_financial_acceptance": false,
+    "replacement_pages_read": 0,
+    "zero_page_count_is_not_evidence_of_empty_day": true,
+    "one_same_period_replacement_observed": true,
+    "same_period_finance_run_exists": true,
+    "original_audit_frame_preserved_exactly": true,
+    "old_publication_parent_and_all_three_frames_preserved_exactly": true,
+    "other_two_active_frames_preserved_exactly": true,
+    "observed_at": "2026-11-17T21:43:51.152948+00:00",
+    "evidence": {
+      "receipt": "docs/system-audit/publication-monthly-continuation-live.json",
+      "evidence_file": "history-real-replacement-live17-2-proof-v2.json",
+      "evidence_sha256": "338396199dd264e4e14e2a9889e7eeb44624c54a70d5d7e491312b06b6d35359",
+      "evidence_canonical_sha256": "bd0b328c1e4ddbd35daeed555033b4ab02a6a566c980746de137f645ea4093b8",
+      "source_commit": "eac37aab4c2a776843f560e294dfdb742238207b",
+      "scope": "ONE_REAL_SAME_PERIOD_SOURCE_REPLACEMENT; ORIGINAL_AUDIT_FRAME_AND_OLD_PUBLICATION_PRESERVED; PAGE_PROGRESS_NOT_OBSERVED"
+    },
+    "scope": "Limited real source recovery; pagination, real financial coverage and owner acceptance remain pending. No forced source start/step/reset and no empty-day inference."
+  },
+  "manual_real_business_mutations_by_audit": false,
+  "manual_external_financial_writes": false,
+  "operationally_accepted": false,
+  "actual_financial_acceptance": false,
+  "all_errors_resolved": false,
+  "m2_closed": false,
+  "m22_closed": false,
+  "sale_track": "ADIADO_VENDA",
+  "evidence_file_digests": [
+    {
+      "name": "ci-current.json",
+      "sha256": "507dd17d4f1fdb11a0fb77838aadd9252db1a6403ba2f663f48f4f0b6ab6c321"
+    },
+    {
+      "name": "full-node.log",
+      "sha256": "577b2c73caee65b7921fb93d88534f175478820808e77fa44d968faeb0219535"
+    },
+    {
+      "name": "python.log",
+      "sha256": "d7dbf3ffa6722c09cb4f5ce5eb210781d56c0d90b104e3c8c4b90cee606a1d4a"
+    },
+    {
+      "name": "stage-app-auth.json",
+      "sha256": "3bfe094c3ccd0f530c01cc1a8503a32f2dc6b91f6f49b9af1f419194c943a013"
+    },
+    {
+      "name": "backup-public.json",
+      "sha256": "8837fa2e8e5f478cccea739bf082d22cdf47bcf1830e4f14e09f139dfd161ead"
+    },
+    {
+      "name": "git-reconciliation.json",
+      "sha256": "801574602fe12cb7ab941c7022c1d855e4f25116ba4854143157f13a98615f68"
+    },
+    {
+      "name": "PROGRESS.json",
+      "sha256": "c8b55e337bd53ed0b5e2f58346776397d5b84396b0b127966aa67b77aa21eb61"
+    },
+    {
+      "name": "hashes.json",
+      "sha256": "dcde752512ac3603aba626e8b459e531d2c97b08e30f77c7a2fd1ea5969663b5"
+    },
+    {
+      "name": "local-interruption.json",
+      "sha256": "f0bf9d4a4bddc4350f41c52cdec75278cf8dd188b0c45cb4919834a0b5b801e4"
+    },
+    {
+      "name": "full-node-interrupted-runtime-recovery.log",
+      "sha256": "977686db5e420748af392024d7bd235783e69bdbde501f6b27f8246d85a3278d"
+    },
+    {
+      "name": "public-transport-failure.json",
+      "sha256": "196934492d3442852bc4cc9b64209a09f1970822c0f70abfd18f19e90608bf43"
+    },
+    {
+      "name": "public-curl-login-response.bin",
+      "sha256": "33fbc61ad080ef68dd7a6479f8c53f1bf864dba2930567dbbc4ceb47490a1909"
+    }
+  ],
+  "preserved_before_publication": {
+    "canonical_current_status": "MONTHLY_CONTINUATION_17_2_IMPLEMENTED_FULL_GATES_PENDING",
+    "canonical_updated_at": "2026-11-17T20:59:28.760149+00:00",
+    "canonical_latest": {
+      "task": "BOUNDED_MONTHLY_CONTINUATION_17_2",
+      "source_commit": "65283aad930bae2159fff6e579025a37097eaa87",
+      "release_candidate": "2026-11-17.2",
+      "implemented": true,
+      "local_validation": "21_TARGETED_PASS_FULL_GATES_PENDING",
+      "exact_head_github_ci": "PENDING",
+      "published": false,
+      "validated_operationally": false,
+      "actual_financial_acceptance": false,
+      "actual_catalog_problem_resolved": false,
+      "receipt": "docs/system-audit/monthly-continuation-20261117.json",
+      "previous_published_receipt": "docs/system-audit/publication-catalog-diagnostics-live.json",
+      "pull_request": 128,
+      "git_integration": "LOCAL_CANDIDATE_SAME_DRAFT_PR_NO_MERGE_NO_AUTO_MERGE",
+      "compiled_hashes": {
+        "app": "10c324f14d0203f1453d36ec60b3d11d0250d40c446b0bc81c5578332ddac0f1",
+        "auth": "002bc90da88de19b968eda850dd668b4811c04506d2be9811f08140828eda6c4",
+        "finance": "522cd735b73157eee92f1859d87959f5e66a7b8070afb4b2c26cb92006a44bf0"
+      }
+    },
+    "canonical_live": {
+      "status": "PUBLISHED_VERIFIED_TECHNICAL_PUBLIC_ONLY",
+      "release_id": "2026-11-17.1",
+      "release": "2026-11-17.1",
+      "source_commit": "e26357dd23b7c488b803481099b2da0af66eb6b6",
+      "prepared_source_commit": "2c1764b607ab719f5109688b9ad6559e69ce979c",
+      "receipt": "docs/system-audit/publication-catalog-diagnostics-live.json",
+      "verified_at": "2026-11-17T20:20:27.302813+00:00",
+      "published": true,
+      "native_verified": true,
+      "public_smoke_complete": true,
+      "verification_scope": "EXACT_NATIVE_SOURCE_CONFIGURATION_100_PERCENT_TRAFFIC_PUBLIC_TLS_HTTP_ROUTING_AND_EXACT_ASSETS; OWNER_ACCEPTANCE_PENDING",
+      "ci_run": 44164656045,
+      "node_tests_pass": 4631,
+      "python_tests_pass": 67,
+      "workers": {
+        "finance": "60259fca-980a-4255-8157-fb74b43023cf",
+        "auth": "5848d2d1-944f-4633-84ce-78886a701dc2",
+        "app": "078e9f9e-d6b3-4dee-8d4c-33a821d43288"
+      },
+      "pull_request": 128,
+      "git_integration": "DRAFT_OPEN_NO_MERGE_OR_AUTO_MERGE",
+      "account_financial_acceptance": false,
+      "owner_live_qa": "NOT_PERFORMED",
+      "actual_catalog_problem_resolved": false,
+      "m2_closed": false,
+      "m22_closed": false
+    },
+    "canonical_next_actions": [
+      "Concluir gates17.2 e CI do head exato; publicar somenteAuth→App apósbackups/verificação, Financepreservado.",
+      "Observar no runtime a continuação mensal/intenção/CAS; não afirmar cobertura financeira completa pelo cenário sintético.",
+      "Catálogo: aguardar tentativa elegível17.1; candidato de compatibilidade permanece não integrado até diagnóstico real.",
+      "Owner operational acceptance and independent OP-014 remain open; preserve physical confirmations, historical cost/CMV/closings, Friday13h Brasília, audit, UNKNOWN and no duplicate cost/revenue.",
+      "Sale ADIADO_VENDA; permissions/CSRF/isolation, six agents and charts remain required."
+    ],
+    "mirror_current_fields": {
+      "current_status": "SEE_CANONICAL_CHECKPOINT_MONTHLY_CONTINUATION_17_2_CANDIDATE",
+      "updated_at": "2026-11-17T20:59:28.760149+00:00",
+      "next_actions": [
+        "Observe the next eligible catalog attempt under the existing cron/backoff and record its finite structural diagnostic; 17.1 publication does not prove catalog recovery. Do not force start/step/reset or bypass BANNED/offset/permissions.",
+        "Use the actual structural code and equivalent provider documentation to correct a reproduced upstream shape; absent arrays remain unknown/error, never empty success.",
+        "Owner operational acceptance and independent OP-014 remain open; preserve physical confirmations, historical cost/CMV/closings, Friday13h Brasília, audit, UNKNOWN and no duplicate cost/revenue.",
+        "Sale ADIADO_VENDA; permissions/CSRF/isolation, six agents and charts remain required."
+      ],
+      "current_release": {
+        "status": "PUBLISHED_VERIFIED_TECHNICAL_PUBLIC_ONLY",
+        "release_id": "2026-11-17.1",
+        "release": "2026-11-17.1",
+        "source_commit": "e26357dd23b7c488b803481099b2da0af66eb6b6",
+        "prepared_source_commit": "2c1764b607ab719f5109688b9ad6559e69ce979c",
+        "receipt": "docs/system-audit/publication-catalog-diagnostics-live.json",
+        "verified_at": "2026-11-17T20:20:27.302813+00:00",
+        "published": true,
+        "native_verified": true,
+        "public_smoke_complete": true,
+        "verification_scope": "EXACT_NATIVE_SOURCE_CONFIGURATION_100_PERCENT_TRAFFIC_PUBLIC_TLS_HTTP_ROUTING_AND_EXACT_ASSETS; OWNER_ACCEPTANCE_PENDING",
+        "ci_run": 44164656045,
+        "node_tests_pass": 4631,
+        "python_tests_pass": 67,
+        "workers": {
+          "finance": "60259fca-980a-4255-8157-fb74b43023cf",
+          "auth": "5848d2d1-944f-4633-84ce-78886a701dc2",
+          "app": "078e9f9e-d6b3-4dee-8d4c-33a821d43288"
+        },
+        "pull_request": 128,
+        "git_integration": "DRAFT_OPEN_NO_MERGE_OR_AUTO_MERGE",
+        "account_financial_acceptance": false,
+        "owner_live_qa": "NOT_PERFORMED",
+        "actual_catalog_problem_resolved": false,
+        "m2_closed": false,
+        "m22_closed": false,
+        "canonical_checkpoint": "docs/MLS_COMMERCE_OS_CHECKPOINT.json"
+      },
+      "live_release": {
+        "status": "PUBLISHED_VERIFIED_TECHNICAL_PUBLIC_ONLY",
+        "release_id": "2026-11-17.1",
+        "release": "2026-11-17.1",
+        "source_commit": "e26357dd23b7c488b803481099b2da0af66eb6b6",
+        "prepared_source_commit": "2c1764b607ab719f5109688b9ad6559e69ce979c",
+        "receipt": "docs/system-audit/publication-catalog-diagnostics-live.json",
+        "verified_at": "2026-11-17T20:20:27.302813+00:00",
+        "published": true,
+        "native_verified": true,
+        "public_smoke_complete": true,
+        "verification_scope": "EXACT_NATIVE_SOURCE_CONFIGURATION_100_PERCENT_TRAFFIC_PUBLIC_TLS_HTTP_ROUTING_AND_EXACT_ASSETS; OWNER_ACCEPTANCE_PENDING",
+        "ci_run": 44164656045,
+        "node_tests_pass": 4631,
+        "python_tests_pass": 67,
+        "workers": {
+          "finance": "60259fca-980a-4255-8157-fb74b43023cf",
+          "auth": "5848d2d1-944f-4633-84ce-78886a701dc2",
+          "app": "078e9f9e-d6b3-4dee-8d4c-33a821d43288"
+        },
+        "pull_request": 128,
+        "git_integration": "DRAFT_OPEN_NO_MERGE_OR_AUTO_MERGE",
+        "account_financial_acceptance": false,
+        "owner_live_qa": "NOT_PERFORMED",
+        "actual_catalog_problem_resolved": false,
+        "m2_closed": false,
+        "m22_closed": false,
+        "canonical_checkpoint": "docs/MLS_COMMERCE_OS_CHECKPOINT.json"
+      },
+      "latest_increment": {
+        "task": "BOUNDED_MONTHLY_CONTINUATION_17_2",
+        "source_commit": "65283aad930bae2159fff6e579025a37097eaa87",
+        "published": false,
+        "canonical_checkpoint": "docs/MLS_COMMERCE_OS_CHECKPOINT.json",
+        "receipt": "docs/system-audit/monthly-continuation-20261117.json"
+      },
+      "current_owner_publication": {
+        "canonical_checkpoint": "docs/MLS_COMMERCE_OS_CHECKPOINT.json",
+        "receipt": "docs/system-audit/publication-catalog-diagnostics-live.json",
+        "source_commit": "e26357dd23b7c488b803481099b2da0af66eb6b6",
+        "release": "2026-11-17.1",
+        "published": true,
+        "native_verified": true,
+        "public_smoke": "VERIFIED_HTTP_AND_EXACT_ASSETS",
+        "operationally_accepted": false,
+        "actual_financial_acceptance": false,
+        "actual_catalog_problem_resolved": false
+      },
+      "current_checkpoint_pointer": {
+        "path": "docs/MLS_COMMERCE_OS_CHECKPOINT.json",
+        "receipt": "docs/system-audit/monthly-continuation-20261117.json",
+        "published": false
+      }
+    },
+    "matrix_delivery": {
+      "task": "BOUNDED_MONTHLY_CONTINUATION_17_2",
+      "branch": "fix/system-stability-20261116",
+      "source_commit": "65283aad930bae2159fff6e579025a37097eaa87",
+      "release_candidate": "2026-11-17.2",
+      "base_main": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
+      "code": true,
+      "tested_locally": "21_TARGETED_PASS_FULL_GATES_PENDING",
+      "exact_head_github_ci": "PENDING",
+      "published": false,
+      "operationally_accepted": false,
+      "actual_catalog_problem_resolved": false,
+      "receipt": "../system-audit/monthly-continuation-20261117.json",
+      "previous_published_receipt": "../system-audit/publication-catalog-diagnostics-live.json",
+      "pull_request": 128,
+      "sale_track": "ADIADO_VENDA",
+      "next_independent_task": "OP-014"
+    },
+    "handoff_current_prefixes": {
+      "README.md": "<!-- OWNER_OPERATION_CURRENT -->\n**Diagnóstico estrutural do catálogo 17.1 publicado e verificado tecnicamente; causa real ainda pendente.** [Recibo](docs/system-audit/publication-catalog-diagnostics-live.json) · [validação](docs/system-audit/catalog-diagnostics-20261117.json) · [uso](docs/owner-operation/README.md) · [checkpoint](docs/MLS_COMMERCE_OS_CHECKPOINT.json).\n\nFonte `e26357d`, CI [44164656045](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/44164656045): 4631 Node e 67 Python aprovados. Os 4631 testes locais foram executados em `f1b01f0`, árvore idêntica `fc7be33`, preservada em branch de arquivo. A validação local e a CI cobrem a mesma árvore. Os três Builds Cloudflare foram aprovados separadamente. App/Auth/Finance ativos em 100%, bytes/configurações/rotas e assets públicos conferidos. PR #128 rascunho; main `346f30f` preservada, sem merge/auto-merge.\n\n17.1 acrescenta diagnóstico estrutural finito sob o mesmo HTTP 502, cursor, filtro BANNED e backoff. Não comprova catálogo recuperado nem autoriza converter ausência em lista vazia ou COMPLETE. Próximo passo: observar a tentativa natural elegível e usar o código real para reproduzir/corrigir a causa; sem start/step/reset forçado. [Histórico 16.5](docs/system-audit/publication-live.json) preservado integralmente.\n\nAceite operacional/financeiro permanece pendente. Escritas naturais dos coletores são separadas de mutações manuais de fatos reais. Sexta às 13h/Brasília, UNKNOWN, não duplicação, confirmações/auditoria, autenticação/permissões, seis agentes e gráficos permanecem ativos. [Regras financeiras](docs/financial-automation/README.md) · [matriz](docs/owner-operation/EXECUCAO.json). OP-014 segue independente; venda ADIADO_VENDA.\n<!-- END_OWNER_OPERATION_CURRENT -->",
+      "NEXT_CHAT_HANDOFF.txt": "<!-- OWNER_OPERATION_CURRENT -->\n**Diagnóstico estrutural do catálogo 17.1 publicado e verificado tecnicamente; causa real ainda pendente.** [Recibo](docs/system-audit/publication-catalog-diagnostics-live.json) · [validação](docs/system-audit/catalog-diagnostics-20261117.json) · [uso](docs/owner-operation/README.md) · [checkpoint](docs/MLS_COMMERCE_OS_CHECKPOINT.json).\n\nFonte `e26357d`, CI [44164656045](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/44164656045): 4631 Node e 67 Python aprovados. Os 4631 testes locais foram executados em `f1b01f0`, árvore idêntica `fc7be33`, preservada em branch de arquivo. A validação local e a CI cobrem a mesma árvore. Os três Builds Cloudflare foram aprovados separadamente. App/Auth/Finance ativos em 100%, bytes/configurações/rotas e assets públicos conferidos. PR #128 rascunho; main `346f30f` preservada, sem merge/auto-merge.\n\n17.1 acrescenta diagnóstico estrutural finito sob o mesmo HTTP 502, cursor, filtro BANNED e backoff. Não comprova catálogo recuperado nem autoriza converter ausência em lista vazia ou COMPLETE. Próximo passo: observar a tentativa natural elegível e usar o código real para reproduzir/corrigir a causa; sem start/step/reset forçado. [Histórico 16.5](docs/system-audit/publication-live.json) preservado integralmente.\n\nAceite operacional/financeiro permanece pendente. Escritas naturais dos coletores são separadas de mutações manuais de fatos reais. Sexta às 13h/Brasília, UNKNOWN, não duplicação, confirmações/auditoria, autenticação/permissões, seis agentes e gráficos permanecem ativos. [Regras financeiras](docs/financial-automation/README.md) · [matriz](docs/owner-operation/EXECUCAO.json). OP-014 segue independente; venda ADIADO_VENDA.\n<!-- END_OWNER_OPERATION_CURRENT -->",
+      "docs/RETOMADA.md": "<!-- OWNER_OPERATION_CURRENT -->\n**Diagnóstico estrutural do catálogo 17.1 publicado e verificado tecnicamente; causa real ainda pendente.** [Recibo](system-audit/publication-catalog-diagnostics-live.json) · [validação](system-audit/catalog-diagnostics-20261117.json) · [uso](owner-operation/README.md) · [checkpoint](MLS_COMMERCE_OS_CHECKPOINT.json).\n\nFonte `e26357d`, CI [44164656045](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/44164656045): 4631 Node e 67 Python aprovados. Os 4631 testes locais foram executados em `f1b01f0`, árvore idêntica `fc7be33`, preservada em branch de arquivo. A validação local e a CI cobrem a mesma árvore. Os três Builds Cloudflare foram aprovados separadamente. App/Auth/Finance ativos em 100%, bytes/configurações/rotas e assets públicos conferidos. PR #128 rascunho; main `346f30f` preservada, sem merge/auto-merge.\n\n17.1 acrescenta diagnóstico estrutural finito sob o mesmo HTTP 502, cursor, filtro BANNED e backoff. Não comprova catálogo recuperado nem autoriza converter ausência em lista vazia ou COMPLETE. Próximo passo: observar a tentativa natural elegível e usar o código real para reproduzir/corrigir a causa; sem start/step/reset forçado. [Histórico 16.5](system-audit/publication-live.json) preservado integralmente.\n\nAceite operacional/financeiro permanece pendente. Escritas naturais dos coletores são separadas de mutações manuais de fatos reais. Sexta às 13h/Brasília, UNKNOWN, não duplicação, confirmações/auditoria, autenticação/permissões, seis agentes e gráficos permanecem ativos. [Regras financeiras](financial-automation/README.md) · [matriz](owner-operation/EXECUCAO.json). OP-014 segue independente; venda ADIADO_VENDA.\n<!-- END_OWNER_OPERATION_CURRENT -->",
+      "docs/ROADMAP_MLS_COMMERCE_OS.md": "<!-- OWNER_OPERATION_CURRENT -->\n**Diagnóstico estrutural do catálogo 17.1 publicado e verificado tecnicamente; causa real ainda pendente.** [Recibo](system-audit/publication-catalog-diagnostics-live.json) · [validação](system-audit/catalog-diagnostics-20261117.json) · [uso](owner-operation/README.md) · [checkpoint](MLS_COMMERCE_OS_CHECKPOINT.json).\n\nFonte `e26357d`, CI [44164656045](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/44164656045): 4631 Node e 67 Python aprovados. Os 4631 testes locais foram executados em `f1b01f0`, árvore idêntica `fc7be33`, preservada em branch de arquivo. A validação local e a CI cobrem a mesma árvore. Os três Builds Cloudflare foram aprovados separadamente. App/Auth/Finance ativos em 100%, bytes/configurações/rotas e assets públicos conferidos. PR #128 rascunho; main `346f30f` preservada, sem merge/auto-merge.\n\n17.1 acrescenta diagnóstico estrutural finito sob o mesmo HTTP 502, cursor, filtro BANNED e backoff. Não comprova catálogo recuperado nem autoriza converter ausência em lista vazia ou COMPLETE. Próximo passo: observar a tentativa natural elegível e usar o código real para reproduzir/corrigir a causa; sem start/step/reset forçado. [Histórico 16.5](system-audit/publication-live.json) preservado integralmente.\n\nAceite operacional/financeiro permanece pendente. Escritas naturais dos coletores são separadas de mutações manuais de fatos reais. Sexta às 13h/Brasília, UNKNOWN, não duplicação, confirmações/auditoria, autenticação/permissões, seis agentes e gráficos permanecem ativos. [Regras financeiras](financial-automation/README.md) · [matriz](owner-operation/EXECUCAO.json). OP-014 segue independente; venda ADIADO_VENDA.\n<!-- END_OWNER_OPERATION_CURRENT -->",
+      "docs/MLS_CODEX_HANDOFF_2026_10_28.md": "<!-- OWNER_OPERATION_CURRENT -->\n**Diagnóstico estrutural do catálogo 17.1 publicado e verificado tecnicamente; causa real ainda pendente.** [Recibo](system-audit/publication-catalog-diagnostics-live.json) · [validação](system-audit/catalog-diagnostics-20261117.json) · [uso](owner-operation/README.md) · [checkpoint](MLS_COMMERCE_OS_CHECKPOINT.json).\n\nFonte `e26357d`, CI [44164656045](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/44164656045): 4631 Node e 67 Python aprovados. Os 4631 testes locais foram executados em `f1b01f0`, árvore idêntica `fc7be33`, preservada em branch de arquivo. A validação local e a CI cobrem a mesma árvore. Os três Builds Cloudflare foram aprovados separadamente. App/Auth/Finance ativos em 100%, bytes/configurações/rotas e assets públicos conferidos. PR #128 rascunho; main `346f30f` preservada, sem merge/auto-merge.\n\n17.1 acrescenta diagnóstico estrutural finito sob o mesmo HTTP 502, cursor, filtro BANNED e backoff. Não comprova catálogo recuperado nem autoriza converter ausência em lista vazia ou COMPLETE. Próximo passo: observar a tentativa natural elegível e usar o código real para reproduzir/corrigir a causa; sem start/step/reset forçado. [Histórico 16.5](system-audit/publication-live.json) preservado integralmente.\n\nAceite operacional/financeiro permanece pendente. Escritas naturais dos coletores são separadas de mutações manuais de fatos reais. Sexta às 13h/Brasília, UNKNOWN, não duplicação, confirmações/auditoria, autenticação/permissões, seis agentes e gráficos permanecem ativos. [Regras financeiras](financial-automation/README.md) · [matriz](owner-operation/EXECUCAO.json). OP-014 segue independente; venda ADIADO_VENDA.\n<!-- END_OWNER_OPERATION_CURRENT -->"
+    }
+  },
+  "preserved_historical_suffix_sha256": {
+    "README.md": "cf3401db77d461b1d847ca0c69ead56c11ddbf8e9c5492729313a37c9f567e59",
+    "NEXT_CHAT_HANDOFF.txt": "38e48f0bf5413598aa79b508e2fc477b083a0f0932428a703cbe31d8462772cc",
+    "docs/RETOMADA.md": "987d51f5df5817b313e37a9094fa46df241653936f6bab9e24b716b64d89759b",
+    "docs/ROADMAP_MLS_COMMERCE_OS.md": "2342fe3eccbf20a718ec716cee2958032b58371583bb8202c65a423b6de91f99",
+    "docs/MLS_CODEX_HANDOFF_2026_10_28.md": "62d6a0ac7275ae6124190c0278a665613752113a1892b446b8b63d0887da6c80",
+    "docs/owner-operation/README.md": "7d0e8e942ef670fcf35e106e955c8a63d931cb387c17eea7155c509a93d31a80",
+    "docs/system-audit/README.md": "c47fbf45e1bfab27468c649096098605dd3566c91c766f8612462c2f93be28cf"
+  },
+  "previous_publication_receipt_sha256": "c8b478aba0103fa33da766ffdca0da92e700714e675e73900268313414642d84",
+  "documentary_task_reconciliation": {
+    "task": "OP-013",
+    "scope": "HISTORICAL_16_1_16_5_17_1_PUBLIC_HTTP_ASSET_BLOCKERS_RECONCILED; NOT_17_2_PUBLIC_GATE_ACCEPTANCE",
+    "before_task_canonical_sha256": "c6f567e9f3ec98bab6775b625dcb19ba32fd2b9c43aee45bce57f357400a001b",
+    "after_task_canonical_sha256": "ebdbc388aa4ea1d425141b83b228fd9343d86e20f5ef43fb21bb9033c514da88",
+    "source_evidence_sha256": {
+      "docs/system-audit/publication-live.json": "9721784d842209831f4348d5771bffab4c213714b81da3b638120d4f8348487c",
+      "docs/system-audit/publication-catalog-diagnostics-live.json": "c8b478aba0103fa33da766ffdca0da92e700714e675e73900268313414642d84",
+      "docs/owner-operation/validation/publication-artwork-live-20261116.json": "090576a0969e9157d0aef295225a6727fa13ca4d6c29a3aa093a14c8c889a0f3",
+      "docs/owner-operation/validation/owner-dtf-artwork-backup.json": "3a1d338cdc0b5f0466f4d60d1ecdc26faf13715c54adb6b09a245540b1f79e49"
+    },
+    "changed_fields": [
+      "bloqueios",
+      "estado_execucao",
+      "evidencias",
+      "publicacao_novo_incremento",
+      "state_history",
+      "technical_verification_followup"
+    ],
+    "entire_original_task_preserved_in": "docs/owner-operation/EXECUCAO.json:OP-013.state_history[-1].task_before_reconciliation",
+    "specification_dependencies_criteria_code_tests_unchanged": true,
+    "all_other_tasks_unchanged": true,
+    "actual_png_backup_restore_operational_acceptance": false,
+    "owner_live_authenticated_qa": "NOT_PERFORMED",
+    "physical_acceptance": false,
+    "financial_acceptance": false,
+    "real_png_backup_restore_blocker_preserved": true,
+    "reconciliation_plan_sha256": "8a74bec9f3a91cc5f23d8cf24592c0da9dc79b669bb16a3800930faf8cc2a45b"
+  },
+  "actual_monthly_recovery_validated": true,
+  "source_page_progress": false,
+  "monthly_recovery_evidence": {
+    "receipt": "docs/system-audit/publication-monthly-continuation-live.json",
+    "evidence_file": "history-real-replacement-live17-2-proof-v2.json",
+    "evidence_sha256": "338396199dd264e4e14e2a9889e7eeb44624c54a70d5d7e491312b06b6d35359",
+    "evidence_canonical_sha256": "bd0b328c1e4ddbd35daeed555033b4ab02a6a566c980746de137f645ea4093b8",
+    "source_commit": "eac37aab4c2a776843f560e294dfdb742238207b",
+    "scope": "ONE_REAL_SAME_PERIOD_SOURCE_REPLACEMENT; ORIGINAL_AUDIT_FRAME_AND_OLD_PUBLICATION_PRESERVED; PAGE_PROGRESS_NOT_OBSERVED",
+    "embedded_file_serialization": "UTF8_JSON_ENSURE_ASCII_FALSE_INDENT2_TRAILING_NEWLINE",
+    "observer_query_count_scope": "The embedded exact-comparison count1 applies to the v2 comparison query only; it is not the total observer query count. The earlier comparison and separate existence read are not included.",
+    "evidence": {
+      "schema": "mls_real_historical_source_replacement_evidence_v1",
+      "at": "2026-11-17T21:43:51.152948+00:00",
+      "release_confirmed_by_root": "2026-11-17.2",
+      "source_commit": "eac37aab4c2a776843f560e294dfdb742238207b",
+      "native_confirmed_at": "2026-11-17T21:32:27.409194+00:00",
+      "scope": "READ_ONLY_REAL_REPLACEMENT_AND_IMMUTABLE_AUDIT_PUBLICATION_PRESERVATION",
+      "snapshot_sha256": "90da55bdfa58ddd5fecbda6897bec249bb5cbb20223515825b9dfc7f40b0783a",
+      "original_frame_sha256": "06ceceda0fbb2afb46be0ce1bbc51a4828441a36ddf00a51287a1ace9262086c",
+      "parent_payload_sha256": "9113edc6d65b466efeaa3fd479d30fcc3af01797ac30932b7563be09047255b9",
+      "rows": [
+        {
+          "recovery_original_columns_exact": 1,
+          "publication_parent_rows_exact": 1,
+          "publication_frame_rows_exact": 3,
+          "other_active_frame_rows_exact": 2,
+          "replacement_matches_same_period_active_source": 1,
+          "active_parent_revision": 17353,
+          "retained_publication_revision": 17326,
+          "actual_replaced_at": 1794951594,
+          "replacement_pages_read": 0,
+          "original_frame_bytes": 2839
+        }
+      ],
+      "same_period_finance_run_exists": true,
+      "finance_run_existence_observed_at": "2026-11-17T21:42:04.192593+00:00",
+      "agent_provider_calls": 0,
+      "agent_remote_writes": 0,
+      "agent_query_calls_for_exact_comparison": 1,
+      "run_ids_or_payloads_in_artifact": false,
+      "actual_source_replacement_observed": true,
+      "source_pagination_complete": false,
+      "financial_coverage_complete": false,
+      "operational_acceptance": "PENDING_OWNER_REAL_FLOW_CONFIRMATION",
+      "zero_page_count_is_not_evidence_of_empty_day": true
+    }
+  },
+  "catalog_root_cause_scope": "FINITE_STRUCTURAL_CLASSIFIER_CAUSE_ONLY; NOT_TERMINAL_CURSOR_OR_RECOVERY_ACCEPTANCE",
+  "actual_catalog_diagnostic_validated": true,
+  "catalog_diagnostic_evidence": {
+    "receipt": "docs/system-audit/publication-monthly-continuation-live.json",
+    "evidence_file": "observed-work-live17-2-pass4.json",
+    "evidence_sha256": "d64e6def4d2c6eeca04e65b263a8383a46c68a435879b1226e5d6ebe71220803",
+    "evidence_canonical_sha256": "e1d281f9597a15748ec5a66e03aee5b584845625fa2e412075ae2434bee0b139",
+    "source_commit": "eac37aab4c2a776843f560e294dfdb742238207b",
+    "diagnostic_code": "FINANCE_PRODUCT_INDEX_RESPONSE_EMPTY_ITEM_MISSING",
+    "scope": "REAL_FINITE_STRUCTURAL_CLASSIFIER_DIAGNOSTIC; CATALOG_RECOVERY_NOT_YET_PROVEN",
+    "embedded_file_serialization": "UTF8_JSON_ENSURE_ASCII_FALSE_INDENT2_TRAILING_NEWLINE",
+    "evidence": {
+      "at": "2026-11-17T21:45:03.938572+00:00",
+      "actual_live_release": "2026-11-17.2",
+      "source_commit": "eac37aab4c2a776843f560e294dfdb742238207b",
+      "root_native_confirmed_at": "2026-11-17T21:32:27.409194+00:00",
+      "scope": "ONE_BOUNDED_READ_ONLY_EXISTING_WORK_METADATA_NO_SOURCE_OPERATION",
+      "rows": [
+        {
+          "observed_epoch": 1794951903,
+          "revision": 29606,
+          "next_lane": "FINANCE",
+          "auxiliary_index": 2,
+          "lease_active": 0,
+          "finance_since_audit": 0,
+          "last_auxiliary_at": 1794951896,
+          "reserved_returns_streak": 1,
+          "pending_scan_streak": 2,
+          "history_status": "RUNNING",
+          "history_last_attempt_at": 1794951592,
+          "history_next_run_at": 1794951657,
+          "history_failure_count": 0,
+          "history_last_error": null,
+          "monthly_next_work": "MONTHLY",
+          "monthly_last_background_revision": 29606,
+          "recovery_attempts": 1,
+          "recovery_replacements": 1,
+          "retained_publication_revision": 17326,
+          "active_month_revision": 17353,
+          "registry_last_attempt_at": 1794951888,
+          "registry_next_run_at": 1794953690,
+          "registry_diagnostic_code": "FINANCE_PRODUCT_INDEX_RESPONSE_EMPTY_ITEM_MISSING",
+          "registry_diagnostic_at": 1794951890
+        }
+      ],
+      "provider_calls": 0,
+      "remote_writes": 0,
+      "query_calls": 1
+    },
+    "meaning": {
+      "diagnostic_code": "FINANCE_PRODUCT_INDEX_RESPONSE_EMPTY_ITEM_MISSING",
+      "actual_attempt_at_utc": "2026-11-17T21:44:48Z",
+      "actual_diagnostic_at_utc": "2026-11-17T21:44:50Z",
+      "classifier_source_path": "web/finance/src/product-index.mjs",
+      "classifier_source_sha256": "c5408476215a179a57bd48894beb054352dc14e62817a10aeb3bb4dc239fe6fe",
+      "proven_by_exact_current_classifier": "Trusted response object with own explicit total_count===0 excluding negative zero, own has_next_page===false, and omitted own item field. This code does not prove terminal next_offset or input offset; the isolated compatibility candidate must enforce those separately.",
+      "raw_next_offset_proven": false,
+      "raw_input_offset_proven_by_this_observation": false,
+      "candidate": "Strict compatibility candidate for17.3 is under isolated review; not integrated or published in17.2. Null or generally absent source values remain errors/UNKNOWN.",
+      "candidate_integrated": false,
+      "candidate_published": false,
+      "actual_catalog_problem_resolved": false
+    }
+  }
+}

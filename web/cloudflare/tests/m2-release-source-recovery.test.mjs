@@ -91,3 +91,14 @@ test('a pause during a recovered source response cannot publish or commit histor
  f.services.getFinanceBusinessPeriod=async(...args)=>{const value=await provider(...args);f.env.ADMIN_DB.db.prepare("UPDATE business_sync_state SET enabled=0,status='PAUSED'").run();return value;};
  assert.equal((await runSourceRecovery(f)).status,'PAUSED');assert.equal(historyRecoveryRow(f),null);assert.deepEqual(await readRecoveryPublication(f),f.original);assert.equal(currentRecoveryRow(f).lease_token,null);
 });
+
+test('reserved history rehydrates a verified complete-source gap while current Finance stays RUNNING and still yields every other auxiliary opportunity',async t=>{
+ const f=await sourceRecoveryFixture(t),db=f.env.ADMIN_DB.db,{runBusinessHistorySync}=await import('../src/business-history-sync.mjs');saveSourceRecoveryGap(f);
+ const summary=JSON.parse(currentRecoveryRow(f).summary);summary.status='RUNNING';summary.net_estimate_cents=null;db.prepare("UPDATE business_sync_state SET status='RUNNING',summary=?,next_run_at=0 WHERE id=1").run(JSON.stringify(summary));const current=currentRecoveryRow(f);let value,monthly=0,yields=0;
+ for(let turn=0;turn<60;turn++){
+  const stamp=Math.floor(f.now()/1000),token=crypto.randomUUID(),row=db.prepare("UPDATE background_collection_lane_state SET revision=revision+1,next_lane='AUXILIARY',auxiliary_index=0,lease_token=?,lease_until=? WHERE id=1 RETURNING revision").get(token,stamp+300),called=f.calls.finance.length;
+  value=await runBusinessHistorySync(f.env,f.services,{now:f.now,backgroundLease:{token,revision:row.revision}});assert.ok(f.calls.finance.length-called<=1);assert.deepEqual(currentRecoveryRow(f),current);
+  if(value.finance_steps)monthly++;if(value.status==='DEFERRED')yields++;if(value.status==='COMPLETE')break;if(value.status==='RUNNING')assert.deepEqual(await readRecoveryPublication(f),f.original);f.clock.time+=61000;
+ }
+ assert.equal(value.status,'COMPLETE');assert.ok(monthly>=3);assert.equal(yields,monthly-1);const after=await readRecoveryPublication(f);assert.ok(after.publication.source_revision>f.original.publication.source_revision);assert.equal(after.payload.slots.reduce((sum,slot)=>sum+slot.frame.coverage.paid,0),24);assert.ok(after.payload.slots.every(slot=>!f.original.payload.slots.some(old=>old.frame.run_id===slot.frame.run_id)));assert.deepEqual(currentRecoveryRow(f),current);
+});

@@ -1,0 +1,642 @@
+{
+  "schema": "mls_system_stability_controlled_publication_v1",
+  "status": "PUBLISHED_VERIFIED_TECHNICAL_PUBLIC_ONLY",
+  "recorded_at_utc": "2026-11-17T19:47:28.393452+00:00",
+  "release": "2026-11-16.5",
+  "source_commit": "ed651fa7a5bd949519c37d287bcaab9c31cb464a",
+  "prepared_source_commit": "1ac7b79c7ac38b6bd09ac8ed38d593ec40bad080",
+  "source_parent": "f78b503f5580f5545b4edc19447da63a78925b5f",
+  "base_main": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
+  "branch": "fix/system-stability-20261116",
+  "pull_request": 128,
+  "pull_request_url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/128",
+  "pull_request_base": "fix/owner-shirt-cost-editing-20261116",
+  "git_integration": "DRAFT_OPEN_NO_MERGE_OR_AUTO_MERGE",
+  "implemented": true,
+  "published": true,
+  "native_verified": true,
+  "verification_scope": "EXACT_NATIVE_SOURCE_CONFIGURATION_100_PERCENT_TRAFFIC_PUBLIC_TLS_HTTP_ROUTING_AND_EXACT_ASSETS; OWNER_OPERATIONAL_ACCEPTANCE_PENDING",
+  "ci": {
+    "id": 44154590335,
+    "head_sha": "ed651fa7a5bd949519c37d287bcaab9c31cb464a",
+    "status": "completed",
+    "conclusion": "success",
+    "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/44154590335",
+    "run_number": 661,
+    "node": {
+      "tests": 4593,
+      "pass": 4593,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0
+    },
+    "python": {
+      "pass": 67,
+      "fail": 0
+    },
+    "compiled_hashes": {
+      "app": "3633dfb963aca8e5f10d90b9427cc482adedf0070eed631929886160b9e7631b",
+      "auth": "f37c53b904ab5d083abb11d84298970b0b62315f54ac12da560d29e145c48347",
+      "finance": "9b21fdf180e37a0bd0f4bb13929bafdcdad158c8de0ba0c66acd0f437bf6d83e"
+    },
+    "cloudflare_checks": [
+      {
+        "name": "Workers Builds: brazacommerce-finance",
+        "status": "completed",
+        "conclusion": "success",
+        "id": 134292021267,
+        "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-finance/production/previews/fix-system-stability-20261116/builds/409b35a8-b541-4f7d-8456-84a90a249f0d"
+      },
+      {
+        "name": "Workers Builds: brazacommerce-app",
+        "status": "completed",
+        "conclusion": "success",
+        "id": 134292013971,
+        "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-app/production/previews/fix-system-stability-20261116/builds/52eeab86-4829-4487-a0b5-2c1acbf1441b"
+      },
+      {
+        "name": "Workers Builds: brazacommerce-auth",
+        "status": "completed",
+        "conclusion": "success",
+        "id": 134291980524,
+        "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-auth/production/previews/fix-system-stability-20261116/builds/fcceee7c-bd4f-47e7-9a60-80dd98c2b3e5"
+      }
+    ],
+    "workflow_preflight_step": "SKIPPED_BY_UNCHANGED_STACKED_PR_CONDITION; LOCAL_PREFLIGHT_OK"
+  },
+  "local_full_node": {
+    "tests": 4593,
+    "pass": 4593,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0,
+    "duration_ms": 753880.690734,
+    "log_sha256": "77726c0782d6857bbe53c1db642a22a2c4556cd2fa1a454e8fa2643d49527dbd"
+  },
+  "local_python": {
+    "pass": 67,
+    "fail": 0
+  },
+  "compiled_hashes": {
+    "app": "3633dfb963aca8e5f10d90b9427cc482adedf0070eed631929886160b9e7631b",
+    "auth": "f37c53b904ab5d083abb11d84298970b0b62315f54ac12da560d29e145c48347",
+    "finance": "9b21fdf180e37a0bd0f4bb13929bafdcdad158c8de0ba0c66acd0f437bf6d83e"
+  },
+  "workers": {
+    "finance": {
+      "active_version_id": "cb1d47af-7683-4426-b56e-9b68a8604eee",
+      "latest_version_id": "cb1d47af-7683-4426-b56e-9b68a8604eee",
+      "active_percentage": 100,
+      "retrieved_raw_sha256": "9b21fdf180e37a0bd0f4bb13929bafdcdad158c8de0ba0c66acd0f437bf6d83e",
+      "raw_bytes": 893579,
+      "effective_config_sha256": "1e5de4eba866ec7c8ca85fc37c7969d61dc513a26336879e2753e506c6711ab2",
+      "action": "UPDATED",
+      "source_matches_expected": true
+    },
+    "auth": {
+      "active_version_id": "63f8176d-47da-4371-adf8-f9c72733247e",
+      "latest_version_id": "63f8176d-47da-4371-adf8-f9c72733247e",
+      "active_percentage": 100,
+      "retrieved_raw_sha256": "f37c53b904ab5d083abb11d84298970b0b62315f54ac12da560d29e145c48347",
+      "raw_bytes": 579213,
+      "effective_config_sha256": "304c9c4615acdfc3a8222e00449e5bceabcf2dd9bd574587538183a935003361",
+      "action": "UPDATED",
+      "source_matches_expected": true
+    },
+    "app": {
+      "active_version_id": "556565ec-a630-42a7-9b43-a5f24867497c",
+      "latest_version_id": "556565ec-a630-42a7-9b43-a5f24867497c",
+      "active_percentage": 100,
+      "retrieved_raw_sha256": "3633dfb963aca8e5f10d90b9427cc482adedf0070eed631929886160b9e7631b",
+      "raw_bytes": 3752627,
+      "effective_config_sha256": "72c1ffdf88e61e4d2b1b7d78545c3d8d9a5b903cc32cf4ed83ee87d5c19a32b9",
+      "action": "UPDATED",
+      "source_matches_expected": true
+    }
+  },
+  "native_verification": {
+    "schema": "owner_artwork_controlled_stage_verification_v1",
+    "recorded_at": "2026-11-17T19:42:35.705887+00:00",
+    "updated_workers": [
+      "app",
+      "auth",
+      "finance"
+    ],
+    "workers": {
+      "finance": {
+        "active_version_id": "cb1d47af-7683-4426-b56e-9b68a8604eee",
+        "latest_version_id": "cb1d47af-7683-4426-b56e-9b68a8604eee",
+        "active_percentage": 100,
+        "retrieved_raw_sha256": "9b21fdf180e37a0bd0f4bb13929bafdcdad158c8de0ba0c66acd0f437bf6d83e",
+        "raw_bytes": 893579,
+        "effective_config_sha256": "1e5de4eba866ec7c8ca85fc37c7969d61dc513a26336879e2753e506c6711ab2",
+        "action": "UPDATED",
+        "source_matches_expected": true
+      },
+      "auth": {
+        "active_version_id": "63f8176d-47da-4371-adf8-f9c72733247e",
+        "latest_version_id": "63f8176d-47da-4371-adf8-f9c72733247e",
+        "active_percentage": 100,
+        "retrieved_raw_sha256": "f37c53b904ab5d083abb11d84298970b0b62315f54ac12da560d29e145c48347",
+        "raw_bytes": 579213,
+        "effective_config_sha256": "304c9c4615acdfc3a8222e00449e5bceabcf2dd9bd574587538183a935003361",
+        "action": "UPDATED",
+        "source_matches_expected": true
+      },
+      "app": {
+        "active_version_id": "556565ec-a630-42a7-9b43-a5f24867497c",
+        "latest_version_id": "556565ec-a630-42a7-9b43-a5f24867497c",
+        "active_percentage": 100,
+        "retrieved_raw_sha256": "3633dfb963aca8e5f10d90b9427cc482adedf0070eed631929886160b9e7631b",
+        "raw_bytes": 3752627,
+        "effective_config_sha256": "72c1ffdf88e61e4d2b1b7d78545c3d8d9a5b903cc32cf4ed83ee87d5c19a32b9",
+        "action": "UPDATED",
+        "source_matches_expected": true
+      }
+    },
+    "all_configs_preserved": true,
+    "owner_flags_preserved": true,
+    "all_source_bytes_exact": true,
+    "all_active_latest_100": true
+  },
+  "public_verification": {
+    "schema": "owner_public_routing_verification_v1",
+    "recorded_at": "2026-11-17T19:42:38.070197+00:00",
+    "release": "2026-11-16.5",
+    "routes_subdomains_schedules": {
+      "app": {
+        "workers_dev": true,
+        "previews_enabled": false,
+        "crons": [
+          "* * * * *"
+        ],
+        "domains": [
+          "app.brazacommerce.com.br"
+        ],
+        "matches_reviewed_config": true
+      },
+      "auth": {
+        "workers_dev": true,
+        "previews_enabled": false,
+        "crons": [],
+        "domains": [
+          "auth.brazacommerce.com.br"
+        ],
+        "matches_reviewed_config": true
+      },
+      "finance": {
+        "workers_dev": false,
+        "previews_enabled": false,
+        "crons": [],
+        "domains": [],
+        "matches_reviewed_config": true
+      }
+    },
+    "public_http": [
+      {
+        "path": "/login",
+        "status": 200,
+        "release_header": "2026-11-16.5",
+        "final_path": "/login",
+        "response_sha256": "c884344cb4f42502664bceabf34d99fa2f32e3c527678b629bda1be5e8109716"
+      },
+      {
+        "path": "/account/login",
+        "status": 200,
+        "release_header": null,
+        "final_path": "/account/login",
+        "response_sha256": "b086152d26d62e9f23346486bedba1b39862586c300b8347bb1b9dd4e8712ae6"
+      },
+      {
+        "path": "/account/help",
+        "status": 200,
+        "release_header": null,
+        "final_path": "/account/login",
+        "response_sha256": "b086152d26d62e9f23346486bedba1b39862586c300b8347bb1b9dd4e8712ae6"
+      },
+      {
+        "path": "/admin?tab=production",
+        "status": 200,
+        "release_header": "2026-11-16.5",
+        "final_path": "/login",
+        "response_sha256": "c884344cb4f42502664bceabf34d99fa2f32e3c527678b629bda1be5e8109716"
+      },
+      {
+        "path": "/health",
+        "status": 200,
+        "release_header": null,
+        "final_path": "/health",
+        "response_sha256": "7cb8471af656cf3d62d5942ac9ea92be09c9f3951fb3fd057ea44b7d761af6c2"
+      },
+      {
+        "path": "/api/admin/bootstrap",
+        "status": 401,
+        "release_header": "2026-11-16.5",
+        "final_path": "/api/admin/bootstrap",
+        "response_sha256": "a1d55d2c2c14a6a8d1c08977059aa62ea671af14dbb076c3ecb00d1f31e74389"
+      },
+      {
+        "path": "/api/admin/production/batches?status=OPEN",
+        "status": 401,
+        "release_header": "2026-11-16.5",
+        "final_path": "/api/admin/production/batches",
+        "response_sha256": "a1d55d2c2c14a6a8d1c08977059aa62ea671af14dbb076c3ecb00d1f31e74389"
+      },
+      {
+        "path": "/api/admin/production/batch?id=00000000-0000-4000-8000-000000000001",
+        "status": 401,
+        "release_header": "2026-11-16.5",
+        "final_path": "/api/admin/production/batch",
+        "response_sha256": "a1d55d2c2c14a6a8d1c08977059aa62ea671af14dbb076c3ecb00d1f31e74389"
+      }
+    ],
+    "assets": [
+      {
+        "path": "/assets/mls/0d6250f5888258fa29664eac45b2cd821d3872b1c96ac47dda46bd7fd10e6a0c.js",
+        "sha256": "0d6250f5888258fa29664eac45b2cd821d3872b1c96ac47dda46bd7fd10e6a0c",
+        "bytes": 38035,
+        "status": 200
+      },
+      {
+        "path": "/assets/mls/1f0ca4ce395126c895b9e79afff57f1ca0ed74c3df31c6b7b0a1ac6dd0673026.js",
+        "sha256": "1f0ca4ce395126c895b9e79afff57f1ca0ed74c3df31c6b7b0a1ac6dd0673026",
+        "bytes": 53814,
+        "status": 200
+      },
+      {
+        "path": "/assets/mls/5203d255416bacb97cd44ddef29a2fc76b1432f0a1ea731fabacc4bb071fcd07.js",
+        "sha256": "5203d255416bacb97cd44ddef29a2fc76b1432f0a1ea731fabacc4bb071fcd07",
+        "bytes": 704817,
+        "status": 200
+      },
+      {
+        "path": "/assets/mls/ec6397070416275d880f293d4abe8d7f531215af369d7e9a275c10f019a8c3c8.js",
+        "sha256": "ec6397070416275d880f293d4abe8d7f531215af369d7e9a275c10f019a8c3c8",
+        "bytes": 21282,
+        "status": 200
+      },
+      {
+        "path": "/assets/mls/549c2b0f6ae183249bed2472af894cf5211d4a6853fc33c0ce6c127aa3ebf034.js",
+        "sha256": "549c2b0f6ae183249bed2472af894cf5211d4a6853fc33c0ce6c127aa3ebf034",
+        "bytes": 165982,
+        "status": 200
+      },
+      {
+        "path": "/assets/mls/04ae3166780be18f31754212640b0887abe9e20830ac4309a6e31109398e4eeb.js",
+        "sha256": "04ae3166780be18f31754212640b0887abe9e20830ac4309a6e31109398e4eeb",
+        "bytes": 54280,
+        "status": 200
+      },
+      {
+        "path": "/assets/mls/ecce6528e87fe80bda1198235b2b76010e83293361afcd0d4a50a46919be97e1.js",
+        "sha256": "ecce6528e87fe80bda1198235b2b76010e83293361afcd0d4a50a46919be97e1",
+        "bytes": 492279,
+        "status": 200
+      },
+      {
+        "path": "/assets/mls/63e4da3d9e8e272f882026d3d500180b98988792133e4b66c77788192ebdcc63.js",
+        "sha256": "63e4da3d9e8e272f882026d3d500180b98988792133e4b66c77788192ebdcc63",
+        "bytes": 49778,
+        "status": 200
+      }
+    ],
+    "all_exact": true,
+    "release_header_contract": "Version checked where the original response provides it; account-page HTML has no release header in the baseline or candidate. No application header was changed to satisfy this probe.",
+    "authenticated_owner_live_qa": "NOT_PERFORMED",
+    "scope": "PUBLIC_TLS_HTTP_ROUTING_ASSETS_AND_ANONYMOUS_AUTHORIZATION_ONLY",
+    "remote_data_mutations": 0,
+    "transport_warnings": [],
+    "transport_revalidation": "Same canonical URL, credentials/CA/proxy unchanged; bounded retries only for exact known98-byte Envoy reset error; no application503 ignored."
+  },
+  "backup_and_local_restore": {
+    "scope": "SCOPED_ATOMIC_APP_SNAPSHOT_AND_LOCAL_SQLITE_RESTORE; NOT_FULL_DATABASE_BACKUP",
+    "capture": {
+      "at": "2026-11-17T19:20:39.205453+00:00",
+      "snapshot_sha256": "afd92d9dd777034db77e4a193d795efe48725233f816dc0bd27ed59c6eb96252",
+      "bytes": 3905739,
+      "tables": 41,
+      "rows": 4222,
+      "rows_written": 0,
+      "app_atomic_select": true,
+      "cross_database_atomicity": false,
+      "bookmarks_read": 6,
+      "export_started": false,
+      "restored_live": false
+    },
+    "restore": {
+      "integrity_check": "ok",
+      "existing_rows_identical": true,
+      "existing_schema_identical": true,
+      "new_control_tables": [
+        "business_history_sync_fairness",
+        "business_month_source_recoveries",
+        "product_registry_source_diagnostics"
+      ],
+      "candidate_head": "ed651fa7a5bd949519c37d287bcaab9c31cb464a",
+      "remote_writes": 0,
+      "remote_restores": 0
+    },
+    "retention": "Private workspace snapshot, code backups and TimeTravel bookmarks prepared; recover original environment to access them. Do not commit private records/bookmarks or restore over later owner edits."
+  },
+  "natural_collector_progress": {
+    "status": "READ_ONLY_NATURAL_OBSERVATION_RECORDED",
+    "recorded_at": "2026-11-17T19:42:20.393262+00:00",
+    "evidence": {
+      "at": "2026-11-17T19:42:20.393262+00:00",
+      "release_confirmed_by_root": "2026-11-16.5",
+      "catalog_diagnostic_observed_after_publication": true,
+      "history_attempt_observed_after_publication": false,
+      "provider_requests": 0,
+      "remote_writes": 0,
+      "query_calls": 18,
+      "run_ids_in_artifact": false,
+      "sidecars_present": [
+        "business_history_sync_fairness",
+        "business_month_source_recoveries",
+        "product_registry_source_diagnostics"
+      ],
+      "read_errors": {},
+      "registry": [
+        {
+          "revision": 755,
+          "status": "RETRY_WAIT",
+          "status_index": 1,
+          "offset": 0,
+          "pages_read": 1,
+          "last_attempt_at": 1794944331,
+          "last_success_at": null,
+          "next_run_at": 1794946133,
+          "failure_count": 752,
+          "last_error": "PRODUCT_REGISTRY_SOURCE_UNAVAILABLE",
+          "lease_active": 0
+        }
+      ],
+      "catalog_diagnostic": [
+        {
+          "item_status": "BANNED",
+          "offset": 0,
+          "code": "FINANCE_PRODUCT_INDEX_RESPONSE_INVALID",
+          "http": null,
+          "checked_at": 1794944333
+        }
+      ],
+      "history": [
+        {
+          "month": "2026-10",
+          "status": "RUNNING",
+          "next_run_at": 1794613737,
+          "failure_count": 0,
+          "last_attempt_at": 1794613672,
+          "last_success_at": 1794563336,
+          "last_error": null
+        }
+      ],
+      "recovery_audit_counts": [],
+      "historical_reference_existence": [
+        {
+          "scope": "active",
+          "month": "2026-10",
+          "slot_index": 0,
+          "app_status": "COMPLETE",
+          "same_period_finance_run_exists": false
+        },
+        {
+          "scope": "active",
+          "month": "2026-10",
+          "slot_index": 1,
+          "app_status": "COMPLETE",
+          "same_period_finance_run_exists": false
+        },
+        {
+          "scope": "active",
+          "month": "2026-10",
+          "slot_index": 2,
+          "app_status": "RUNNING",
+          "same_period_finance_run_exists": false
+        },
+        {
+          "scope": "publication",
+          "month": "2026-10",
+          "slot_index": 0,
+          "app_status": "COMPLETE",
+          "same_period_finance_run_exists": false
+        },
+        {
+          "scope": "publication",
+          "month": "2026-10",
+          "slot_index": 1,
+          "app_status": "COMPLETE",
+          "same_period_finance_run_exists": false
+        },
+        {
+          "scope": "publication",
+          "month": "2026-10",
+          "slot_index": 2,
+          "app_status": "COMPLETE",
+          "same_period_finance_run_exists": false
+        }
+      ]
+    },
+    "evidence_sha256": "76d73751371c6792f705a1da822da1b7ac9f2ca5a9cba1e8542738450ecb8e0e",
+    "source_start_step_reset_by_audit": 0,
+    "scope": "Remote writes0 applies only to this observer; existing natural cron may write. This observation does not prove source completeness, closure or owner acceptance."
+  },
+  "publication_method": "PROJECT_SCRIPTS_FINANCE_THEN_AUTH_THEN_APP; FULL_NATIVE_VECTOR_VERIFIED_AFTER_EACH_STAGE",
+  "manual_real_business_mutations_by_audit": false,
+  "manual_external_financial_writes": false,
+  "operationally_accepted": false,
+  "actual_financial_acceptance": false,
+  "m2_closed": false,
+  "m22_closed": false,
+  "sale_track": "ADIADO_VENDA",
+  "previous_publication_receipt": "../owner-operation/validation/publication-shirt-cost-live-20261116.json",
+  "blockers": "BLOCKERS.json",
+  "documentary_recovery": "Same existing environment recovered; local branch fast-forwarded to0315e454; only missing native/public reads repeated. No application/source/configuration change or redeploy.",
+  "source_code_ci_is_separate_from_followup_documentary_ci": true,
+  "environment_recovery_history": [
+    {
+      "documentary_head": "0315e454ea42a4ee477f7aed7deeeb7edd8845fd",
+      "recorded_at": "2026-11-17T19:47:28.393452+00:00",
+      "previous_status": "NATIVE_PUBLISHED_PUBLIC_AND_OPERATIONAL_VERIFICATION_BLOCKED_ENVIRONMENT",
+      "previous_verification_scope": "NATIVE_VERSION_BYTES_CONFIG_AND_100_PERCENT_TRAFFIC_ONLY; FINAL_PUBLIC_ROUTING_ASSETS_AND_REAL_OPERATIONS_PENDING",
+      "previous_public_verification": {
+        "status": "INCOMPLETE_BLOCKED",
+        "complete": false,
+        "first_attempt": {
+          "path": "/account/help",
+          "status": 503,
+          "response_sha256": "33fbc61ad080ef68dd7a6479f8c53f1bf864dba2930567dbbc4ceb47490a1909",
+          "classification": "KNOWN_ENVIRONMENT_ENVOY_TRANSPORT_RESET; NOT_ESTABLISHED_AS_APPLICATION_FAILURE",
+          "final_assertion": "PUBLIC_STATUS_MISMATCH; gate not waived"
+        },
+        "retry": {
+          "status": "DID_NOT_START",
+          "cause": "exec-server transport disconnected; recovery timed out after45s; later no usable execution environment"
+        },
+        "alternate_public_web_reader": {
+          "paths": [
+            "/account/help",
+            "/health",
+            "/login"
+          ],
+          "status": "TOOL_REPORTED_URL_NOT_ACCESSIBLE; DOES_NOT_ESTABLISH_SITE_HEALTH"
+        },
+        "routing_assets_final_verification": "PENDING",
+        "authenticated_owner_live_qa": "NOT_PERFORMED"
+      },
+      "previous_native_verification": {
+        "recorded_at": "2026-11-17T19:22:56.685625+00:00",
+        "updated_workers": [
+          "app",
+          "auth",
+          "finance"
+        ],
+        "workers": {
+          "app": {
+            "active_version_id": "556565ec-a630-42a7-9b43-a5f24867497c",
+            "latest_version_id": "556565ec-a630-42a7-9b43-a5f24867497c",
+            "active_percentage": 100,
+            "retrieved_raw_sha256": "3633dfb963aca8e5f10d90b9427cc482adedf0070eed631929886160b9e7631b",
+            "raw_bytes": 3752627,
+            "effective_config_sha256": "72c1ffdf88e61e4d2b1b7d78545c3d8d9a5b903cc32cf4ed83ee87d5c19a32b9",
+            "action": "UPDATED",
+            "source_matches_expected": true
+          },
+          "auth": {
+            "active_version_id": "63f8176d-47da-4371-adf8-f9c72733247e",
+            "latest_version_id": "63f8176d-47da-4371-adf8-f9c72733247e",
+            "active_percentage": 100,
+            "retrieved_raw_sha256": "f37c53b904ab5d083abb11d84298970b0b62315f54ac12da560d29e145c48347",
+            "raw_bytes": 579213,
+            "effective_config_sha256": "304c9c4615acdfc3a8222e00449e5bceabcf2dd9bd574587538183a935003361",
+            "action": "UPDATED",
+            "source_matches_expected": true
+          },
+          "finance": {
+            "active_version_id": "cb1d47af-7683-4426-b56e-9b68a8604eee",
+            "latest_version_id": "cb1d47af-7683-4426-b56e-9b68a8604eee",
+            "active_percentage": 100,
+            "retrieved_raw_sha256": "9b21fdf180e37a0bd0f4bb13929bafdcdad158c8de0ba0c66acd0f437bf6d83e",
+            "raw_bytes": 893579,
+            "effective_config_sha256": "1e5de4eba866ec7c8ca85fc37c7969d61dc513a26336879e2753e506c6711ab2",
+            "action": "UPDATED",
+            "source_matches_expected": true
+          }
+        },
+        "all_configs_preserved": true,
+        "owner_flags_preserved": true,
+        "all_source_bytes_exact": true,
+        "all_active_latest_100": true,
+        "evidence_origin": "Successful verify-stage.py finance,auth,app before executor interruption; artifact remained in workspace. Native version/hash/config result was observed in this session; no claim of a fresh post-interruption read."
+      },
+      "previous_documentary_recovery": "Recorded through existing GitHub connector after executor loss; no further application deployment or config change.",
+      "previous_executor_public_blockers": [
+        {
+          "id": "EXECUTOR_UNAVAILABLE",
+          "status": "BLOCKED_ACCESS",
+          "evidence": "Environment declared unavailable; exec failed with transport disconnected/recovery timed out45s and then No usable execution environment. Control-plane running/connected status did not restore executor access.",
+          "required_action": "Reconnect/open the SAME existing Codex environment/desktop if offered, then verify a harmless read. Preserve all worktrees, local commits, private backup and gates. Do not create/reset another workspace or change credentials.",
+          "next_executable": "Reconcile GitHub documentation commit into the existing branch by fast-forward; recover private proofs; repeat only missing public/routing/assets and natural collector reads."
+        },
+        {
+          "id": "PUBLIC_POST_DEPLOY_SMOKE",
+          "status": "PENDING_VERIFICATION",
+          "evidence": {
+            "status": "INCOMPLETE_BLOCKED",
+            "complete": false,
+            "first_attempt": {
+              "path": "/account/help",
+              "status": 503,
+              "response_sha256": "33fbc61ad080ef68dd7a6479f8c53f1bf864dba2930567dbbc4ceb47490a1909",
+              "classification": "KNOWN_ENVIRONMENT_ENVOY_TRANSPORT_RESET; NOT_ESTABLISHED_AS_APPLICATION_FAILURE",
+              "final_assertion": "PUBLIC_STATUS_MISMATCH; gate not waived"
+            },
+            "retry": {
+              "status": "DID_NOT_START",
+              "cause": "exec-server transport disconnected; recovery timed out after45s; later no usable execution environment"
+            },
+            "alternate_public_web_reader": {
+              "paths": [
+                "/account/help",
+                "/health",
+                "/login"
+              ],
+              "status": "TOOL_REPORTED_URL_NOT_ACCESSIBLE; DOES_NOT_ESTABLISH_SITE_HEALTH"
+            },
+            "routing_assets_final_verification": "PENDING",
+            "authenticated_owner_live_qa": "NOT_PERFORMED"
+          },
+          "required_action": "Finish existing verify-public.py with unchanged URLs, CA, proxy, credentials and strict statuses/hashes. Preserve failed-attempt logs. No source change or rollback is justified solely by this environment transport failure."
+        }
+      ],
+      "recovery_evidence_sha256": {
+        "independent-doc-head.json": "894e889af151239648124ceb88ea9e413a2dcced77ba74534fc4fe0d847d9342",
+        "stage-app-auth-finance.json": "39398f4b1233f274c880e392a4d00c5a2edf0e6c8c604ea20f6136c83b5b095e",
+        "public-after.json": "cbd75c8245a7e9c1b8e5e837054bac4f2916c1481094f1466ca194fd399ecf76"
+      }
+    }
+  ],
+  "documentary_ci": {
+    "head_sha": "0315e454ea42a4ee477f7aed7deeeb7edd8845fd",
+    "id": 44159400083,
+    "run_number": 662,
+    "status": "completed",
+    "conclusion": "success",
+    "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/44159400083",
+    "checks": [
+      {
+        "name": "Workers Builds: brazacommerce-finance",
+        "id": 134309598385,
+        "head_sha": "0315e454ea42a4ee477f7aed7deeeb7edd8845fd",
+        "status": "completed",
+        "conclusion": "success",
+        "completed_at": "2026-11-17T19:32:13Z",
+        "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/runs/134309598385"
+      },
+      {
+        "name": "Workers Builds: brazacommerce-auth",
+        "id": 134309522330,
+        "head_sha": "0315e454ea42a4ee477f7aed7deeeb7edd8845fd",
+        "status": "completed",
+        "conclusion": "success",
+        "completed_at": "2026-11-17T19:32:05Z",
+        "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/runs/134309522330"
+      },
+      {
+        "name": "Workers Builds: brazacommerce-app",
+        "id": 134309280508,
+        "head_sha": "0315e454ea42a4ee477f7aed7deeeb7edd8845fd",
+        "status": "completed",
+        "conclusion": "success",
+        "completed_at": "2026-11-17T19:31:43Z",
+        "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/runs/134309280508"
+      },
+      {
+        "name": "validate",
+        "id": 134308826489,
+        "head_sha": "0315e454ea42a4ee477f7aed7deeeb7edd8845fd",
+        "status": "completed",
+        "conclusion": "success",
+        "completed_at": "2026-11-17T19:41:48Z",
+        "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/44159400083/job/134308826489"
+      }
+    ],
+    "scope": "FOLLOWUP_DOCUMENTATION_ONLY; SOURCE_PUBLICATION_CI_REMAINS661_ED651FA",
+    "node": {
+      "tests": 4593,
+      "pass": 4593,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0
+    },
+    "python": {
+      "pass": 67,
+      "fail": 0
+    },
+    "compiled_hashes": {
+      "app": "3633dfb963aca8e5f10d90b9427cc482adedf0070eed631929886160b9e7631b",
+      "auth": "f37c53b904ab5d083abb11d84298970b0b62315f54ac12da560d29e145c48347",
+      "finance": "9b21fdf180e37a0bd0f4bb13929bafdcdad158c8de0ba0c66acd0f437bf6d83e"
+    }
+  }
+}

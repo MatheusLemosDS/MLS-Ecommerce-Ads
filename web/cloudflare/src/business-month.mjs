@@ -12,6 +12,7 @@ import {BUSINESS_MONTH_ADS_HISTORY_SCHEMA,businessMonthAdsHistoryQueries,busines
 import {EXPENSE_LEDGER_SCHEMA} from './expense-ledger.mjs';
 import {buildExpenseSchedule} from './expense-schedule.mjs';
 import {unwrapBusinessMonthVariantSource,captureBusinessMonthVariantAttribution} from './business-variant-attribution.mjs';
+import {BUSINESS_MONTH_SOURCE_RECOVERY_SCHEMA,readBusinessMonthSourceRecovery,recordBusinessMonthMissingSource,businessMonthSourceRecoveryFence,completeBusinessMonthSourceRecovery} from './business-month-source-recovery.mjs';
 
 export class BusinessMonthError extends Error {
  constructor(code,status=400,diagnostic=null){super(code);this.status=status;if(diagnostic!==null)this.diagnostic=Object.freeze({...diagnostic});}
@@ -30,6 +31,7 @@ export function businessMonthClientFrame(frame,contract='business-month-v1'){
  return legacy;
 }
 export const BUSINESS_MONTH_SCHEMA=[
+ ...BUSINESS_MONTH_SOURCE_RECOVERY_SCHEMA,
  ...EXPENSE_LEDGER_SCHEMA,
  ...BUSINESS_MONTH_PUBLICATION_SCHEMA,
  ...BUSINESS_MONTH_ADS_HISTORY_SCHEMA,
@@ -275,6 +277,7 @@ async function businessMonthLoadRun(db,month,range,stamp,allowPreviousScope=fals
  const snapshot=await db.batch([
   db.prepare('SELECT revision,payload,created_at,updated_at FROM business_month_runs WHERE month=?').bind(month),
   db.prepare('SELECT slot_index,run_id,revision,payload FROM business_month_frames WHERE month=? ORDER BY slot_index').bind(month),
+  db.prepare('SELECT * FROM business_month_source_recoveries WHERE month=? AND parent_revision=(SELECT revision FROM business_month_runs WHERE month=?) AND replacement_run_id IS NULL ORDER BY slot_index LIMIT 4').bind(month,month),
  ]);
  const row=snapshot[0].results[0];
  if(!row)return null;
@@ -312,7 +315,7 @@ async function businessMonthLoadRun(db,month,range,stamp,allowPreviousScope=fals
   if(frame)ids.add(frame.run_id);return {...expected,frame};
  });
  if(referenced.size!==storedFrames.size)businessMonthFail('BUSINESS_MONTH_STORAGE_INVALID',503);
- return {row,storedPayload:payload,payload:{start_date:range.start_date,end_date:range.end_date,slots},complete:slots.every(slot=>slot.frame?.status==='COMPLETE')};
+ return {row,storedPayload:payload,payload:{start_date:range.start_date,end_date:range.end_date,slots},complete:slots.every(slot=>slot.frame?.status==='COMPLETE'),recoveryRows:snapshot[2].results};
 }
 async function businessMonthCreateRun(db,month,range,stamp,observed){
  const payload=JSON.stringify({start_date:range.start_date,end_date:range.end_date,slots:range.slots});
@@ -324,11 +327,17 @@ async function businessMonthAdvance(env,db,month,range,stamp,observed,services){
  const index=observed.payload.slots.findIndex(slot=>slot.frame===null||slot.frame.status==='RUNNING');
  if(index<0||observed.payload.slots.some(slot=>slot.frame?.status==='LIMIT_REACHED'))return observed;
  if(typeof services?.getFinanceBusinessPeriod!=='function')businessMonthFail('BUSINESS_MONTH_SOURCE_UNAVAILABLE',503);
- const slot=observed.payload.slots[index],selection=slot.frame?{operation:'step',run_id:slot.frame.run_id}:{operation:'start',start_date:slot.start_date,end_date:slot.end_date};
+ const slot=observed.payload.slots[index];let recovery;
+ try{recovery=await readBusinessMonthSourceRecovery(db,month,index,slot,observed,stamp);}catch{businessMonthFail('BUSINESS_MONTH_STORAGE_INVALID',503);}
+ const selection=slot.frame&&!recovery?{operation:'step',run_id:slot.frame.run_id}:{operation:'start',start_date:slot.start_date,end_date:slot.end_date};
  let source;try{source=await services.getFinanceBusinessPeriod(env,selection,{includeVariants:true});}catch{businessMonthFail('BUSINESS_MONTH_SOURCE_UNAVAILABLE',503);}
  // Only this exact, bounded envelope can turn a private transport failure into
  // an owner-facing code. Provider text and unknown fields never cross here.
  if(businessMonthExact(source,['schema','status','diagnostic'])&&source.schema==='finance_business_period_v1'&&source.status==='UNAVAILABLE'){
+  if(!recovery&&slot.frame?.status==='RUNNING'&&businessMonthExact(source.diagnostic,['code','http'])&&source.diagnostic.code==='FINANCE_BUSINESS_RUN_NOT_FOUND'&&source.diagnostic.http===404){
+   try{await recordBusinessMonthMissingSource(db,month,index,slot,observed,stamp);}catch{businessMonthFail('BUSINESS_MONTH_STORAGE_INVALID',503);}
+   throw new BusinessMonthError('BUSINESS_MONTH_SOURCE_RUN_NOT_FOUND',503,{code:'FINANCE_BUSINESS_RUN_NOT_FOUND',http:404});
+  }
   const diagnostic=source.diagnostic,codes=['UNAVAILABLE','CONFIGURATION','NETWORK_ERROR','TIMEOUT','HTTP_ERROR','REDIRECT_REJECTED','CONTENT_TYPE_INVALID','BODY_LIMIT','BODY_READ_ERROR','JSON_INVALID','FRAME_INVALID','SCOPE_MISMATCH','RESPONSE_INVALID'];
   if(businessMonthExact(diagnostic,['code','http'])&&typeof diagnostic.code==='string'&&codes.some(suffix=>diagnostic.code==='FINANCE_BUSINESS_'+suffix)&&(diagnostic.http===null||Number.isInteger(diagnostic.http)&&diagnostic.http>=100&&diagnostic.http<=599)){
    let suffix=diagnostic.code.slice('FINANCE_BUSINESS_'.length);
@@ -338,22 +347,23 @@ async function businessMonthAdvance(env,db,month,range,stamp,observed,services){
   businessMonthFail('BUSINESS_MONTH_SOURCE_UNAVAILABLE',503);
  }
  const negotiated=await unwrapBusinessMonthVariantSource(source),frame=negotiated?.report??null;
- if(!frame||frame.start_date!==slot.start_date||frame.end_date!==slot.end_date||frame.checked_at>stamp+60||slot.frame&&(frame.run_id!==slot.frame.run_id||frame.revision<slot.frame.revision)||observed.payload.slots.some((entry,position)=>position!==index&&entry.frame?.run_id===frame.run_id))businessMonthFail('BUSINESS_MONTH_SOURCE_INVALID',503);
+ if(!frame||frame.start_date!==slot.start_date||frame.end_date!==slot.end_date||frame.checked_at>stamp+60||slot.frame&&(!recovery&&frame.run_id!==slot.frame.run_id||(frame.run_id===slot.frame.run_id&&frame.revision<slot.frame.revision))||observed.payload.slots.some((entry,position)=>position!==index&&entry.frame?.run_id===frame.run_id))businessMonthFail('BUSINESS_MONTH_SOURCE_INVALID',503);
  const payload={...observed.payload,slots:observed.payload.slots.map((entry,position)=>position===index?{...entry,frame}:entry)};
  // Full frames each fit one bounded row. The parent keeps only three compact
  // references, so a legal month cannot exceed D1's per-value size limit.
- const writes=[],storedPayload={...payload,slots:payload.slots.map((entry,position)=>{
+ const fence=businessMonthSourceRecoveryFence(recovery),writes=[],storedPayload={...payload,slots:payload.slots.map((entry,position)=>{
   if(entry.frame===null)return entry;
   const next=entry.frame,reference={schema:'business_month_frame_ref_v1',run_id:next.run_id,revision:next.revision};
   if(position===index||observed.storedPayload.slots[position].frame?.schema!=='business_month_frame_ref_v1'){
    const raw=JSON.stringify(next);if(new TextEncoder().encode(raw).byteLength>1048576)businessMonthFail('BUSINESS_MONTH_SOURCE_INVALID',503);
-   writes.push(db.prepare('INSERT INTO business_month_frames(month,slot_index,run_id,revision,payload) SELECT ?,?,?,?,? WHERE EXISTS(SELECT 1 FROM business_month_runs WHERE month=? AND revision=? AND payload=?) ON CONFLICT(month,slot_index) DO UPDATE SET run_id=excluded.run_id,revision=excluded.revision,payload=excluded.payload').bind(month,position,next.run_id,next.revision,raw,month,observed.row.revision,observed.row.payload));
+   writes.push(db.prepare('INSERT INTO business_month_frames(month,slot_index,run_id,revision,payload) SELECT ?,?,?,?,? WHERE EXISTS(SELECT 1 FROM business_month_runs WHERE month=? AND revision=? AND payload=?)'+fence.sql+' ON CONFLICT(month,slot_index) DO UPDATE SET run_id=excluded.run_id,revision=excluded.revision,payload=excluded.payload').bind(month,position,next.run_id,next.revision,raw,month,observed.row.revision,observed.row.payload,...fence.values));
   }
   return {...entry,frame:reference};
  })};
  const raw=JSON.stringify(storedPayload),updatedAt=Math.max(stamp,frame.checked_at),parentIndex=writes.length;
- writes.push(db.prepare('UPDATE business_month_runs SET revision=revision+1,payload=?,updated_at=? WHERE month=? AND revision=? AND payload=?').bind(raw,updatedAt,month,observed.row.revision,observed.row.payload));
+ writes.push(db.prepare('UPDATE business_month_runs SET revision=revision+1,payload=?,updated_at=? WHERE month=? AND revision=? AND payload=?'+fence.sql).bind(raw,updatedAt,month,observed.row.revision,observed.row.payload,...fence.values));
  const next={row:{revision:observed.row.revision+1,payload:raw,created_at:observed.row.created_at,updated_at:updatedAt},storedPayload,payload,complete:payload.slots.every(slot=>slot.frame?.status==='COMPLETE')};
+ if(recovery)writes.push(completeBusinessMonthSourceRecovery(db,recovery,frame,next,updatedAt));
  writes.push(...completedBusinessMonthPublicationStatements(db,month,next,{now:()=>updatedAt*1000}));
  const written=(await db.batch(writes))[parentIndex];
  if(written.meta.changes!==1){const latest=await businessMonthLoadRun(db,month,range,Math.max(stamp,frame.checked_at));if(!latest)businessMonthFail('BUSINESS_MONTH_CHANGED_RELOAD',409);return latest;}
