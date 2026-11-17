@@ -4,6 +4,20 @@ A trilha ativa é **owner_operation**. Cadastro de outros clientes, e-mail comer
 
 [Checkpoint canônico](../MLS_COMMERCE_OS_CHECKPOINT.json) · [36 tarefas e dependências técnicas](EXECUCAO.json) · [21 contratos visuais e famílias preservadas](CATALOGO_GRAFICOS.json) · [inspeção atual](validation/reconciliation.json) · [validação do incremento](validation/owner-dtf-batches.json).
 
+## Continuação mensal 17.2 — nativa publicada, HTTP/assets pendentes
+
+Diagnóstico real do catálogo observado: `FINANCE_PRODUCT_INDEX_RESPONSE_EMPTY_ITEM_MISSING`, na tentativa de 21:44:48 UTC. A compatibilidade estrita está em revisão isolada para 17.3, ainda sem integração ou publicação; o catálogo permanece não resolvido.
+
+Retomada real observada: uma fonte histórica foi substituída por uma nova fonte do mesmo período, preservando o frame original e a publicação anterior; páginas, cobertura financeira e aceite operacional permanecem pendentes.
+
+[Recibo 17.2](../system-audit/publication-monthly-continuation-live.json) · [validação](../system-audit/monthly-continuation-20261117.json) · [última conferência completa 17.1](../system-audit/publication-catalog-diagnostics-live.json). Auth→App 17.2 estão ativos e foram conferidos nativamente com Finance retido; fonte, configuração e tráfego de 100% exatos. A versão nativa atual é 17.2; 17.1 permanece somente o último registro integral fonte/configuração/HTTP/assets.
+
+A leitura de `/login` ainda recebeu 503 com 98 bytes Envoy em tentativas limitadas e curl da mesma URL. HTTP/assets da 17.2 não estão aprovados. Repetir esse gate quando o transporte permitir, sem mudar segurança, permissões ou publicar novamente para contornar. O recibo conserva hash, tentativas e ausência de cancelamento manual; não infere falha da aplicação.
+
+A continuação reservada atende apenas o mês anterior ativo válido, com intervalo mínimo de 900 s e uma AUX não mensal distinta; HISTORY ordinário mantém seu backoff. Pausa, leases, CAS, uma fonte por turno e publicação anterior permanecem protegidos. Acompanhe o avanço natural das páginas após a substituição observada; não force/reset coletores. A prova sintética de 421 pedidos não comprova cobertura, retenção ou aceite reais.
+
+**Catálogo não resolvido**; o botão **Atualizar catálogo local** apenas esclarece a ação existente. Aceite das artes/PNGs reais, produção, custos históricos e pagamentos continuam nos respectivos gates. Nenhum PARTIAL foi declarado COMPLETE; venda ADIADO_VENDA e OP-014 independente.
+
 ## Diagnóstico do catálogo 17.1 — publicação técnica, causa real pendente
 
 A versão 17.1 preserva códigos estruturais finitos entre Finance/Auth/App, mantendo HTTP 502, cursor, filtro BANNED, backoff e permissões. Publicação não comprova recuperação do catálogo. [Recibo](../system-audit/publication-catalog-diagnostics-live.json) · [validação](../system-audit/catalog-diagnostics-20261117.json) · [histórico 16.5](../system-audit/publication-live.json).

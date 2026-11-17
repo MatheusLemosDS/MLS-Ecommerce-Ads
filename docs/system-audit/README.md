@@ -1,5 +1,19 @@
 # Varredura de estabilidade — operação própria
 
+## Continuação mensal 17.2 — fonte/configuração verificadas, público pendente
+
+Diagnóstico real do catálogo observado: `FINANCE_PRODUCT_INDEX_RESPONSE_EMPTY_ITEM_MISSING`, na tentativa de 21:44:48 UTC. A compatibilidade estrita está em revisão isolada para 17.3, ainda sem integração ou publicação; o catálogo permanece não resolvido.
+
+Retomada real observada: uma fonte histórica foi substituída por uma nova fonte do mesmo período, preservando o frame original e a publicação anterior; páginas, cobertura financeira e aceite operacional permanecem pendentes.
+
+[Recibo 17.2](publication-monthly-continuation-live.json) · [validação](monthly-continuation-20261117.json). Auth→App foram publicados pelo candidato exato aprovado; Finance permaneceu na versão 17.1. Leitura nativa confirma as fontes e configurações dos três Workers, com tráfego de 100%. Nenhuma mudança de schema, retenção, cap, fórmulas, permissões ou workflows.
+
+O gate público 17.2 está **pendente**, após 503 com 98 bytes Envoy na URL canônica em três séries de três tentativas e curl; a falha, SHA256 e ausência de cancelamento manual são preservados. Não equivale a sucesso público nem prova falha da aplicação. A 17.1 continua a última publicação integralmente conferida em fonte/configuração/HTTP/assets.
+
+A continuação mantém intervalo mínimo de 900 s nas ofertas reservadas, yield não mensal, uma fonte/turno, leases e CAS; HISTORY ordinário conserva seu backoff. Avanço de páginas do histórico, catálogo e aceite operacional/financeiro pendentes; prova sintética não promete prazo ou cobertura. Repetir o gate público limitado sem alterar configuração/segurança para contornar.
+
+## Histórico das publicações 17.1 e 16.5
+
 ## Catálogo17.1 — diagnóstico publicado, recuperação ainda não comprovada
 
 [Recibo 17.1](publication-catalog-diagnostics-live.json) · [validação](catalog-diagnostics-20261117.json). App/Auth/Finance foram publicados e verificados pelo candidato exato aprovado, sem mudança de schema, permissões ou workflows. A correção acrescenta diagnóstico estrutural finito; preserva erro 502, identidade, filtros/cursor e backoff. Não normaliza ausência em sucesso e não prova que o erro real do catálogo foi resolvido.

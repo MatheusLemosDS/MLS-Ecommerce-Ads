@@ -1,6 +1,6 @@
 {
   "schema": "bounded_monthly_continuation_candidate_v1",
-  "status": "IMPLEMENTED_TARGETED_PASS_FULL_GATES_PENDING",
+  "status": "NATIVE_PUBLISHED_PUBLIC_TRANSPORT_PENDING",
   "recorded_at": "2026-11-17T20:59:28.760149+00:00",
   "prepared_source_commit": "65283aad930bae2159fff6e579025a37097eaa87",
   "local_implementation_commit": "c7bd321",
@@ -14,9 +14,69 @@
     "fail": 0,
     "skipped": 0
   },
-  "full_local_node": "PENDING",
-  "exact_head_ci": "PENDING",
-  "published": false,
+  "full_local_node": {
+    "tests": 4648,
+    "pass": 4648,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0,
+    "duration_ms": 754057.208251,
+    "log_sha256": "577b2c73caee65b7921fb93d88534f175478820808e77fa44d968faeb0219535",
+    "source_commit_at_execution": "eac37aab4c2a776843f560e294dfdb742238207b",
+    "source_tree": "16d8404399f06e816ef144d669008bc9211c5947",
+    "local_full_session": 66328,
+    "archived_pre_reconciliation_commit": "44d9f8057efb78c78852e796ab093a731b50587c",
+    "scope": "LOCAL_FULL_SUITE_RESTARTED_AFTER_EXECUTOR_INTERRUPTION_ON_UNCHANGED_EXACT_REMOTE_EAC37AA"
+  },
+  "exact_head_ci": {
+    "id": 44175286949,
+    "run_number": 665,
+    "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/44175286949",
+    "head_sha": "eac37aab4c2a776843f560e294dfdb742238207b",
+    "status": "completed",
+    "conclusion": "success",
+    "node": {
+      "tests": 4648,
+      "pass": 4648,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0
+    },
+    "python": {
+      "pass": 67,
+      "fail": 0
+    },
+    "compiled_hashes": {
+      "app": "10c324f14d0203f1453d36ec60b3d11d0250d40c446b0bc81c5578332ddac0f1",
+      "auth": "002bc90da88de19b968eda850dd668b4811c04506d2be9811f08140828eda6c4",
+      "finance": "522cd735b73157eee92f1859d87959f5e66a7b8070afb4b2c26cb92006a44bf0"
+    },
+    "workflow_preflight_step": "SKIPPED_BY_EXISTING_STACKED_PR_CONDITION; LOCAL_PREFLIGHT_PASS",
+    "cloudflare_checks": [
+      {
+        "name": "Workers Builds: brazacommerce-app",
+        "status": "completed",
+        "conclusion": "success",
+        "id": 134365725970,
+        "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-app/production/previews/fix-system-stability-20261116/builds/f135743c-32ff-42d4-a98e-3cd556e5c5c1"
+      },
+      {
+        "name": "Workers Builds: brazacommerce-finance",
+        "status": "completed",
+        "conclusion": "success",
+        "id": 134365521662,
+        "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-finance/production/previews/fix-system-stability-20261116/builds/b860cf70-3173-4b65-9ef7-10d6faadc0f0"
+      },
+      {
+        "name": "Workers Builds: brazacommerce-auth",
+        "status": "completed",
+        "conclusion": "success",
+        "id": 134365423384,
+        "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-auth/production/previews/fix-system-stability-20261116/builds/a59a46f5-951c-455b-8831-0553a2fead13"
+      }
+    ]
+  },
+  "published": true,
   "operational_acceptance": false,
   "actual_financial_acceptance": false,
   "actual_catalog_problem_resolved": false,
@@ -133,5 +193,366 @@
   ],
   "finance_retained": true,
   "previous_live_receipt": "publication-catalog-diagnostics-live.json",
-  "publication_receipt": "publication-monthly-continuation-live.json"
+  "publication_receipt": "publication-monthly-continuation-live.json",
+  "candidate_validation_before_publication": {
+    "schema": "bounded_monthly_continuation_candidate_v1",
+    "status": "IMPLEMENTED_TARGETED_PASS_FULL_GATES_PENDING",
+    "recorded_at": "2026-11-17T20:59:28.760149+00:00",
+    "prepared_source_commit": "65283aad930bae2159fff6e579025a37097eaa87",
+    "local_implementation_commit": "c7bd321",
+    "base_main": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
+    "branch": "fix/system-stability-20261116",
+    "pull_request": 128,
+    "release_candidate": "2026-11-17.2",
+    "implemented": true,
+    "local_targeted": {
+      "pass": 21,
+      "fail": 0,
+      "skipped": 0
+    },
+    "full_local_node": "PENDING",
+    "exact_head_ci": "PENDING",
+    "published": false,
+    "operational_acceptance": false,
+    "actual_financial_acceptance": false,
+    "actual_catalog_problem_resolved": false,
+    "scope": [
+      "bounded priority for valid active previous-month cohort under existing leases and4Finance/300s budget",
+      "mandatory non-monthly auxiliary yield; reserved offer cooldown900s, ordinary HISTORY keeps existing backoff",
+      "ERROR continuation only valid pending cohort newer than preserved publication with retry due",
+      "first Returns protected slot preserved; eligible bootstrap gets shared second slot",
+      "catalog refresh button explicitly names local destination; handler and permissions unchanged"
+    ],
+    "unchanged": [
+      "Financial formulas/DTOs/pins",
+      "Finance retention60/maxorders1000/maxpages200",
+      "schema/tenant inventory",
+      "permissions/grants and external financial writes",
+      "existing source/backoff/lease/CAS gates"
+    ],
+    "synthetic_proof": {
+      "schema": "monthly_continuation_cadence_local_proof_v1",
+      "test_commit": "0106b91 (same test content as7751dee)",
+      "runtime_base": "ddf1630da2e5c25a042ffc2f462cf8a1daceaa8d",
+      "environment": "LOCAL_SYNTHETIC_SQLITE_AND_GENERATED_APP",
+      "external_queries": 0,
+      "remote_writes": 0,
+      "external_provider_calls": 0,
+      "tests_passed": 7,
+      "test_command": "node --test web/cloudflare/tests/monthly-continuation-cadence.test.mjs web/finance/tests/monthly-source-throughput.test.mjs",
+      "generated_profiles": [
+        {
+          "minify": false,
+          "pass": true
+        },
+        {
+          "minify": true,
+          "pass": true
+        }
+      ],
+      "scenario": {
+        "orders": 421,
+        "statuses": "all synthetic CANCELLED to isolate scheduler/retention throughput; no payment calls",
+        "final_day": "explicitly empty synthetic day, not a claim about Live",
+        "november_turnover_interval_minutes": 13,
+        "control_windows": "alternating two November windows outside unchanged900s same-window RUNNING reuse",
+        "current_month": "real saved RUNNING Finance source read only; no current provider step",
+        "cron_reserved_minutes_modulo10": [
+          0,
+          2,
+          5,
+          7
+        ],
+        "protected_scan_returns_bootstrap": "controlled always-due cues; count work-budget opportunities, not verified operational financial results"
+      },
+      "observed_local_result": {
+        "finished_after_minutes": 518,
+        "monthly_turns_after_initial_start": 25,
+        "total_monthly_source_turns": 26,
+        "maximum_monthly_gap_minutes": 22,
+        "eligible_aux_after_cooldown_at_most": 2,
+        "at_least_one_other_aux_between_monthly_turns": true,
+        "all_three_sources_present_at_publication": true,
+        "maximum_source_count": 45,
+        "source_cap_unchanged": 60,
+        "lane_opportunities": {
+          "FINANCE": 228,
+          "RESERVED_MINUTE": 200,
+          "SCAN_BUDGET": 20,
+          "MONTHLY": 25,
+          "RETURNS_BUDGET": 10,
+          "BOOTSTRAP_BUDGET": 10,
+          "PRODUCTION": 2,
+          "COSTS": 2,
+          "CATALOG": 2,
+          "REGISTRY": 1,
+          "ORDINARY_HISTORY": 1
+        }
+      },
+      "limits": [
+        "No real-world retention lifetime or completion deadline is guaranteed by this synthetic run.",
+        "Payment latency, provider errors, D1 latency and long competing leases can add work and delays.",
+        "The model records protected budget opportunities; it does not fabricate Pending/Returns/coverage acceptance."
+      ],
+      "post_fix_regression_command": "node --test web/cloudflare/tests/business-history-continuation.test.mjs",
+      "post_fix_regressions_passed": 10,
+      "initial_evidence_preserved_at": "/workspace/work/integration-audit-evidence/monthly-continuation-cadence-proof-initial.json",
+      "mandatory_yield_fix": {
+        "commit": "ddf1630da2e5c25a042ffc2f462cf8a1daceaa8d",
+        "condition": "same-revision monthly work retains AUXILIARY; only a later non-monthly auxiliary revision resets MONTHLY",
+        "regression_passed": true
+      }
+    },
+    "rpc_budget": {
+      "acquire": "same UPDATE RETURNING/one RPC; adds one bounded active-cohort metadata scalar and current health fields; financial frame bodies are not aggregated",
+      "run_history": "one additional validation SELECT only for eligible/active continuation; one private source maximum",
+      "finish": "same batch/one RPC; monthly lost-offer cooldown prepended under active lease+parent CAS, release restores original changes() chain, monthly fairness statement last",
+      "finance_scheduled_combined_rpc_max": 49,
+      "cold_finance_combined_rpc_max": 48,
+      "new_monthly_phase_combined_rpc": 26,
+      "combined_rpc_cap_unchanged": 50
+    },
+    "known_limits": "Synthetic cadence is not an unconditional wall-clock/retention guarantee. Actual financial facts/coverage and source failures remain distinct. Catalog normalization candidate is NOT integrated without real source proof.",
+    "expected_hashes": {
+      "app": "10c324f14d0203f1453d36ec60b3d11d0250d40c446b0bc81c5578332ddac0f1",
+      "auth": "002bc90da88de19b968eda850dd668b4811c04506d2be9811f08140828eda6c4",
+      "finance": "522cd735b73157eee92f1859d87959f5e66a7b8070afb4b2c26cb92006a44bf0"
+    },
+    "bytes": {
+      "app": 3763106,
+      "auth": 579491,
+      "finance": 895222
+    },
+    "workers_to_publish": [
+      "auth",
+      "app"
+    ],
+    "finance_retained": true,
+    "previous_live_receipt": "publication-catalog-diagnostics-live.json",
+    "publication_receipt": "publication-monthly-continuation-live.json"
+  },
+  "updated_at": "2026-11-17T21:39:56.676706+00:00",
+  "validation_head": "eac37aab4c2a776843f560e294dfdb742238207b",
+  "publication_source_commit": "eac37aab4c2a776843f560e294dfdb742238207b",
+  "local_validated_commit": "eac37aab4c2a776843f560e294dfdb742238207b",
+  "archived_pre_reconciliation_commit": "44d9f8057efb78c78852e796ab093a731b50587c",
+  "source_tree": "16d8404399f06e816ef144d669008bc9211c5947",
+  "git_reconciliation": {
+    "local_original": "44d9f8057efb78c78852e796ab093a731b50587c",
+    "archive_branch": "archive/monthly-continuation-native-pre-connector-20261117",
+    "remote_head": "eac37aab4c2a776843f560e294dfdb742238207b",
+    "same_working_tree_and_index": true,
+    "tree": "16d8404399f06e816ef144d669008bc9211c5947",
+    "source_files_modified_during_reconciliation": false
+  },
+  "prior_local_executor_interruption": {
+    "source_commit": "eac37aab4c2a776843f560e294dfdb742238207b",
+    "status": "INTERRUPTED_NO_FINAL_TAP_RESULT",
+    "cause_evidence": "Executor key changed during session recovery; old unified session75073 unknown, no Nodefulltestprocess remains, lastlog21:08:31UTC. Root cause of platform interruption not inferred.",
+    "manual_cancellation": false,
+    "prior_failed_tests_in_partial_log": false,
+    "required_action": "Repeat missing local full gate on unchanged exactcandidate; preserve partial log and green full CI independently.",
+    "interrupted_session": 75073,
+    "restart_session": 66328,
+    "partial_log_name": "full-node-interrupted-runtime-recovery.log",
+    "partial_log_sha256": "977686db5e420748af392024d7bd235783e69bdbde501f6b27f8246d85a3278d",
+    "partial_log_bytes": 712770,
+    "source_tree": "16d8404399f06e816ef144d669008bc9211c5947",
+    "same_unchanged_exact_source_for_restart": true
+  },
+  "local_python": {
+    "pass": 67,
+    "fail": 0
+  },
+  "native_verified": true,
+  "public_smoke_complete": false,
+  "publication": {
+    "release": "2026-11-17.2",
+    "receipt": "publication-monthly-continuation-live.json",
+    "scope": "EXACT_NATIVE_SOURCE_CONFIGURATION_AND_100_PERCENT_TRAFFIC_ONLY; PUBLIC_GATE_PENDING_TRANSPORT"
+  },
+  "public_verification": {
+    "status": "BLOCKED_TRANSPORT_PUBLIC_GATE_NOT_COMPLETE",
+    "all_exact": false,
+    "release": "2026-11-17.2",
+    "scope": "PUBLIC_TLS_HTTP_ROUTING_ASSETS_NOT_YET_VERIFIED_FOR_17_2",
+    "failure": {
+      "schema": "mls_public_transport_failure_preserved_v1",
+      "release_native_confirmed": "2026-11-17.2",
+      "source_commit": "eac37aab4c2a776843f560e294dfdb742238207b",
+      "native_verified_at": "2026-11-17T21:32:27.409194+00:00",
+      "public_gate": "NOT_COMPLETE",
+      "url": "https://app.brazacommerce.com.br/login",
+      "expected_http": 200,
+      "actual_http": 503,
+      "body_bytes": 98,
+      "body_sha256": "33fbc61ad080ef68dd7a6479f8c53f1bf864dba2930567dbbc4ceb47490a1909",
+      "reported_server": "envoy",
+      "application_failure_inferred": false,
+      "manual_cancellation": false,
+      "client_checks": [
+        "Python urllib: initial pass3 bounded retries",
+        "Python urllib: delayed retry3 bounded retries",
+        "curl: samecanonicalURL inheritedproxy/CA unchanged"
+      ],
+      "failure_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "warnings": [
+        [
+          {
+            "url": "https://app.brazacommerce.com.br/login",
+            "attempt": 1,
+            "status": 503,
+            "body_sha256": "33fbc61ad080ef68dd7a6479f8c53f1bf864dba2930567dbbc4ceb47490a1909",
+            "cause": "ENVIRONMENT_ENVOY_UPSTREAM_REMOTE_CONNECTION_FAILURE_IDENTICAL_TO_GITHUB_TRANSPORT_ERROR"
+          },
+          {
+            "url": "https://app.brazacommerce.com.br/login",
+            "attempt": 2,
+            "status": 503,
+            "body_sha256": "33fbc61ad080ef68dd7a6479f8c53f1bf864dba2930567dbbc4ceb47490a1909",
+            "cause": "ENVIRONMENT_ENVOY_UPSTREAM_REMOTE_CONNECTION_FAILURE_IDENTICAL_TO_GITHUB_TRANSPORT_ERROR"
+          },
+          {
+            "url": "https://app.brazacommerce.com.br/login",
+            "attempt": 3,
+            "status": 503,
+            "body_sha256": "33fbc61ad080ef68dd7a6479f8c53f1bf864dba2930567dbbc4ceb47490a1909",
+            "cause": "ENVIRONMENT_ENVOY_UPSTREAM_REMOTE_CONNECTION_FAILURE_IDENTICAL_TO_GITHUB_TRANSPORT_ERROR"
+          }
+        ],
+        [
+          {
+            "url": "https://app.brazacommerce.com.br/login",
+            "attempt": 1,
+            "status": 503,
+            "body_sha256": "33fbc61ad080ef68dd7a6479f8c53f1bf864dba2930567dbbc4ceb47490a1909",
+            "cause": "ENVIRONMENT_ENVOY_UPSTREAM_REMOTE_CONNECTION_FAILURE_IDENTICAL_TO_GITHUB_TRANSPORT_ERROR"
+          },
+          {
+            "url": "https://app.brazacommerce.com.br/login",
+            "attempt": 2,
+            "status": 503,
+            "body_sha256": "33fbc61ad080ef68dd7a6479f8c53f1bf864dba2930567dbbc4ceb47490a1909",
+            "cause": "ENVIRONMENT_ENVOY_UPSTREAM_REMOTE_CONNECTION_FAILURE_IDENTICAL_TO_GITHUB_TRANSPORT_ERROR"
+          },
+          {
+            "url": "https://app.brazacommerce.com.br/login",
+            "attempt": 3,
+            "status": 503,
+            "body_sha256": "33fbc61ad080ef68dd7a6479f8c53f1bf864dba2930567dbbc4ceb47490a1909",
+            "cause": "ENVIRONMENT_ENVOY_UPSTREAM_REMOTE_CONNECTION_FAILURE_IDENTICAL_TO_GITHUB_TRANSPORT_ERROR"
+          }
+        ]
+      ],
+      "network_environment_observation": {
+        "network_policy_mode": "unrestricted",
+        "state": "enforced",
+        "observations_current": true,
+        "same_selected_environment": true
+      },
+      "credentials_security_configuration_changes": false,
+      "web_read_separate_service": "CANONICAL_URL_NOT_ACCESSIBLE_VIA_TOOL; NO_STATUS_OR_BYTE_PROOF",
+      "recorded_at": "2026-11-17T21:39:49.845096+00:00",
+      "python_full_probe_attempts": 3,
+      "bounded_login_tries_per_attempt": 3,
+      "additional_warning_sets": [
+        [
+          {
+            "url": "https://app.brazacommerce.com.br/login",
+            "attempt": 1,
+            "status": 503,
+            "body_sha256": "33fbc61ad080ef68dd7a6479f8c53f1bf864dba2930567dbbc4ceb47490a1909",
+            "cause": "ENVIRONMENT_ENVOY_UPSTREAM_REMOTE_CONNECTION_FAILURE_IDENTICAL_TO_GITHUB_TRANSPORT_ERROR"
+          },
+          {
+            "url": "https://app.brazacommerce.com.br/login",
+            "attempt": 2,
+            "status": 503,
+            "body_sha256": "33fbc61ad080ef68dd7a6479f8c53f1bf864dba2930567dbbc4ceb47490a1909",
+            "cause": "ENVIRONMENT_ENVOY_UPSTREAM_REMOTE_CONNECTION_FAILURE_IDENTICAL_TO_GITHUB_TRANSPORT_ERROR"
+          },
+          {
+            "url": "https://app.brazacommerce.com.br/login",
+            "attempt": 3,
+            "status": 503,
+            "body_sha256": "33fbc61ad080ef68dd7a6479f8c53f1bf864dba2930567dbbc4ceb47490a1909",
+            "cause": "ENVIRONMENT_ENVOY_UPSTREAM_REMOTE_CONNECTION_FAILURE_IDENTICAL_TO_GITHUB_TRANSPORT_ERROR"
+          }
+        ]
+      ],
+      "additional_same_canonical_checks": {
+        "curl_health_http": 503,
+        "curl_account_login_http": 503
+      },
+      "stderr_observed_in_tool_result": "AssertionError: PUBLIC_STATUS_MISMATCH_/login_503_33fbc61ad080ef68dd7a6479f8c53f1bf864dba2930567dbbc4ceb47490a1909",
+      "stdout_log_scope": "Original stdout file empty; the assertion was emitted on stderr in the tool result. The separately captured98-byte curl body and Envoy headers support transport classification.",
+      "curl_body_sha256": "33fbc61ad080ef68dd7a6479f8c53f1bf864dba2930567dbbc4ceb47490a1909",
+      "curl_headers_sha256": "f1a7073ae61e8b0f4a987c2cf1a4c1541feebf5cf11748b8cf326a929a97da7d"
+    },
+    "authenticated_owner_live_qa": "NOT_PERFORMED",
+    "application_failure_inferred": false,
+    "manual_cancellation": false,
+    "next_action": "Retry the same canonical public endpoints/assets with bounded retries and unchanged credentials, CA, proxy and security configuration. A transport failure does not count as an application pass. Preserve this pending record when later evidence completes the gate."
+  },
+  "actual_monthly_source_progress_validated": false,
+  "natural_collector_progress": {
+    "status": "ACTUAL_ONE_SAME_PERIOD_SOURCE_REPLACEMENT_OBSERVED_PAGE_PROGRESS_UNPROVEN",
+    "actual_monthly_recovery_validated": true,
+    "source_page_progress": false,
+    "actual_monthly_source_progress_validated": false,
+    "financial_coverage_complete": false,
+    "actual_financial_acceptance": false,
+    "replacement_pages_read": 0,
+    "zero_page_count_is_not_evidence_of_empty_day": true,
+    "one_same_period_replacement_observed": true,
+    "same_period_finance_run_exists": true,
+    "original_audit_frame_preserved_exactly": true,
+    "old_publication_parent_and_all_three_frames_preserved_exactly": true,
+    "other_two_active_frames_preserved_exactly": true,
+    "observed_at": "2026-11-17T21:43:51.152948+00:00",
+    "evidence": {
+      "receipt": "docs/system-audit/publication-monthly-continuation-live.json",
+      "evidence_file": "history-real-replacement-live17-2-proof-v2.json",
+      "evidence_sha256": "338396199dd264e4e14e2a9889e7eeb44624c54a70d5d7e491312b06b6d35359",
+      "evidence_canonical_sha256": "bd0b328c1e4ddbd35daeed555033b4ab02a6a566c980746de137f645ea4093b8",
+      "source_commit": "eac37aab4c2a776843f560e294dfdb742238207b",
+      "scope": "ONE_REAL_SAME_PERIOD_SOURCE_REPLACEMENT; ORIGINAL_AUDIT_FRAME_AND_OLD_PUBLICATION_PRESERVED; PAGE_PROGRESS_NOT_OBSERVED"
+    },
+    "scope": "Limited real source recovery; pagination, real financial coverage and owner acceptance remain pending. No forced source start/step/reset and no empty-day inference."
+  },
+  "remaining": "Actual same-period source replacement and finite catalog EMPTY_ITEM_MISSING diagnostic are proved. Observe subsequent source page progression and financial coverage; pages_read0 does not prove an empty day. Review strict17.3 compatibility in isolation, preserving all negative guards and requiring new exact gates before integration/publication. Current17.2 public HTTP/assets verification remains pending; catalog recovery and owner/financial acceptance are not proved.",
+  "actual_monthly_recovery_validated": true,
+  "source_page_progress": false,
+  "monthly_recovery_evidence": {
+    "receipt": "publication-monthly-continuation-live.json",
+    "evidence_file": "history-real-replacement-live17-2-proof-v2.json",
+    "evidence_sha256": "338396199dd264e4e14e2a9889e7eeb44624c54a70d5d7e491312b06b6d35359",
+    "evidence_canonical_sha256": "bd0b328c1e4ddbd35daeed555033b4ab02a6a566c980746de137f645ea4093b8",
+    "source_commit": "eac37aab4c2a776843f560e294dfdb742238207b",
+    "scope": "ONE_REAL_SAME_PERIOD_SOURCE_REPLACEMENT; ORIGINAL_AUDIT_FRAME_AND_OLD_PUBLICATION_PRESERVED; PAGE_PROGRESS_NOT_OBSERVED"
+  },
+  "actual_catalog_diagnostic_validated": true,
+  "catalog_diagnostic_evidence": {
+    "receipt": "publication-monthly-continuation-live.json",
+    "evidence_file": "observed-work-live17-2-pass4.json",
+    "evidence_sha256": "d64e6def4d2c6eeca04e65b263a8383a46c68a435879b1226e5d6ebe71220803",
+    "evidence_canonical_sha256": "e1d281f9597a15748ec5a66e03aee5b584845625fa2e412075ae2434bee0b139",
+    "source_commit": "eac37aab4c2a776843f560e294dfdb742238207b",
+    "diagnostic_code": "FINANCE_PRODUCT_INDEX_RESPONSE_EMPTY_ITEM_MISSING",
+    "scope": "REAL_FINITE_STRUCTURAL_CLASSIFIER_DIAGNOSTIC; CATALOG_RECOVERY_NOT_YET_PROVEN",
+    "meaning": {
+      "diagnostic_code": "FINANCE_PRODUCT_INDEX_RESPONSE_EMPTY_ITEM_MISSING",
+      "actual_attempt_at_utc": "2026-11-17T21:44:48Z",
+      "actual_diagnostic_at_utc": "2026-11-17T21:44:50Z",
+      "classifier_source_path": "web/finance/src/product-index.mjs",
+      "classifier_source_sha256": "c5408476215a179a57bd48894beb054352dc14e62817a10aeb3bb4dc239fe6fe",
+      "proven_by_exact_current_classifier": "Trusted response object with own explicit total_count===0 excluding negative zero, own has_next_page===false, and omitted own item field. This code does not prove terminal next_offset or input offset; the isolated compatibility candidate must enforce those separately.",
+      "raw_next_offset_proven": false,
+      "raw_input_offset_proven_by_this_observation": false,
+      "candidate": "Strict compatibility candidate for17.3 is under isolated review; not integrated or published in17.2. Null or generally absent source values remain errors/UNKNOWN.",
+      "candidate_integrated": false,
+      "candidate_published": false,
+      "actual_catalog_problem_resolved": false
+    }
+  }
 }
