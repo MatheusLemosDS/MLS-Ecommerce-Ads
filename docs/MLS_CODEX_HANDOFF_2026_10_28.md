@@ -1,9 +1,9 @@
 <!-- OWNER_OPERATION_CURRENT -->
-Operação própria: **montador DTF 2026-11-16.2 publicado e verificado tecnicamente**. [Como usar](owner-operation/README.md) · [checkpoint canônico](MLS_COMMERCE_OS_CHECKPOINT.json) · [recibo](owner-operation/validation/publication-dtf-cycle-live-20261116.json).
+Prioridade: corrigir a montagem manual apontada pelo proprietário. [Uso e estado](owner-operation/README.md) · [checkpoint](MLS_COMMERCE_OS_CHECKPOINT.json) · [evidência da prévia automática](owner-operation/validation/dtf-auto-layout.json).
 
-Kits têm composição explícita por variação/SKU de origem; impressão parcial, saldo, liberação confirmada de EXPORTED, reimpressão por parte, perda e correção auditada preservam fatos. Fonte 9c94210, CI 43986753284: 4.480 Node/67 Python, mais8 casos locais autenticados após recuperar o executor. App/Auth novos com 100% do tráfego, Finance retido; bytes/configurações/rotas/cron, 8 verificações HTTP e 8 arquivos públicos conferidos. PR #125 permanece rascunho, sem merge/auto-merge; main 346f30f preservada.
+Candidata2026-11-16.3 implementa seleção e prévia automáticas das linhas aptas com PNGs salvos e kits confirmados. Fonte2c225f0, branch feature/owner-dtf-auto-layout-20261116, pai ab4ad7f/PR125.38 testes direcionados passaram, incluindo12 casos Chromium autenticados normais/minificados em320/1365; gates completos/CI/publicação pendentes. A Live verificada continua2026-11-16.2.
 
-Próximo passo do proprietário: abra Produção → Montador e fila DTF, importe os PNGs reais, confirme as artes/larguras dos kits e confira uma folha em tamanho real antes de registrar impressão. Aceite físico/financeiro ainda pendente. Próximo desenvolvimento independente: OP-014, fabricação/custos/pagamentos conforme a matriz. Impressão não comprova fabricação; ausência de fonte/custo não é zero; não duplicar custos/receitas. [Regras ativas e gates](../AGENTS.md#regras-de-domínio-ativas): sexta às 13h/Brasília, confirmações e auditoria permanecem. Gráficos e seis agentes preservados; venda ADIADO_VENDA. Históricos integrais seguem abaixo e nos recibos.
+Automação somente da prévia local; reserva, download e confirmação física continuam explícitos. Sem arte/composição não há suposição. Limites, sessão/tenant, proporção/DPI, seis agentes, gráficos, sexta13h/Brasília e contratos financeiros preservados. Históricos integrais seguem abaixo e na evidência do incremento. Venda ADIADO_VENDA.
 <!-- END_OWNER_OPERATION_CURRENT -->
 
 FINANCIAL_AUTOMATION_20261113 — PUBLISHED_VERIFIED_TECHNICAL_PUBLIC_ONLY — release 2026-11-13.3

@@ -1,0 +1,73 @@
+{
+  "schema": "dtf_automatic_preview_increment_v1",
+  "task": "OP-012_AUTOMATIC_LAYOUT",
+  "source_commit": "2c225f0b341c57b956baa1519f4b63344a4337a6",
+  "previous_published_parent": "ab4ad7ff3fc92922633e096bd26653d12796ff1b",
+  "base_main": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
+  "branch": "feature/owner-dtf-auto-layout-20261116",
+  "recorded_at_utc": "2026-11-17T01:27:01.692818+00:00",
+  "recorded_at_brasilia": "2026-11-16T22:27:01.692818-03:00",
+  "release_candidate": "2026-11-16.3",
+  "problem": "Owner has the original PNGs but still had to select eligible orders and click the manual preview button in16.2.",
+  "implemented": true,
+  "tested": {
+    "targeted": {
+      "total": 38,
+      "pass": 38,
+      "fail": 0,
+      "skipped": 0,
+      "cancelled": 0
+    },
+    "new_unit_cases": 7,
+    "new_native_chromium_cases": 4,
+    "native_regression_cases": 8,
+    "widths": [
+      320,
+      1365
+    ],
+    "normal_and_minified": true,
+    "source_scope": "COMPILED_AUTHENTICATED_APP_SYNTHETIC_SQLITE_AND_DECODED_PNG_ONLY",
+    "full_node": "PENDING",
+    "python": "PENDING",
+    "github_ci": "PENDING"
+  },
+  "published": false,
+  "operational_acceptance": false,
+  "financial_acceptance": false,
+  "physical_manufacturing_acceptance": false,
+  "implemented_behavior": [
+    "Default-on local automatic selection and preview after opening production, PNG import/restore, eligible source refresh and explicit kit recipe confirmation.",
+    "Existing100-line/50-order/300-print/20-sheet limits are reused; unconfirmed kits, missing/low-resolution arts, cancelled/reserved/printed/review rows remain out.",
+    "Identical planning inputs preserve the same canvas; changed inputs invalidate the old preview immediately. Dirty settings must be saved/loaded first.",
+    "Manual selection/clear disables automatic reselection; the explicit checkbox resumes automatic mode. A pending asynchronous render can be cancelled or discarded after account/session/source changes.",
+    "Automatic selection updates checkboxes without replacing action buttons under pointer focus. Queue buttons become usable again after busy operations.",
+    "No reservation, PNG download, physical confirmation or financial entry is performed by automatic preview. Existing server rechecks/CAS/idempotence stay unchanged."
+  ],
+  "runtime_hashes": {
+    "app": "787d0435e9b6f4df169239687f501de7db402f1a2ab2b3a8a8fccc3879a13b0b",
+    "auth": "0e4547e61441131c5ad8c5f955a64ac691c0d89ada8eb52bbfe0cad2fe485a45",
+    "finance": "ccce234f36f0a763942bf30e274360b9d1223b3594b6600adf3352fafd92efb4"
+  },
+  "dry_packages": {
+    "app": {
+      "raw_sha256": "d53172c56b430bf425db2c70debf919e0823e9a3bdcd6f38500b248f5d311e61",
+      "raw_bytes": 4193726
+    },
+    "auth": {
+      "raw_sha256": "5989c016d79b8eff799fda18d3eafe3c0ba457c728c5fb7fb31d67b18aa22181",
+      "raw_bytes": 654598
+    }
+  },
+  "previous_live_receipt": "docs/owner-operation/validation/publication-dtf-cycle-live-20261116.json",
+  "backend_schema_permissions_workflows_changed": false,
+  "finance_unchanged": true,
+  "actual_owner_pixels_or_facts_created": false,
+  "continuity_before_this_increment": {
+    "README.md": "<!-- OWNER_OPERATION_CURRENT -->\nOperação própria: **montador DTF 2026-11-16.2 publicado e verificado tecnicamente**. [Como usar](docs/owner-operation/README.md) · [checkpoint canônico](docs/MLS_COMMERCE_OS_CHECKPOINT.json) · [recibo](docs/owner-operation/validation/publication-dtf-cycle-live-20261116.json).\n\nKits têm composição explícita por variação/SKU de origem; impressão parcial, saldo, liberação confirmada de EXPORTED, reimpressão por parte, perda e correção auditada preservam fatos. Fonte 9c94210, CI 43986753284: 4.480 Node/67 Python, mais8 casos locais autenticados após recuperar o executor. App/Auth novos com 100% do tráfego, Finance retido; bytes/configurações/rotas/cron, 8 verificações HTTP e 8 arquivos públicos conferidos. PR #125 permanece rascunho, sem merge/auto-merge; main 346f30f preservada.\n\nPróximo passo do proprietário: abra Produção → Montador e fila DTF, importe os PNGs reais, confirme as artes/larguras dos kits e confira uma folha em tamanho real antes de registrar impressão. Aceite físico/financeiro ainda pendente. Próximo desenvolvimento independente: OP-014, fabricação/custos/pagamentos conforme a matriz. Impressão não comprova fabricação; ausência de fonte/custo não é zero; não duplicar custos/receitas. [Regras ativas e gates](AGENTS.md#regras-de-domínio-ativas): sexta às 13h/Brasília, confirmações e auditoria permanecem. Gráficos e seis agentes preservados; venda ADIADO_VENDA. Históricos integrais seguem abaixo e nos recibos.\n<!-- END_OWNER_OPERATION_CURRENT -->",
+    "NEXT_CHAT_HANDOFF.txt": "<!-- OWNER_OPERATION_CURRENT -->\nOperação própria: **montador DTF 2026-11-16.2 publicado e verificado tecnicamente**. [Como usar](docs/owner-operation/README.md) · [checkpoint canônico](docs/MLS_COMMERCE_OS_CHECKPOINT.json) · [recibo](docs/owner-operation/validation/publication-dtf-cycle-live-20261116.json).\n\nKits têm composição explícita por variação/SKU de origem; impressão parcial, saldo, liberação confirmada de EXPORTED, reimpressão por parte, perda e correção auditada preservam fatos. Fonte 9c94210, CI 43986753284: 4.480 Node/67 Python, mais8 casos locais autenticados após recuperar o executor. App/Auth novos com 100% do tráfego, Finance retido; bytes/configurações/rotas/cron, 8 verificações HTTP e 8 arquivos públicos conferidos. PR #125 permanece rascunho, sem merge/auto-merge; main 346f30f preservada.\n\nPróximo passo do proprietário: abra Produção → Montador e fila DTF, importe os PNGs reais, confirme as artes/larguras dos kits e confira uma folha em tamanho real antes de registrar impressão. Aceite físico/financeiro ainda pendente. Próximo desenvolvimento independente: OP-014, fabricação/custos/pagamentos conforme a matriz. Impressão não comprova fabricação; ausência de fonte/custo não é zero; não duplicar custos/receitas. [Regras ativas e gates](AGENTS.md#regras-de-domínio-ativas): sexta às 13h/Brasília, confirmações e auditoria permanecem. Gráficos e seis agentes preservados; venda ADIADO_VENDA. Históricos integrais seguem abaixo e nos recibos.\n<!-- END_OWNER_OPERATION_CURRENT -->",
+    "docs/RETOMADA.md": "<!-- OWNER_OPERATION_CURRENT -->\nOperação própria: **montador DTF 2026-11-16.2 publicado e verificado tecnicamente**. [Como usar](owner-operation/README.md) · [checkpoint canônico](MLS_COMMERCE_OS_CHECKPOINT.json) · [recibo](owner-operation/validation/publication-dtf-cycle-live-20261116.json).\n\nKits têm composição explícita por variação/SKU de origem; impressão parcial, saldo, liberação confirmada de EXPORTED, reimpressão por parte, perda e correção auditada preservam fatos. Fonte 9c94210, CI 43986753284: 4.480 Node/67 Python, mais8 casos locais autenticados após recuperar o executor. App/Auth novos com 100% do tráfego, Finance retido; bytes/configurações/rotas/cron, 8 verificações HTTP e 8 arquivos públicos conferidos. PR #125 permanece rascunho, sem merge/auto-merge; main 346f30f preservada.\n\nPróximo passo do proprietário: abra Produção → Montador e fila DTF, importe os PNGs reais, confirme as artes/larguras dos kits e confira uma folha em tamanho real antes de registrar impressão. Aceite físico/financeiro ainda pendente. Próximo desenvolvimento independente: OP-014, fabricação/custos/pagamentos conforme a matriz. Impressão não comprova fabricação; ausência de fonte/custo não é zero; não duplicar custos/receitas. [Regras ativas e gates](../AGENTS.md#regras-de-domínio-ativas): sexta às 13h/Brasília, confirmações e auditoria permanecem. Gráficos e seis agentes preservados; venda ADIADO_VENDA. Históricos integrais seguem abaixo e nos recibos.\n<!-- END_OWNER_OPERATION_CURRENT -->",
+    "docs/ROADMAP_MLS_COMMERCE_OS.md": "<!-- OWNER_OPERATION_CURRENT -->\nOperação própria: **montador DTF 2026-11-16.2 publicado e verificado tecnicamente**. [Como usar](owner-operation/README.md) · [checkpoint canônico](MLS_COMMERCE_OS_CHECKPOINT.json) · [recibo](owner-operation/validation/publication-dtf-cycle-live-20261116.json).\n\nKits têm composição explícita por variação/SKU de origem; impressão parcial, saldo, liberação confirmada de EXPORTED, reimpressão por parte, perda e correção auditada preservam fatos. Fonte 9c94210, CI 43986753284: 4.480 Node/67 Python, mais8 casos locais autenticados após recuperar o executor. App/Auth novos com 100% do tráfego, Finance retido; bytes/configurações/rotas/cron, 8 verificações HTTP e 8 arquivos públicos conferidos. PR #125 permanece rascunho, sem merge/auto-merge; main 346f30f preservada.\n\nPróximo passo do proprietário: abra Produção → Montador e fila DTF, importe os PNGs reais, confirme as artes/larguras dos kits e confira uma folha em tamanho real antes de registrar impressão. Aceite físico/financeiro ainda pendente. Próximo desenvolvimento independente: OP-014, fabricação/custos/pagamentos conforme a matriz. Impressão não comprova fabricação; ausência de fonte/custo não é zero; não duplicar custos/receitas. [Regras ativas e gates](../AGENTS.md#regras-de-domínio-ativas): sexta às 13h/Brasília, confirmações e auditoria permanecem. Gráficos e seis agentes preservados; venda ADIADO_VENDA. Históricos integrais seguem abaixo e nos recibos.\n<!-- END_OWNER_OPERATION_CURRENT -->",
+    "docs/MLS_CODEX_HANDOFF_2026_10_28.md": "<!-- OWNER_OPERATION_CURRENT -->\nOperação própria: **montador DTF 2026-11-16.2 publicado e verificado tecnicamente**. [Como usar](owner-operation/README.md) · [checkpoint canônico](MLS_COMMERCE_OS_CHECKPOINT.json) · [recibo](owner-operation/validation/publication-dtf-cycle-live-20261116.json).\n\nKits têm composição explícita por variação/SKU de origem; impressão parcial, saldo, liberação confirmada de EXPORTED, reimpressão por parte, perda e correção auditada preservam fatos. Fonte 9c94210, CI 43986753284: 4.480 Node/67 Python, mais8 casos locais autenticados após recuperar o executor. App/Auth novos com 100% do tráfego, Finance retido; bytes/configurações/rotas/cron, 8 verificações HTTP e 8 arquivos públicos conferidos. PR #125 permanece rascunho, sem merge/auto-merge; main 346f30f preservada.\n\nPróximo passo do proprietário: abra Produção → Montador e fila DTF, importe os PNGs reais, confirme as artes/larguras dos kits e confira uma folha em tamanho real antes de registrar impressão. Aceite físico/financeiro ainda pendente. Próximo desenvolvimento independente: OP-014, fabricação/custos/pagamentos conforme a matriz. Impressão não comprova fabricação; ausência de fonte/custo não é zero; não duplicar custos/receitas. [Regras ativas e gates](../AGENTS.md#regras-de-domínio-ativas): sexta às 13h/Brasília, confirmações e auditoria permanecem. Gráficos e seis agentes preservados; venda ADIADO_VENDA. Históricos integrais seguem abaixo e nos recibos.\n<!-- END_OWNER_OPERATION_CURRENT -->"
+  },
+  "next_independent_task": "Complete exact-candidate local and GitHub gates, then controlled Auth/App promotion and source/config/traffic/public verification. Owner real PNG/print acceptance remains separate."
+}

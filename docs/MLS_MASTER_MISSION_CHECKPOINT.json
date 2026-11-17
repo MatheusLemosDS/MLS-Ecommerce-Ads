@@ -1,6 +1,6 @@
 {
   "schema": "mls_master_mission_checkpoint_v1",
-  "updated_at": "2026-11-17T00:54:04.350468+00:00",
+  "updated_at": "2026-11-17T01:27:01.692818+00:00",
   "base_visual_sha": "8d860b2c4f26531c53c4cdba0e06a14f51a7eef4",
   "visual_branch": "feature/mls-mockup-parity-real-charts-20261029",
   "visual_pr": 79,
@@ -7049,9 +7049,9 @@
       "Concluir M2/M2.2 com devoluções e fabricação reais, Seller Centre e Nubank no mesmo recorte, sem dupla contagem."
     ]
   },
-  "current_phase": "OWNER_OPERATION_U2_DTF_COMPLETE_PRINT_CYCLE",
+  "current_phase": "OWNER_OPERATION_U2_DTF_AUTOMATIC_PREVIEW",
   "working_branch": "feature/owner-dtf-cycle-20261116",
-  "current_status": "SEE_CANONICAL_CHECKPOINT_DTF_PUBLISHED_TECHNICAL_ACCEPTANCE_PENDING",
+  "current_status": "SEE_CANONICAL_CHECKPOINT_DTF_AUTO_GATES_PENDING",
   "next_phase": "OWNER_OPERATION_BY_TECHNICAL_DEPENDENCY_NOT_SAAS_PHASE_GATES",
   "active_execution_matrix": "docs/owner-operation/EXECUCAO.json",
   "active_charts_catalog": "docs/owner-operation/CATALOGO_GRAFICOS.json",
@@ -7110,10 +7110,9 @@
   },
   "current_checkpoint_pointer": {
     "path": "docs/MLS_COMMERCE_OS_CHECKPOINT.json",
-    "receipt": "docs/owner-operation/validation/publication-dtf-cycle-live-20261116.json",
-    "validation_head": "9c94210cbecb50c7d6a32f2937852b623c529032",
-    "published": true,
-    "blocker": null
+    "receipt": "docs/owner-operation/validation/dtf-auto-layout.json",
+    "source_commit": "2c225f0b341c57b956baa1519f4b63344a4337a6",
+    "published": false
   },
   "previous_current_release_before_owner_dtf_cycle": {
     "status": "PUBLISHED_VERIFIED",

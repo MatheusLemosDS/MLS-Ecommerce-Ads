@@ -4,7 +4,13 @@ A trilha ativa é **owner_operation**. Cadastro de outros clientes, e-mail comer
 
 [Checkpoint canônico](../MLS_COMMERCE_OS_CHECKPOINT.json) · [36 tarefas e dependências técnicas](EXECUCAO.json) · [21 contratos visuais e famílias preservadas](CATALOGO_GRAFICOS.json) · [inspeção atual](validation/reconciliation.json) · [validação do incremento](validation/owner-dtf-batches.json).
 
-## Incremento atual OP-012 — montagem e ciclo de impressão
+## Correção atual — prévia DTF automática (candidata2026-11-16.3)
+
+O proprietário confirmou que os PNGs existem, mas a versão publicada ainda exige selecionar linhas e montar a prévia manualmente. A correção deixa **Montar automaticamente os pedidos aptos** ativado por padrão. Com a fila carregada, PNGs locais disponíveis e composição dos kits confirmada, a seleção e a prévia são atualizadas sem esses dois cliques. Reserva e impressão não são registradas automaticamente. [Evidência](validation/dtf-auto-layout.json):38 testes direcionados passaram; gates completos, CI e publicação pendentes. Live atual2026-11-16.2.
+
+Importe/restaure os PNGs uma vez neste navegador. A próxima abertura reutiliza as artes salvas. Confirme a composição de kits pendentes para que entrem no próximo lote. Confira a prévia e clique em **Reservar lote** para seguir com a exportação. Cancelados/reservados/impressos e pendências continuam separados. Se alterar o formato, salve-o antes de uma nova montagem. Selecione/desmarque linhas ou use **Limpar seleção** para entrar no modo manual; reative a opção para retomar a automação. Não haverá downloads, reserva, fabricação, custo ou confirmação física por conta da prévia.
+
+## Registro OP-012 — montagem e ciclo de impressão publicada em16.2
 
 **Publicado e verificado tecnicamente: 2026-11-16.2.** CI do head 9c94210 aprovada: 4.480 Node / 67 Python; oito casos locais autenticados desktop/celular passaram após recuperar o terminal. App/Auth ativos e Finance preservado, com fontes/configurações/tráfego/HTTP/assets conferidos. [Recibo de publicação](validation/publication-dtf-cycle-live-20261116.json). Aceite com PNGs reais e impressora continua pendente.
 
