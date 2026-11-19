@@ -22,10 +22,11 @@ export async function readHistoricalCostSchedule(db,{month,stamp,frames,items,cu
   for(const group of frame.daily_breakdown.days){if(sources.has(group.date))return {state:'UNAVAILABLE'};sources.set(group.date,group);}
  }
  const end=frames.at(-1)?.end_date;
- if(!end||end.slice(0,7)!==month)return {state:'UNAVAILABLE'};
+ if(!end||month&&end.slice(0,7)!==month)return {state:'UNAVAILABLE'};
+ const dates=month?Array.from({length:Number(end.slice(8))},(_,index)=>month+'-'+String(index+1).padStart(2,'0')):[...sources.keys()].sort();
  const days=[],unmapped=new Map(),knownByVariant=new Map();let totalKnown=0n,complete=true;
- for(let number=1;number<=Number(end.slice(8));number++){
-  const date=month+'-'+String(number).padStart(2,'0'),group=sources.get(date);
+ for(const date of dates){
+  const group=sources.get(date);
   if(!group||!Array.isArray(group.items))return {state:'UNAVAILABLE'};
   const costAudit=costAuditBeforeDay(costHistory,date),ruleAudit=costAuditBeforeDay(ruleHistory,date),bindingAudit=costAuditBeforeDay(bindingHistory,date);
   let unitMap=null;
