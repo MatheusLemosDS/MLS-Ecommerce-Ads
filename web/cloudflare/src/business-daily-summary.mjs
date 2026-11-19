@@ -31,7 +31,7 @@ export function buildDailyBusinessSummary(monthly,frames,auditScope,validators={
   // The product summary is already priced with current bindings, approved
   // historical variants and cost rules. Never price a second way or average
   // the monthly production total over units, orders or days.
-  const unitCosts=new Map();
+  const unitCosts=new Map(),datedCosts=Array.isArray(m.cost_schedule)?new Map(m.cost_schedule.map(row=>[row.date,row])):null;
   if(m.product_summary){
    let cost=0n;for(const product of m.product_summary.products)for(const variant of product.variants){
     const key=product.item_id+':'+variant.model_id;if(unitCosts.has(key)||quantities.get(key)!==BigInt(variant.quantity))return null;
@@ -67,9 +67,11 @@ export function buildDailyBusinessSummary(monthly,frames,auditScope,validators={
       if(row.base_repass_cents!==null){row.payout_basis='BASE_REPASS';row.payout_cents=row.base_repass_cents;}
      }
      let total=0n,known=0n,cost=0n;
-     for(const item of group.items){const amount=BigInt(item.quantity),unit=unitCosts.get(item.item_id+':'+item.model_id);total+=amount;if(unit!==undefined&&unit!==null){known+=amount;cost+=amount*BigInt(unit);}}
-     const totalUnits=safe(total),knownUnits=safe(known),knownCost=safe(cost);if(totalUnits===null||knownUnits===null||knownCost===null)return null;
-     row.production_coverage={total_units:totalUnits,known_units:knownUnits,pending_units:totalUnits-knownUnits};row.known_production_cost_cents=knownCost;
+      for(const item of group.items){const amount=BigInt(item.quantity),unit=unitCosts.get(item.item_id+':'+item.model_id);total+=amount;if(!datedCosts&&unit!==undefined&&unit!==null){known+=amount;cost+=amount*BigInt(unit);}}
+      const dayCost=datedCosts?.get(date)??null;
+      if(datedCosts){if(!dayCost||total!==BigInt(dayCost.total_units))return null;known=BigInt(dayCost.known_units);cost=BigInt(dayCost.known_production_cost_cents);}
+      const totalUnits=safe(total),knownUnits=safe(known),knownCost=safe(cost);if(totalUnits===null||knownUnits===null||knownCost===null)return null;
+      row.production_coverage={total_units:totalUnits,known_units:knownUnits,pending_units:totalUnits-knownUnits};row.known_production_cost_cents=knownCost;
      if(total===known)row.production_cost_cents=knownCost;else pending.push('PRODUCTION_COST_INCOMPLETE');
      const recharge=group.ads_adjustment_raw===null?null:cents(group.ads_adjustment_raw);
      if(recharge===null||recharge<0)pending.push('ADJUSTMENT_UNAVAILABLE');else if(recharge>0&&m.expenses.recharge_treatment==='UNCONFIRMED')pending.push('RECHARGE_TREATMENT_REQUIRED');else row.recharge_addback_cents=m.expenses.recharge_treatment==='ADS_RECHARGE'?recharge:0;
@@ -134,7 +136,7 @@ export function projectDailyBusinessSummary(value,monthly,auditScope){
    if(!array(adsRows,31)||read(ads,'source_timezone')!=='UNCONFIRMED'||read(ads,'basis')!=='CALENDAR_PERIOD_NOT_ORDER_ATTRIBUTION'||adsAt!==observed.ads_at)return null;
    for(const row of adsRows){const d=read(row,'date'),expense=read(row,'expense_cents');if(!date(d)||adsMap.has(d)||!cent(expense))return null;adsMap.set(d,expense);}
   }else if(observed.ads_at!==null)return null;
-  const brt=new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Sao_Paulo'}),totals=Object.fromEntries(coverageKeys.map(key=>[key,0])),windows=new Map(),days=[];
+  const brt=new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Sao_Paulo'}),totals=Object.fromEntries(coverageKeys.map(key=>[key,0])),windows=new Map(),days=[],datedCosts=read(monthly,'cost_schedule');
   let fullyDated=true,allPayment=true,allRecharge=true,allProduction=true,sales=0n,base=0n,recharge=0n,cost=0n,units=0n,knownUnits=0n,missingUnits=0n;
   for(let index=0;index<value.days.length;index++){
    const row=value.days[index],day=index+1,d=value.month+'-'+String(day).padStart(2,'0'),window=Math.floor(index/15),source=value.sources[window];
@@ -155,6 +157,7 @@ export function projectDailyBusinessSummary(value,monthly,auditScope){
     for(const key of coverageKeys){totals[key]+=c[key];if(totals[key]>monthlyCoverage[key])return null;}
     if(c.orders===0){if(t.finance_oldest_at!==null||t.finance_latest_at!==null)return null;}else if(!int(t.finance_oldest_at,Math.max(row.source_cutoff_at,observed.finance_oldest_at),observed.finance_latest_at)||!int(t.finance_latest_at,t.finance_oldest_at,observed.finance_latest_at)||c.orders===1&&t.finance_oldest_at!==t.finance_latest_at)return null;
     if(!requireFlag('PAYMENT_INCOMPLETE',c.payment_missing>0)||!requireFlag('STATUS_REVIEW_REQUIRED',c.cancel_pending+c.other+c.unknown>0)||!requireFlag('RETURNS_NOT_RECONCILED',c.returns+c.returns_unknown>0))return null;
+    if(datedCosts!==undefined){const price=datedCosts[index];if(!price||price.date!==d||row.known_production_cost_cents!==price.known_production_cost_cents||p.total_units!==price.total_units||p.known_units!==price.known_units||p.pending_units!==price.pending_units)return null;}
     if(c.payment_missing){allPayment=false;if(row.sales_cents!==null||row.base_repass_cents!==null||row.payout_basis!=='UNAVAILABLE'||!has('ADJUSTMENTS_PENDING'))return null;}else{if(row.sales_cents===null||row.base_repass_cents===null)return null;sales+=BigInt(row.sales_cents);base+=BigInt(row.base_repass_cents);}
     if(c.payment_covered===0&&c.payment_missing===0&&(row.sales_cents!==0||row.base_repass_cents!==0))return null;
     if(row.payout_basis==='AFTER_ADJUSTMENTS'){
@@ -189,6 +192,8 @@ export function projectDailyBusinessSummary(value,monthly,auditScope){
     if(!array(products,3000))return null;let total=0n,known=0n,knownCost=0n;const seen=new Set();
     for(const product of products){const variants=read(product,'variants'),item=read(product,'item_id');if(!array(variants,3000))return null;for(const variant of variants){const q=read(variant,'quantity'),unit=read(variant,'unit_cost_cents'),key=item+':'+read(variant,'model_id');if(!int(q,1)||!cent(unit)||seen.has(key))return null;seen.add(key);total+=BigInt(q);if(unit!==null){known+=BigInt(q);knownCost+=BigInt(q)*BigInt(unit);}}}
     if(units!==total||knownUnits!==known||missingUnits!==total-known||cost!==knownCost||!int(read(monthly,'known_production_cost_cents'))||cost!==BigInt(read(monthly,'known_production_cost_cents'))||allProduction!==(read(monthly,'production_cost_cents')!==null))return null;
+   }else if(datedCosts!==undefined){
+    if(!array(datedCosts,31)||datedCosts.length!==value.days.length||knownUnits!==datedCosts.reduce((n,row)=>n+BigInt(row.known_units),0n)||cost!==datedCosts.reduce((n,row)=>n+BigInt(row.known_production_cost_cents),0n)||cost!==BigInt(read(monthly,'known_production_cost_cents'))||allProduction!==(read(monthly,'production_cost_cents')!==null))return null;
    }else if(knownUnits!==0n||cost!==0n)return null;
   }
   const state=days.every(row=>row.estimate_cents!==null)?'AVAILABLE':days.some(row=>row.known_estimate_cents!==null)?'PARTIAL':'UNAVAILABLE';if(value.state!==state)return null;
