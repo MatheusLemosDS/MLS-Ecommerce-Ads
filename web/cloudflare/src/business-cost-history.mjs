@@ -7,7 +7,7 @@ import {costRuleReferenceFromSnapshot,mergeCatalogCostReference} from './cost-ru
 // first sale. The D1 audit is the sole source of effective dates. This produces
 // daily totals, not a fictitious monthly "average unit cost".
 export async function readHistoricalCostSchedule(db,{month,stamp,frames,items,current,ruleSnapshot,classification}){
- if(!Array.isArray(frames)||!Array.isArray(items)||!Array.isArray(ruleSnapshot)||!current||typeof month!=='string')return null;
+ if(!Array.isArray(frames)||!Array.isArray(items)||!Array.isArray(ruleSnapshot)||!current||(month!==null&&typeof month!=='string'))return null;
  const auditTables=['production_costs_audit','production_cost_rules_audit','variant_bindings_audit'];
  let rows;
  try{rows=await db.batch(auditTables.map(table=>db.prepare('SELECT revision,payload,created_at FROM '+table+' ORDER BY revision ASC LIMIT 513')));}
