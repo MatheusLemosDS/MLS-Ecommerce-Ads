@@ -14,7 +14,7 @@ export async function readHistoricalCostSchedule(db,{month,stamp,frames,items,cu
  catch{return null;} // Old fixtures/tenants without audit: keep the labeled legacy reference, not a fabricated history.
  if(rows.length!==3||rows.some(row=>!Array.isArray(row.results)))return null;
  const costHistory=checkedCostAudit(rows[0].results,current.costs),ruleHistory=checkedCostAudit(rows[1].results,current.rules),bindingHistory=checkedCostAudit(rows[2].results,current.bindings);
- if(!costHistory||!ruleHistory||!bindingHistory)return null;
+ if(!costHistory||!ruleHistory||!bindingHistory)return {state:'UNAVAILABLE'};
  if(![costHistory,ruleHistory,bindingHistory].some(history=>history.length>1))return null;
  const sources=new Map();
  for(const frame of frames){
