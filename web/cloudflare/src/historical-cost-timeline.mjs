@@ -11,10 +11,10 @@ const safe=value=>value>=0n&&value<=BigInt(Number.MAX_SAFE_INTEGER)?Number(value
 /**
  * Reject missing/corrupt audit history instead of assigning today's price to
  * an earlier date. D1 callers must fetch in ascending revision with LIMIT 513:
- * >512 rows means incomplete evidence, never a partially valid timeline.
+ * >128 rows means incomplete evidence, never a partially valid timeline.
  */
 export function checkedCostAudit(rows,current){
- if(!Array.isArray(rows)||!rows.length||rows.length>512||!current||!Number.isSafeInteger(current.revision)||typeof current.payload!=='string')return null;
+ if(!Array.isArray(rows)||!rows.length||rows.length>128||!current||!Number.isSafeInteger(current.revision)||typeof current.payload!=='string')return null;
  let previousAt=0;
  for(let index=0;index<rows.length;index++){
   const row=rows[index],at=Date.parse(row?.created_at??'');
