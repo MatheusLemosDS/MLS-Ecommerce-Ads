@@ -431,7 +431,7 @@ export async function businessMonthBundle(db,month,range,stamp,observed,{withExp
  if(invalidQuantity)productionComplete=false;
  if(costHistory?.state==='AVAILABLE'){
   productionKnown=BigInt(costHistory.known_production_cost_cents);
-  productionComplete=costHistory.production_cost_cents!==null;
+  productionComplete=!invalidQuantity&&costHistory.production_cost_cents!==null;
   unmapped.push(...costHistory.unmapped_variants);
  }else if(costHistory?.state==='UNAVAILABLE'){
   // An incomplete audit cannot justify repricing old sales at today's price.
