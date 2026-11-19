@@ -11,8 +11,8 @@ export async function readHistoricalCostSchedule(db,{month,stamp,frames,items,cu
  const auditTables=['production_costs_audit','production_cost_rules_audit','variant_bindings_audit'];
  let rows;
  try{rows=await db.batch(auditTables.map(table=>db.prepare('SELECT revision,payload,created_at FROM '+table+' ORDER BY revision ASC LIMIT 513')));}
- catch{return null;} // Old fixtures/tenants without audit: keep the labeled legacy reference, not a fabricated history.
- if(rows.length!==3||rows.some(row=>!Array.isArray(row.results)))return null;
+ catch{return current.costs?.revision>1||current.rules?.revision>1||current.bindings?.revision>1?{state:'UNAVAILABLE'}:null;}
+ if(rows.length!==3||rows.some(row=>!Array.isArray(row.results)))return {state:'UNAVAILABLE'};
  const costHistory=checkedCostAudit(rows[0].results,current.costs),ruleHistory=checkedCostAudit(rows[1].results,current.rules),bindingHistory=checkedCostAudit(rows[2].results,current.bindings);
  if(!costHistory||!ruleHistory||!bindingHistory)return {state:'UNAVAILABLE'};
  if(![costHistory,ruleHistory,bindingHistory].some(history=>history.length>1))return null;
