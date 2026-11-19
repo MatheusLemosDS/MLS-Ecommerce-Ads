@@ -4,6 +4,7 @@ import {projectAdsCalendar} from './ads-calendar.mjs';
 import {validateVariantBindings} from './variant-bindings.mjs';
 import {productionCostReference,validateProductionCosts} from './production-costs.mjs';
 import {buildBusinessMonthProducts,projectBusinessMonthProducts} from './business-month-products.mjs';
+import {readHistoricalCostSchedule} from './business-cost-history.mjs';
 import {TAX_POLICY_SCHEMA,businessTaxPolicyFromSnapshot,businessMonthTax} from './business-tax-policy.mjs';
 import {COST_RULE_SCHEMA,costRuleSchemaForEnvironment,costRuleSnapshotQueries,costRuleReferenceFromSnapshot,mergeCatalogCostReference} from './cost-rules.mjs';
 import {catalogClassificationQueries,catalogClassificationsFromSnapshot} from './catalog-classification.mjs';
@@ -63,6 +64,7 @@ export function projectBusinessMonth(value){
   if(plain(value)&&Object.hasOwn(value,'cost_rules_revision'))keys.push('cost_rules_revision');
   if(plain(value)&&Object.hasOwn(value,'classification_revision'))keys.push('classification_revision');
   if(plain(value)&&Object.hasOwn(value,'collection'))keys.push('collection');
+  if(plain(value)&&Object.hasOwn(value,'cost_schedule'))keys.push('cost_schedule');
   if(!exact(value,keys)||value.schema!=='business_month_v1'||typeof value.month!=='string'||!/^\d{4}-(0[1-9]|1[0-2])$/.test(value.month)||!day(value.start_date)||value.start_date!==value.month+'-01'||!day(value.end_date)||value.end_date.slice(0,7)!==value.month||!['RUNNING','COMPLETE','LIMIT_REACHED'].includes(value.status)||!int(value.checked_at,1,9999999999)||!int(value.bindings_revision,1,2147483647)||!int(value.costs_revision,1,2147483647)||!plain(value.progress)||!exact(value.coverage,covKeys))return null;
   const span=Number(value.end_date.slice(8)),p=value.progress,c=value.coverage;
   const hasCapacity=Object.hasOwn(p,'order_capacity');
@@ -86,6 +88,17 @@ export function projectBusinessMonth(value){
    if(!exact(sources,['finance_oldest_at','finance_latest_at','ads_at'])||!Object.values(sources).every(at=>at===null||int(at,1,value.checked_at))||(sources.finance_oldest_at===null)!==(sources.finance_latest_at===null)||p.windows_complete>0&&sources.finance_oldest_at===null||sources.finance_oldest_at!==null&&sources.finance_oldest_at>sources.finance_latest_at||sources.ads_at!==(Object.getOwnPropertyDescriptor(value.ads||{},'fetched_at')?.value??null))return null;
   }
   for(const key of ['sales_cents','known_sales_cents','production_cost_cents','known_production_cost_cents','invoice_tax_cents','known_invoice_tax_cents'])if(!cent(value[key]))return null;
+  if(Object.hasOwn(value,'cost_schedule')){
+   const schedule=value.cost_schedule;
+   if(!array(schedule,31)||schedule.length!==Number(value.end_date.slice(8))||value.product_summary!==null)return null;
+   let known=0n,pending=0n;
+   for(let i=0;i<schedule.length;i++){
+    const row=schedule[i],date=value.month+'-'+String(i+1).padStart(2,'0');
+    if(!exact(row,['date','total_units','known_units','pending_units','known_production_cost_cents','production_cost_cents'])||row.date!==date||!int(row.total_units)||!int(row.known_units)||!int(row.pending_units)||row.total_units!==row.known_units+row.pending_units||!int(row.known_production_cost_cents)||row.production_cost_cents!==(row.pending_units?null:row.known_production_cost_cents))return null;
+    known+=BigInt(row.known_production_cost_cents);pending+=BigInt(row.pending_units);
+   }
+   if(known>BigInt(Number.MAX_SAFE_INTEGER)||value.known_production_cost_cents!==Number(known)||value.production_cost_cents!==(pending?null:Number(known)))return null;
+  }
   for(const key of ['expected_repass_cents','known_expected_repass_cents','ads_adjustment_cents'])if(!cent(value[key],true))return null;
   if(!exact(value.expenses,['revision','external_expenses_cents','recharge_treatment','updated_at'])||!int(value.expenses.revision,0,2147483646)||!cent(value.expenses.external_expenses_cents)||!['UNCONFIRMED','ADS_RECHARGE','TECH_SUPPORT'].includes(value.expenses.recharge_treatment)||value.expenses.updated_at!==null&&(typeof value.expenses.updated_at!=='string'||!Number.isFinite(Date.parse(value.expenses.updated_at))))return null;
   const expense=value.expenses;
@@ -411,9 +424,22 @@ export async function businessMonthBundle(db,month,range,stamp,observed,{withExp
  for(const frame of frames)for(const row of frame.items){const key=row.item_id+':'+row.model_id,previous=map.get(key),quantity=(previous?.quantity||0)+row.quantity;if(!Number.isSafeInteger(quantity))invalidQuantity=true;else map.set(key,{...row,quantity});}
  const items=[...map.values()],unmapped=[],variantReferences=[];let productionKnown=0n,productionComplete=true;
  const automaticCosts=mergeCatalogCostReference(costRuleReferenceFromSnapshot(rows.slice(4,4+ruleQueries.length),{now:()=>stamp*1000}),catalogClassificationsFromSnapshot(rows.slice(4+ruleQueries.length,4+ruleQueries.length+classificationQueries.length)));
+ let costHistory=null;
+ try{
+  costHistory=await readHistoricalCostSchedule(db,{month,stamp,frames,items,current:{costs:{revision:c.revision,payload:c.payload,updated_at:c.updated_at},rules:rows[4].results[0],bindings:{revision:b.revision,payload:b.payload,updated_at:b.updated_at}},ruleSnapshot:rows.slice(4,4+ruleQueries.length),classification:catalogClassificationsFromSnapshot(rows.slice(4+ruleQueries.length,4+ruleQueries.length+classificationQueries.length))});
+ }catch{costHistory={state:'UNAVAILABLE'};}
  if(invalidQuantity)productionComplete=false;
- // The cost helper is bounded per batch; all batches use the same snapshots.
- try{for(let index=0;index<items.length;index+=1000){const ref=productionCostReference({status:'AVAILABLE',rows:items.slice(index,index+1000)},bindings,costs,automaticCosts);variantReferences.push(...ref.variants);productionKnown+=BigInt(ref.known_subset_cents);if(ref.total_cents===null)productionComplete=false;for(const row of ref.variants)if(row.unit_cost_cents===null)unmapped.push({item_id:row.item_id,model_id:row.model_id,quantity:row.quantity});}}catch{productionComplete=false;invalidQuantity=true;}
+ if(costHistory?.state==='AVAILABLE'){
+  productionKnown=BigInt(costHistory.known_production_cost_cents);
+  productionComplete=costHistory.production_cost_cents!==null;
+  unmapped.push(...costHistory.unmapped_variants);
+ }else if(costHistory?.state==='UNAVAILABLE'){
+  // An incomplete audit cannot justify repricing old sales at today's price.
+  productionComplete=false;for(const row of items)unmapped.push({item_id:row.item_id,model_id:row.model_id,quantity:row.quantity});
+ }else{
+  // Unchanged legacy references retain the original contract.
+  try{for(let index=0;index<items.length;index+=1000){const ref=productionCostReference({status:'AVAILABLE',rows:items.slice(index,index+1000)},bindings,costs,automaticCosts);variantReferences.push(...ref.variants);productionKnown+=BigInt(ref.known_subset_cents);if(ref.total_cents===null)productionComplete=false;for(const row of ref.variants)if(row.unit_cost_cents===null)unmapped.push({item_id:row.item_id,model_id:row.model_id,quantity:row.quantity});}}catch{productionComplete=false;invalidQuantity=true;}
+ }
  const knownProduction=businessMonthSafe(productionKnown),amountsSafe=[knownSales,knownPayout,knownAdjustment,knownProduction].every(value=>value!==null)&&!invalidQuantity;
  const sales=complete&&coverage.payment_missing===0?knownSales:null,payout=complete&&coverage.payment_missing===0?knownPayout:null,tax=complete?knownTax:null,adjustment=complete&&coverage.payment_missing===0?knownAdjustment:null,production=complete&&productionComplete?knownProduction:null;
  if(production===null)pending.push('PRODUCTION_COST_INCOMPLETE');if(tax===null)pending.push('INVOICE_TAX_UNAVAILABLE');if(!adsFresh)pending.push('ADS_UNAVAILABLE');if(expense.external_expenses_cents===null||expensesDraft)pending.push('EXTERNAL_EXPENSES_REQUIRED');if(adjustment===null||adjustment<0)pending.push('ADJUSTMENT_UNAVAILABLE');else if(adjustment>0&&expense.recharge_treatment==='UNCONFIRMED')pending.push('RECHARGE_TREATMENT_REQUIRED');if(!amountsSafe)pending.push('ARITHMETIC_UNSAFE');
@@ -429,6 +455,7 @@ export async function businessMonthBundle(db,month,range,stamp,observed,{withExp
  const result={schema:'business_month_v1',month,start_date:range.start_date,end_date:range.end_date,status:complete?'COMPLETE':limited?'LIMIT_REACHED':'RUNNING',checked_at:checkedAt,progress:{windows_total:range.slots.length,windows_complete:frames.filter(frame=>frame.status==='COMPLETE').length,pages_read:frames.reduce((sum,frame)=>sum+frame.pages_read,0),order_capacity:frames.reduce((sum,frame)=>sum+frame.pages_read*(frame.page_capacity??5),0)},coverage,sales_cents:sales,known_sales_cents:knownSales,expected_repass_cents:payout,known_expected_repass_cents:knownPayout,production_cost_cents:production,known_production_cost_cents:knownProduction,invoice_tax_cents:tax,known_invoice_tax_cents:knownTax,ads_adjustment_cents:adjustment,ads,expenses:expense,result:{net_estimate_cents:net,net_profit_cents:null,net_margin_bps:margin,pending,basis:'PAID_ORDER_CREATE_MONTH_AND_CALENDAR_ADS_ESTIMATE'},unmapped_variants:unmapped,bindings_revision:bindings.revision,costs_revision:costs.revision};
  result.tax=taxPolicy;result.source_checked_at=sourceCheckedAt;result.collection=collection;
  result.cost_rules_revision=automaticCosts.revision;result.classification_revision=automaticCosts.classification_revision;
- result.product_summary=buildBusinessMonthProducts(frames,result,variantReferences,bindings);
+ if(costHistory?.state==='AVAILABLE')result.cost_schedule=costHistory.days;
+ result.product_summary=costHistory?.state?null:buildBusinessMonthProducts(frames,result,variantReferences,bindings);
  const projected=projectBusinessMonth(result);if(!projected)businessMonthFail('BUSINESS_MONTH_RESULT_INVALID',503);return withExpenseSchedule?{frame:projected,expense_schedule:expenseSchedule}:projected;
 }
