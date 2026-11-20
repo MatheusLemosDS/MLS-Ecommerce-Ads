@@ -135,6 +135,32 @@ test('production publication metadata renews one exact cohort lease in the evide
  for(let turn=0;turn<10&&seen.length<2;turn++)result=await adapter.readFinancialAutomationSources({scope,period,policy,now,mode:'sync',checkpoint:result.checkpoint});
  assert.equal(seen.length,2);assert.equal(seen[0].schema,'financial_source_request_v4');assert.deepEqual(seen[0].retention,seen[1].retention);assert.equal(seen[0].retention.kind,'COHORT');assert.equal(seen[0].retention.publication_revision,7);assert.equal(seen[0].retention.month,'2026-10');assert.match(seen[0].retention.lease_id,/^[a-f0-9-]{36}$/);assert.deepEqual(seen[0].retention.slots,[{slot_index:0,run_id,revision:1,start_date:'2026-10-01',end_date:'2026-10-31'}]);assert.equal(seen[1].cursor,cursor);
 });
+test('verified missing source abandons its unavailable cohort and adopts the next real publication',async()=>{
+ const replacement='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',cursor='c'.repeat(64),seen=[];let published=false;
+ const adapter=refreshingServices(async input=>{seen.push(input);if(input.run_id===run_id&&input.cursor!==null)return {status:404,body:{schema:'financial_source_error_v1',error:'FINANCIAL_SOURCE_RUN_NOT_FOUND'}};return {status:200,body:input.run_id===run_id?frame([fact()],{more:true,next:cursor}):{...frame([fact(2)]),run:{...frame([]).run,run_id:replacement,revision:2}}};},async()=>({audit_scope:{sources:[{run_id:published?replacement:run_id,source_revision:published?2:1}]}}));
+ let result=await adapter.readFinancialAutomationSources({scope,period,policy,now,mode:'sync'});
+ for(let turn=0;turn<10&&seen.length<2;turn++)result=await adapter.readFinancialAutomationSources({scope,period,policy,now,mode:'sync',checkpoint:result.checkpoint});
+ assert.equal(result.checkpoint.order_checkpoint.invalidated,true);assert.equal(result.checkpoint.order_done,false);assert.equal(result.events.length,0);assert.equal(result.coverage.find(row=>row.family==='ORDERS').state,'PARTIAL');assert.ok(result.pending.includes('FINANCIAL_SOURCE_RUN_NOT_FOUND'));
+ published=true;for(let turn=0;turn<10&&seen.length<3;turn++)result=await adapter.readFinancialAutomationSources({scope,period,policy,now,mode:'sync',checkpoint:result.checkpoint});
+ assert.equal(seen.length,3);assert.equal(seen[2].run_id,replacement);assert.equal(seen[2].cursor,null);assert.equal(seen[2].expected_revision,2);assert.equal(result.events.length,1);
+});
+test('a generic404 cannot authorize a source cohort replacement',async()=>{
+ const adapter=services(async()=>({status:404,body:{schema:'financial_source_error_v1',error:'FINANCIAL_SOURCE_NOT_FOUND'}})),result=await adapter.readFinancialAutomationSources({scope,period,policy,now,mode:'sync'});
+ assert.notEqual(result.checkpoint.order_checkpoint.invalidated,true);assert.equal(result.coverage.find(row=>row.family==='ORDERS').state,'PARTIAL');assert.equal(result.events.length,0);
+});
+test('an unavailable order dependency cannot prevent independent source lanes from refreshing',async()=>{
+ const counts={orders:0,ads:0,cash:0,inventory:0,returns:0},base=services(async()=>{counts.orders++;return {status:503,body:{schema:'financial_source_error_v1',error:'FINANCIAL_SOURCE_STORAGE_UNAVAILABLE'}};}),dependencies={...base};delete dependencies.readFinancialAutomationSources;
+ for(const [name,key] of [['readFinancialSavedAds','ads'],['readFinancialSavedCash','cash'],['readFinancialSavedInventory','inventory'],['readFinancialSavedReturns','returns']])dependencies[name]=async(...args)=>{counts[key]++;return base[name](...args);};
+ const adapter=createFinancialAutomationServices({},dependencies);let result=null;
+ for(let turn=0;turn<20;turn++)result=await adapter.readFinancialAutomationSources({scope,period,policy,now,mode:'sync',checkpoint:result?.checkpoint??null});
+ assert.ok(counts.ads>=2,JSON.stringify(counts));assert.ok(counts.inventory>=2,JSON.stringify(counts));assert.ok(counts.returns>=2,JSON.stringify(counts));assert.ok(counts.orders>=2);assert.equal(result.coverage.find(row=>row.family==='ORDERS').state,'PARTIAL');assert.ok(result.pending.includes('FINANCIAL_SOURCE_STORAGE_UNAVAILABLE'));assert.deepEqual(result.events,[]);
+});
+test('a deferred transport failure resumes the exact saved page after independent lanes run',async()=>{
+ const replacement='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',cursor='c'.repeat(64),seen=[];let publicationChanged=false;
+ const adapter=refreshingServices(async input=>{seen.push(input);if(seen.length===2){publicationChanged=true;return {status:503,body:{error:'FINANCIAL_SOURCE_STORAGE_UNAVAILABLE'}};}return {status:200,body:frame([fact(seen.length)],{more:seen.length===1,next:seen.length===1?cursor:null,cursor:input.cursor})};},async()=>({audit_scope:{sources:[{run_id:publicationChanged?replacement:run_id,source_revision:1}]}}));
+ let result=null;for(let turn=0;turn<20&&seen.length<3;turn++)result=await adapter.readFinancialAutomationSources({scope,period,policy,now,mode:'sync',checkpoint:result?.checkpoint??null});
+ assert.equal(seen.length,3);assert.equal(seen[2].run_id,run_id);assert.equal(seen[2].cursor,cursor);assert.equal(seen[2].expected_revision,1);assert.equal(result.checkpoint.order_done,true);assert.ok(!result.pending.includes('FINANCIAL_SOURCE_STORAGE_UNAVAILABLE'));
+});
 test('complete creation-window pages cannot claim the uncovered remainder of an accounting period',async()=>{
  const runIds=[run_id,'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb','cccccccc-cccc-4ccc-8ccc-cccccccccccc'],estimate={...policy,recognition:'PAID_ORDER_CREATE_ESTIMATE'};
  async function collect(windows,observed=stamp,cutoff=stamp-10){

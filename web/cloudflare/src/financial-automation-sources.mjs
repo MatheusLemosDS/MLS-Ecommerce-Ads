@@ -109,7 +109,7 @@ export function createFinancialAutomationServices(env,services={}){
    const legacy=checkpoint?.schema==='financial_saved_source_cursor_v2'&&checkpoint.signature===signature?checkpoint:null;
    const prior=pinned??legacy;
    if(pinned)runs.splice(0,runs.length,...pinned.runs.map(r=>({...r})));
-   let observedCapabilities=null;let progress=prior?{...prior,schema:'financial_saved_source_cursor_v3',context_signature:contextSignature,runs:runs.map(r=>({...r}))}:{schema:'financial_saved_source_cursor_v3',signature,context_signature:contextSignature,runs:runs.map(r=>({...r})),index:0,cursor:null,expected_revision:null,complete:runs.length>0,missing_required:0,classification_pending:[],checked_at:null,capabilities:faSourceCapabilities()};
+   let observedCapabilities=null,deferred=false;let progress=prior?{...prior,schema:'financial_saved_source_cursor_v3',context_signature:contextSignature,runs:runs.map(r=>({...r}))}:{schema:'financial_saved_source_cursor_v3',signature,context_signature:contextSignature,runs:runs.map(r=>({...r})),index:0,cursor:null,expected_revision:null,complete:runs.length>0,missing_required:0,classification_pending:[],checked_at:null,capabilities:faSourceCapabilities()};
    if(!progress.retention)progress.retention=months.flatMap(month=>{const selected=runs.filter(r=>r.month===month);if(!selected.length||selected.some(r=>!Number.isSafeInteger(r.publication_revision)||r.publication_revision<1))return [];return [{kind:'COHORT',month,publication_revision:selected[0].publication_revision,lease_id:crypto.randomUUID(),slots:selected.map(r=>({slot_index:r.slot_index,run_id:r.run_id,revision:r.source_revision,start_date:r.start_date,end_date:r.end_date}))}];});
    if(mode==='sync'&&runs.length&&progress.index<runs.length){
     const run=runs[progress.index],retention=progress.retention.find(row=>row.month===run.month),input={schema:retention?'financial_source_request_v4':'financial_source_request_v2',operation:'evidence',run_id:run.run_id,cursor:progress.cursor,limit:100,expected_revision:progress.expected_revision??run.source_revision,...(retention?{retention}:{})};
@@ -122,7 +122,7 @@ export function createFinancialAutomationServices(env,services={}){
      const observedWindows=(progress.observed_windows??[]).filter(row=>row.run_id!==frame.run.run_id);observedWindows.push({run_id:frame.run.run_id,start_date:frame.run.start_date??null,end_date:frame.run.end_date??null,cutoff_at:frame.run.cutoff_at??null});
      progress={...progress,observed_windows:observedWindows,cursor:frame.next_cursor,expected_revision:frame.run.revision,complete:progress.complete&&sourceComplete,missing_required:progress.missing_required+missing,classification_pending:[...new Set([...(progress.classification_pending??[]),...classificationPending])],checked_at:progress.checked_at&&progress.checked_at<observed?progress.checked_at:observed,capabilities:captured,last_page:{run_id:frame.run.run_id,revision:frame.run.revision,checked_at:observed,sha256:await financialDigest({run:frame.run,coverage:frame.coverage,facts:frame.facts.map(row=>[row.event_key,row.source_hash,row.checked_at])})}};
      if(frame.has_more===false){progress.index++;progress.cursor=null;progress.expected_revision=null;}
-    }else{pending.push(/^FINANCIAL_[A-Z0-9_]+$/.test(reply.body?.error??'')?reply.body.error:'ORDERS_SOURCE_UNAVAILABLE');if(reply.status===409&&reply.body?.error==='FINANCIAL_SOURCE_CURSOR_STALE')progress={...progress,invalidated:true,index:0,cursor:null,expected_revision:null,complete:false,missing_required:0,classification_pending:[],checked_at:null};}
+    }else{deferred=true;pending.push(/^FINANCIAL_[A-Z0-9_]+$/.test(reply.body?.error??'')?reply.body.error:'ORDERS_SOURCE_UNAVAILABLE');if(reply.status===409&&reply.body?.error==='FINANCIAL_SOURCE_CURSOR_STALE'||reply.status===404&&reply.body?.error==='FINANCIAL_SOURCE_RUN_NOT_FOUND')progress={...progress,invalidated:true,index:0,cursor:null,expected_revision:null,complete:false,missing_required:0,classification_pending:[],checked_at:null};}
    }
    const finished=runs.length>0&&progress.index>=runs.length;
    // These existing runs select creation dates. A completed-date policy needs
@@ -134,7 +134,7 @@ export function createFinancialAutomationServices(env,services={}){
    faSourceSetCoverage(coverage,'ORDERS',period,{complete:ordersComplete,pending:orderPending});
    if(policy?.revenue_base==='GROSS_COMPONENTS')pending.push('GROSS_COMPONENTS_RECONCILIATION_REQUIRED');
    pending.push(...orderPending,...coverage.filter(r=>r.state==='UNKNOWN').flatMap(r=>r.pending));
-   return {events,coverage,balances:[],obligations,reserve:null,...(observedCapabilities?{capabilities:observedCapabilities}:{}),pending:[...new Set(pending)],cutoff_at:progress.checked_at,checkpoint:progress,has_more:runs.length>0&&!finished};
+   return {events,coverage,balances:[],obligations,reserve:null,...(observedCapabilities?{capabilities:observedCapabilities}:{}),pending:[...new Set(pending)],cutoff_at:progress.checked_at,checkpoint:progress,deferred,has_more:runs.length>0&&!finished};
   }))};
 }
 
@@ -144,15 +144,15 @@ function faSourceRotate(env,services,ordersRead){return async args=>{
  const signature=await financialDigest([args.scope,args.period,args.policy?.policy_id??null,args.policy?.revision??null]);
  const saved=args.checkpoint?.schema==='financial_multi_source_cursor_v1'&&args.checkpoint.signature===signature?args.checkpoint:null;
  const progress=saved?structuredClone(saved):{schema:'financial_multi_source_cursor_v1',signature,lane:0,order_checkpoint:null,order_done:false,ads_done:false,inventory_done:false,inventory_checkpoint:null,returns_done:false,cash_index:0,cash_checkpoint:null,coverage:[],pending:{orders:[],ads:[],cash:[]},observations:{},completed:false};
- if(progress.completed){progress.completed=false;progress.lane=0;progress.order_done=false;progress.order_checkpoint=null;progress.ads_done=false;progress.inventory_done=false;progress.inventory_checkpoint=null;progress.returns_done=false;progress.cash_index=0;progress.cash_checkpoint=null;}
+ if(progress.completed){progress.completed=false;progress.lane=0;progress.order_done=false;if(!progress.order_deferred)progress.order_checkpoint=null;progress.order_deferred=false;progress.ads_done=false;progress.inventory_done=false;progress.inventory_checkpoint=null;progress.returns_done=false;progress.cash_index=0;progress.cash_checkpoint=null;}
  const scope=args.scope,period=args.period,events=[],obligations=[];let cutoff=null,inventory=null,observedCapabilities=null;
  const cashTargetCount=period.start_date.slice(0,7)===period.end_date.slice(0,7)?2:4;
- for(let skipped=0;skipped<5;skipped++){const done=progress.lane===0?progress.order_done:progress.lane===1?progress.ads_done:progress.lane===2?progress.cash_index>=cashTargetCount:progress.lane===3?progress.inventory_done:progress.returns_done;if(!done)break;progress.lane=(progress.lane+1)%5;}
+ for(let skipped=0;skipped<5;skipped++){const done=progress.lane===0?(progress.order_done||progress.order_deferred):progress.lane===1?progress.ads_done:progress.lane===2?progress.cash_index>=cashTargetCount:progress.lane===3?progress.inventory_done:progress.returns_done;if(!done)break;progress.lane=(progress.lane+1)%5;}
  const selectedLane=progress.lane;
  const merge=rows=>{for(const row of rows){const {scope:ignored,...minimal}=row;const index=progress.coverage.findIndex(r=>r.family===row.family);if(index<0)progress.coverage.push(minimal);else progress.coverage[index]=minimal;}};
  if(progress.lane===0){
   const result=await ordersRead({...args,checkpoint:progress.order_checkpoint});events.push(...result.events);obligations.push(...result.obligations);merge(result.coverage.filter(r=>['ORDERS','EXPENSES','OBLIGATIONS'].includes(r.family)));
-  observedCapabilities=result.capabilities??null;progress.order_checkpoint=result.checkpoint;progress.order_done=result.has_more===false;progress.pending.orders=result.pending;if(result.checkpoint?.last_page)progress.observations.orders=result.checkpoint.last_page;cutoff=result.cutoff_at;progress.lane=1;
+  observedCapabilities=result.capabilities??null;progress.order_checkpoint=result.checkpoint;progress.order_deferred=result.deferred===true;progress.order_done=result.has_more===false;progress.pending.orders=result.pending;if(result.checkpoint?.last_page)progress.observations.orders=result.checkpoint.last_page;cutoff=result.cutoff_at;progress.lane=1;
  }else if(progress.lane===1){
   const result=await (services.readFinancialSavedAds??(input=>readFinancialAutomationSavedAds(env,input)))({scope,period,now:args.now});events.push(...result.events);merge(result.coverage);progress.pending.ads=result.pending;progress.ads_done=true;
   progress.observations.ads={known_expense_cents:result.known_expense_cents,covered_days:result.covered_days,missing_days:result.missing_days,partial_days:result.partial_days};progress.lane=2;
@@ -174,7 +174,7 @@ function faSourceRotate(env,services,ordersRead){return async args=>{
   const result=await (services.readFinancialSavedReturns??(input=>readFinancialReturnsTracker(env,{scope:input.scope},{assertAuthorized:args.assertAuthorized,now:args.now,actor:args.actor})))({scope,period,now:args.now});
   const codes=[...result.pending,'RETURNS_FINANCIAL_COVERAGE_UNCONFIRMED'];merge([{family:'RETURNS',state:result.counts.known?'PARTIAL':'UNKNOWN',start_at:null,end_at:null,timezone_confirmed:false,comparison:'NOT_COMPARED',account_refs:[],pending:codes}]);progress.pending.returns=codes;progress.returns_done=true;progress.observations.returns={revision:result.revision,checked_at:result.checked_at,state:result.state,counts:result.counts};progress.lane=0;
  }
- progress.completed=progress.order_done&&progress.ads_done&&progress.inventory_done&&progress.returns_done&&progress.cash_index>=cashTargetCount;
+ progress.completed=(progress.order_done||progress.order_deferred)&&progress.ads_done&&progress.inventory_done&&progress.returns_done&&progress.cash_index>=cashTargetCount;
  const coverage=faSourceCoverage(scope);for(const row of progress.coverage)Object.assign(coverage.find(r=>r.family===row.family),row,{scope});
  const pending=[...new Set([...Object.values(progress.pending).flat(),...coverage.filter(r=>r.state==='UNKNOWN').flatMap(r=>r.pending)])];
  return {events,coverage,...(selectedLane===0?{obligations}:{}),...(inventory?{inventory}:{}),...(observedCapabilities?{capabilities:observedCapabilities}:{}),pending,observations:progress.observations,cutoff_at:cutoff??progress.order_checkpoint?.checked_at??null,checkpoint:progress,has_more:!progress.completed};

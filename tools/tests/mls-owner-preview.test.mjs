@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import path from 'node:path';
 import {mkdtempSync,writeFileSync,rmSync,symlinkSync} from 'node:fs';
 import os from 'node:os';
-import http from '../../web/cloudflare/tests/browser-assets-http-fixture.mjs';
+import http,{assertCompiledBrowserScriptInventory} from '../../web/cloudflare/tests/browser-assets-http-fixture.mjs';
 import {createHash} from 'node:crypto';
 import {startPreviewServer} from '../mls_owner_preview_server.mjs';
 import {createPreviewRuntime} from '../mls-owner-preview/runtime.mjs';
@@ -39,7 +39,7 @@ test('actual JSON cost mutation keeps realm validation and CSRF; logout revokes 
 
 test('real preview routes every generated browser asset through Worker inventory and hash validation',async()=>{
  const s=await startPreviewServer();try{
-  const cookie=await login(s),html=await get(s,'/admin?tab=ai-sales',cookie),scripts=[...html.data.matchAll(/<script src="(\/assets\/mls\/([a-f0-9]{64})\.js)" integrity="([^"]+)"/g)];assert.equal(scripts.length,6);
+  const cookie=await login(s),html=await get(s,'/admin?tab=ai-sales',cookie),scripts=[...html.data.matchAll(/<script src="(\/assets\/mls\/([a-f0-9]{64})\.js)" integrity="([^"]+)"/g)];assertCompiledBrowserScriptInventory(html.data,{listingFactory:true,aiSales:true});assert.equal(scripts.length,7);
   for(const [,route,sha,integrity]of scripts){
    const response=await fetch(s.origin+route),bytes=Buffer.from(await response.arrayBuffer());assert.equal(response.status,200,route);assert.equal(response.headers.get('content-type'),'text/javascript; charset=utf-8');assert.equal(response.headers.get('x-content-type-options'),'nosniff');assert.equal(createHash('sha256').update(bytes).digest('hex'),sha);assert.equal(integrity,'sha256-'+Buffer.from(sha,'hex').toString('base64'));
    const head=await fetch(s.origin+route,{method:'HEAD'});assert.equal(head.status,200);assert.equal(head.headers.get('content-length'),String(bytes.length));assert.equal((await head.arrayBuffer()).byteLength,0);

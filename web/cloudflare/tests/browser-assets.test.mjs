@@ -20,10 +20,18 @@ import {PRODUCTION_WEEKLY_CLIENT} from '../src/production-weekly-view.mjs';
 import {PRODUCTION_COVERAGE_CLIENT} from '../src/production-coverage-view.mjs';
 import {PRODUCTION_WORKSPACE_CLIENT} from '../src/production-workspace-view.mjs';
 import {createLocalBrowserAssets,verifyBrowserAssets} from '../../../tools/browser_assets.mjs';
+import {assertCompiledBrowserScriptInventory} from './browser-assets-http-fixture.mjs';
+import {compiledOwnerReportPage} from './owner-report-browser-fixture.mjs';
 
 const root=fileURLToPath(new URL('../../../',import.meta.url));
 const bank=manifest.assets.find(row=>row.id==='bank'),month=manifest.assets.find(row=>row.id==='month');
 const request=(row=bank,method='GET')=>new Request('https://public.fixture'+row.path,{method,headers:{cookie:'synthetic-cookie-must-not-cross-assets',authorization:'synthetic-not-forwarded'}});
+
+test('complete compiled inventory validation rejects missing, duplicated, unsigned, reordered and unparsable script dependencies',async()=>{
+ const {html}=await compiledOwnerReportPage(false,{ownerPreview:true}),dtf=manifest.assets.find(row=>row.id==='dtf'),tag=browserAssetScript('dtf'),workspaceTag=browserAssetScript('workspace'),guard='<script>'+browserWorkspaceFailureScript()+'</script>';assert.equal(assertCompiledBrowserScriptInventory(html).length,18);assert.equal(html.split(guard).length,2);
+ for(const changed of [html.replace(tag,''),html.replace(tag,tag+tag),html.replace(tag,tag.replace(dtf.integrity,'sha256-'+'a'.repeat(43)+'=')),html.replace(tag,tag.replace(dtf.path,'/assets/mls/'+'0'.repeat(64)+'.js')),html.replace(guard,'').replace(tag,tag+guard),html.replace(tag,'__DTF_SCRIPT_POSITION__').replace(workspaceTag,tag).replace('__DTF_SCRIPT_POSITION__',workspaceTag),html.replace('</body>','<script>function (</script></body>')])assert.throws(()=>assertCompiledBrowserScriptInventory(changed));
+ assert.throws(()=>assertCompiledBrowserScriptInventory(html,{listingFactory:false}),'a count update must not permit an editor when its owner flag is off');
+});
 
 test('the monthly browser asset is byte-identical to the unchanged legacy client after the existing HTML safety escapes',()=>{
  const bytes=readFileSync(path.join(root,'dist','browser-assets',...month.path.slice(1).split('/')));

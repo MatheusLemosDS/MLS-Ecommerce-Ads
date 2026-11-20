@@ -51,6 +51,7 @@ export function createAuthorizedFinancialBankConnector({adapter=null,consent=nul
       if(!own(input)||!instant(input.start_at)||!instant(input.end_at)||Date.parse(input.start_at)>=Date.parse(input.end_at))fail('CONNECTOR_INTERVAL_INVALID');
       const scope=scopeFor(input.scope);await allowed(scope,'before-read');
       const c=await this.capability(scope);if(c.state!=='AVAILABLE')return {schema:'financial_bank_connector_result_v1',scope,state:'UNAVAILABLE',reason:c.reason,statement:null};
+      if(!activeConsent(scope))fail('CONNECTOR_CONSENT_REVOKED',403);
       const statement=await adapter.readStatement({scope,start_at:input.start_at,end_at:input.end_at,read_only:true});await allowed(scope,'after-provider-read');
       if(!activeConsent(scope))fail('CONNECTOR_CONSENT_REVOKED',403);
       if(!own(statement)||!own(statement.scope)||!same(statement.scope,scope)||statement.coverage?.start_at!==input.start_at||statement.coverage?.end_at!==input.end_at)fail('CONNECTOR_STATEMENT_SCOPE_MISMATCH',403);
