@@ -2,6 +2,7 @@ import {checkedCostAudit,costAuditBeforeDay,historicalDayCosts} from './historic
 import {productionCostReference,validateProductionCosts} from './production-costs.mjs';
 import {validateVariantBindings} from './variant-bindings.mjs';
 import {costRuleReferenceFromSnapshot} from './cost-rules.mjs';
+import {datedCostIdentityForSchedule} from './dated-cost-evidence.mjs';
 
 const brDay=new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Sao_Paulo'});
 const day=value=>typeof value==='string'&&/^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/.test(value)&&Number.isFinite(Date.parse(value+'T00:00:00Z'))&&new Date(value+'T00:00:00Z').toISOString().slice(0,10)===value;
@@ -50,6 +51,8 @@ export async function readHistoricalCostSchedule(db,input){
  if(actual.size!==expected.size||[...expected].some(([id,count])=>actual.get(id)!==count))return unavailable('SOURCE_INVALID');
  const end=frames.at(-1)?.end_date;
  if(!day(end)||end>today||month!==null&&end.slice(0,7)!==month||[...sources.keys()].some(date=>date>end))return unavailable('SOURCE_INVALID');
+ const dated=input.datedIdentity===undefined?null:datedCostIdentityForSchedule(input.datedIdentity,{month,end_date:end,items,stamp});
+ if(input.datedIdentity!==undefined&&!dated)return unavailable('DATED_EVIDENCE_INVALID');
  const dates=month===null?[...sources.keys()].sort():Array.from({length:Number(end.slice(8))},(_,index)=>month+'-'+String(index+1).padStart(2,'0'));
  if(dates.length!==sources.size)return unavailable('SOURCE_INVALID');
  const days=[],day_evidence=[],unmapped=new Map(),knownByVariant=new Map();let totalKnown=0n,complete=true;
@@ -67,7 +70,7 @@ export async function readHistoricalCostSchedule(db,input){
     const c={revision:costAudit.revision,values:validateProductionCosts(JSON.parse(costAudit.payload))};
     // A rule's explicit audited assignments are self-contained. Automatic
     // name/axis matching needs a dated catalogue that these audits do not hold.
-    const rules=costRuleReferenceFromSnapshot([{results:[{revision:ruleAudit.revision,payload:ruleAudit.payload,updated_at:ruleAudit.updated_at}]}],{now:()=>stamp*1000});
+    const rules=costRuleReferenceFromSnapshot([{results:[{revision:ruleAudit.revision,payload:ruleAudit.payload,updated_at:ruleAudit.updated_at}]},...(dated??[])],{now:()=>stamp*1000});
     unitMap=new Map();
     for(let start=0;start<group.items.length;start+=1000){
      const ref=productionCostReference({status:'AVAILABLE',rows:group.items.slice(start,start+1000)},b,c,rules);

@@ -12,6 +12,19 @@ import {financialAccountingPeriod} from './financial-accounting-schedule.mjs';
 
 const faSourceFamilies=['ORDERS','COGS','ADS','EXPENSES','TAX','RETURNS','RECEIVABLES','WALLET','PAYOUTS','BANK','INVENTORY','OBLIGATIONS'];
 const faSourceIds=['ORDERS','ESCROW','INCOME_OVERVIEW','PENDING','RELEASES','RETURNS','RETURN_DISCOVERY','WALLET','PAYOUTS'];
+const faOriginalPosition=value=>value!==null&&typeof value==='object'&&!Array.isArray(value)&&Object.keys(value).sort().join(',')==='item_id,model_id,order_hash'&&typeof value.order_hash==='string'&&/^[a-f0-9]{64}$/.test(value.order_hash)&&typeof value.item_id==='string'&&/^[1-9][0-9]{0,19}$/.test(value.item_id)&&typeof value.model_id==='string'&&/^(0|[1-9][0-9]{0,19})$/.test(value.model_id);
+const faOriginalEncode=value=>btoa(JSON.stringify(value)).replaceAll('+','-').replaceAll('/','_').replace(/=+$/,'');
+function faOriginalCursor(value){
+ try{if(typeof value!=='string'||value.length>2048||!/^[A-Za-z0-9_-]+$/.test(value))throw Error();const parsed=JSON.parse(atob(value.replaceAll('-','+').replaceAll('_','/')));if(parsed===null||typeof parsed!=='object'||Array.isArray(parsed)||Object.keys(parsed).sort().join(',')!=='collection_sha256,run_index,source_cursor,version'||parsed.version!==1||typeof parsed.collection_sha256!=='string'||!/^[a-f0-9]{64}$/.test(parsed.collection_sha256)||!Number.isSafeInteger(parsed.run_index)||parsed.run_index<0||parsed.run_index>2||parsed.source_cursor!==null&&!faOriginalPosition(parsed.source_cursor)||faOriginalEncode(parsed)!==value)throw Error();return parsed;}catch{throw new FinancialLedgerError('FINANCIAL_AUTOMATION_ORIGINAL_ITEM_CURSOR_INVALID',400);}
+}
+function faSourceWindowsCover(windows,period,{observed=false}={}){
+ const day=value=>typeof value==='string'&&/^20\d{2}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/.test(value)&&Number.isFinite(Date.parse(value+'T12:00:00Z'))&&new Date(value+'T12:00:00Z').toISOString().slice(0,10)===value;
+ if(!Array.isArray(windows)||!windows.length||windows.some(row=>!day(row.start_date)||!day(row.end_date)||row.start_date>row.end_date))return false;
+ // Finance's second-precision creation filter includes cutoff_at. Compare
+ // its exclusive successor with civil/Friday13 boundaries, including23:59:59.
+ if(observed)windows=windows.flatMap(row=>{const cutoff=faSourceStamp(row.cutoff_at);if(cutoff===null)return [];const through=new Date(Date.parse(cutoff)+1000).toISOString(),local=new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Sao_Paulo'}).format(new Date(through)),lastFullDay=new Date(local+'T12:00:00Z');lastFullDay.setUTCDate(lastFullDay.getUTCDate()-1);let end=lastFullDay.toISOString().slice(0,10);if(through>=period.end_at&&row.end_date>=period.end_date)end=period.end_date;end=end<row.end_date?end:row.end_date;return end<row.start_date?[]:[{...row,end_date:end}];});
+ let required=period.start_date;for(const row of [...windows].sort((a,b)=>a.start_date.localeCompare(b.start_date))){if(row.end_date<required)continue;if(row.start_date>required)return false;if(row.end_date>=period.end_date)return true;const next=new Date(row.end_date+'T12:00:00Z');next.setUTCDate(next.getUTCDate()+1);required=next.toISOString().slice(0,10);}return false;
+}
 const faSourceStamp=seconds=>Number.isSafeInteger(seconds)&&seconds>0&&seconds<=9999999999?new Date(seconds*1000).toISOString():null;
 const faSourceComponentStamp=value=>typeof value==='string'&&/^20\d{2}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.000Z$/.test(value)&&Number.isFinite(Date.parse(value))&&new Date(value).toISOString()===value?value:null;
 const faSourceDay=date=>/^20\d\d-\d\d-\d\d$/.test(date??'')?date+'T03:00:00.000Z':null;
@@ -44,14 +57,27 @@ async function faSourceOrderEvent(scope,fact,policy,observed){
 // Saved observations only: no new Shopee order/wallet/bank provider request.
 export function createFinancialAutomationServices(env,services={}){
  const monthRead=services.readFinancialSavedMonth??((month,now)=>readBusinessMonthDisplay(env,{month},{now}));
- const referencesRead=services.readFinancialSavedMonth??(async(month,now)=>{const saved=await readCompletedBusinessMonth(env,month,{now});return {audit_scope:saved?{sources:saved.payload.slots.map(slot=>({run_id:slot.frame.run_id,source_revision:slot.frame.revision,start_date:slot.start_date,end_date:slot.end_date}))}:null};});
+ const referencesRead=services.readFinancialSavedMonth??(async(month,now)=>{const saved=await readCompletedBusinessMonth(env,month,{now});return {audit_scope:saved?{sources:saved.payload.slots.map((slot,slot_index)=>({run_id:slot.frame.run_id,source_revision:slot.frame.revision,start_date:slot.start_date,end_date:slot.end_date,slot_index,publication_revision:saved.publication.source_revision}))}:null};});
  const expensesRead=services.readFinancialSavedExpenses??((month,now)=>readExpenseLedger(env,{month},{now}));
  const privateRead=services.readFinancialPrivate??(input=>getFinanceFinancialAutomation(env,'sources',input));
  const taxRead=async({scope,month})=>{if(scope.currency!=='BRL')return null;try{const row=await readBusinessTaxPolicy(env,Number(month.slice(0,4)));if(!Number.isSafeInteger(row.values?.monthly_das_cents)||row.values.monthly_das_cents<0||row.revision<1)return null;return {regime:row.values.regime,mode:'FIXED_MONTHLY',monthly_cents:row.values.monthly_das_cents,recognition:'MONTH_END',source_ref:'declared-tax-'+month.slice(0,4)+'-r'+row.revision,revision:row.revision};}catch{return null;}};
  const originalPage=async(scope,input)=>{normalizeFinancialScope(scope);const reply=await privateRead({schema:'financial_source_request_v3',operation:'original-items',...input});if(reply?.status!==200)throw new FinancialLedgerError(reply?.status===404?'FINANCIAL_AUTOMATION_ORIGINAL_ITEM_NOT_FOUND':reply?.status===409?'FINANCIAL_AUTOMATION_ORIGINAL_ITEM_SOURCE_CHANGED':'FINANCIAL_AUTOMATION_ORIGINAL_ITEM_SOURCE_UNAVAILABLE',reply?.status===404||reply?.status===409?409:503);const frame=reply.body;if(frame?.schema!=='financial_source_original_items_v3'||!sameFinancialScope(frame.scope,scope)||frame.run.run_id!==input.run_id||!Array.isArray(frame.items)||frame.items.length>input.limit||frame.items.some(row=>!sameFinancialScope(row.scope,scope)||row.run_id!==input.run_id))throw new FinancialLedgerError('FINANCIAL_AUTOMATION_ORIGINAL_ITEM_SCOPE_INVALID',403);return frame;};
  const resolveOriginal=async({scope,run_id,order_hash,item_id,model_id})=>{const frame=await originalPage(scope,{run_id,cursor:null,limit:1,expected_revision:null,order_hash,item_id,model_id});const row=frame.items[0];if(frame.items.length!==1||row.order_hash!==order_hash||row.item_id!==item_id||row.model_id!==model_id)throw new FinancialLedgerError('FINANCIAL_AUTOMATION_ORIGINAL_ITEM_NOT_FOUND',409);return row;};
  const listOriginal=async({scope,month,now=Date.now})=>{if(!/^20\d{2}-(0[1-9]|1[0-2])$/.test(month??''))return [];const saved=await referencesRead(month,now),runs=[...new Map((saved.audit_scope?.sources??[]).map(row=>[row.run_id,row])).values()];if(runs.length>3)throw new FinancialLedgerError('FINANCIAL_AUTOMATION_SOURCE_PERIOD_LIMIT',503);const items=new Map();for(const ref of runs){const frame=await originalPage(scope,{run_id:ref.run_id,cursor:null,limit:100,expected_revision:ref.source_revision,order_hash:null,item_id:null,model_id:null});for(const row of frame.items){const key=[row.order_hash,row.item_id,row.model_id].join(':'),old=items.get(key);if(!old||old.checked_at<row.checked_at)items.set(key,row);}}return [...items.values()];};
- return {...services,resolveFinancialOriginalItem:services.resolveFinancialOriginalItem??resolveOriginal,listFinancialOriginalItems:services.listFinancialOriginalItems??listOriginal,readFinancialAutomationTaxPolicy:services.readFinancialAutomationTaxPolicy??taxRead,
+ const listOriginalPage=async({scope,month,cursor=null,now=Date.now})=>{
+  normalizeFinancialScope(scope);if(!/^20\d{2}-(0[1-9]|1[0-2])$/.test(month??''))throw new FinancialLedgerError('FINANCIAL_AUTOMATION_ORIGINAL_ITEM_CURSOR_INVALID',400);
+  const position=cursor===null?null:faOriginalCursor(cursor),saved=await referencesRead(month,now),runs=[...new Map((saved.audit_scope?.sources??[]).map(row=>[row.run_id,row])).values()];
+  if(runs.length>3)throw new FinancialLedgerError('FINANCIAL_AUTOMATION_SOURCE_PERIOD_LIMIT',503);
+  const collection=await financialDigest([scope,month,runs.map(row=>[row.run_id,row.source_revision])]);
+  if(position&&position.collection_sha256!==collection)throw new FinancialLedgerError('FINANCIAL_AUTOMATION_ORIGINAL_ITEM_CURSOR_STALE',409);
+  const index=position?.run_index??0;if(position&&index>=runs.length)throw new FinancialLedgerError('FINANCIAL_AUTOMATION_ORIGINAL_ITEM_CURSOR_INVALID',400);
+  if(!runs.length)return {schema:'financial_original_items_page_v1',scope,month,items:[],next_cursor:null,has_more:false};
+  const ref=runs[index],sourceCursor=position?.source_cursor??null,frame=await originalPage(scope,{run_id:ref.run_id,cursor:sourceCursor,limit:100,expected_revision:ref.source_revision,order_hash:null,item_id:null,model_id:null});
+  if(frame.run.revision!==ref.source_revision||!(sourceCursor===null?frame.cursor===null:faOriginalPosition(frame.cursor)&&['order_hash','item_id','model_id'].every(key=>frame.cursor[key]===sourceCursor[key]))||typeof frame.has_more!=='boolean'||frame.has_more!==(frame.next_cursor!==null)||frame.next_cursor!==null&&(!faOriginalPosition(frame.next_cursor)||!frame.items.length||['order_hash','item_id','model_id'].some(key=>frame.next_cursor[key]!==frame.items.at(-1)[key])))throw new FinancialLedgerError('FINANCIAL_AUTOMATION_ORIGINAL_ITEM_SOURCE_UNAVAILABLE',503);
+  const next=frame.has_more?{version:1,collection_sha256:collection,run_index:index,source_cursor:frame.next_cursor}:index+1<runs.length?{version:1,collection_sha256:collection,run_index:index+1,source_cursor:null}:null;
+  return {schema:'financial_original_items_page_v1',scope,month,items:frame.items,next_cursor:next?faOriginalEncode(next):null,has_more:next!==null};
+ };
+ return {...services,resolveFinancialOriginalItem:services.resolveFinancialOriginalItem??resolveOriginal,listFinancialOriginalItems:services.listFinancialOriginalItems??listOriginal,listFinancialOriginalItemsPage:services.listFinancialOriginalItemsPage??listOriginalPage,readFinancialAutomationTaxPolicy:services.readFinancialAutomationTaxPolicy??taxRead,
   readFinancialLegacyEstimate:services.readFinancialLegacyEstimate??(async({month,now})=>{try{const value=await monthRead(month,now);return {schema:'financial_legacy_estimate_reference_v1',month,basis:value.display.result.basis,amount_cents:value.display.result.net_estimate_cents,checked_at:value.display.checked_at,pending:[...value.display.result.pending],source:'EXISTING_BUSINESS_MONTH_NO_CHANGE'};}catch{return null;}}),
   readFinancialAutomationSources:services.readFinancialAutomationSources??faSourceRotate(env,services,(async({scope,period,policy,now=Date.now,checkpoint=null,mode='read'})=>{
    normalizeFinancialScope(scope);const stamp=new Date(now()).toISOString(),coverage=faSourceCoverage(scope),events=[],obligations=[],pending=[];
@@ -72,27 +98,39 @@ export function createFinancialAutomationServices(env,services={}){
    }
    faSourceSetCoverage(coverage,'EXPENSES',period,{complete:expenseComplete,pending:expenseComplete?[]:['EXPENSES_CONFIRMATION_REQUIRED']});
    faSourceSetCoverage(coverage,'OBLIGATIONS',period,{pending:['EXTERNAL_OBLIGATIONS_COVERAGE_REQUIRED']});
-   const signature=await financialDigest([runs.map(r=>[r.run_id,r.source_revision]),policy?.policy_id??null,policy?.revision??null]);
-   const prior=checkpoint?.schema==='financial_saved_source_cursor_v2'&&checkpoint.signature===signature?checkpoint:null;
-   let observedCapabilities=null;let progress=prior?{...prior}:{schema:'financial_saved_source_cursor_v2',signature,index:0,cursor:null,expected_revision:null,complete:runs.length>0,missing_required:0,classification_pending:[],checked_at:null,capabilities:faSourceCapabilities()};
+   const contextSignature=await financialDigest([scope,period,policy?.policy_id??null,policy?.revision??null]);
+   const signatureFor=rows=>financialDigest([rows.map(r=>[r.run_id,r.source_revision]),policy?.policy_id??null,policy?.revision??null]);
+   const signature=await signatureFor(runs);
+   // A publication can refresh between two pages. Finish the exact saved run
+   // cohort before starting a newer publication, rather than repeatedly losing
+   // the cursor (and never reaching later pages). Scope/period/policy changes
+   // still invalidate the cursor. The journal owns this compact checkpoint.
+   const pinned=checkpoint?.schema==='financial_saved_source_cursor_v3'&&checkpoint.context_signature===contextSignature&&checkpoint.invalidated!==true&&Array.isArray(checkpoint.runs)&&checkpoint.runs.length<=39&&checkpoint.runs.every(r=>months.includes(r.month)&&typeof r.run_id==='string'&&/^[a-f0-9-]{36}$/.test(r.run_id)&&Number.isSafeInteger(r.source_revision)&&r.source_revision>0)&&new Set(checkpoint.runs.map(r=>r.run_id)).size===checkpoint.runs.length&&Number.isSafeInteger(checkpoint.index)&&checkpoint.index>=0&&checkpoint.index<=checkpoint.runs.length&&checkpoint.signature===await signatureFor(checkpoint.runs)?checkpoint:null;
+   const legacy=checkpoint?.schema==='financial_saved_source_cursor_v2'&&checkpoint.signature===signature?checkpoint:null;
+   const prior=pinned??legacy;
+   if(pinned)runs.splice(0,runs.length,...pinned.runs.map(r=>({...r})));
+   let observedCapabilities=null;let progress=prior?{...prior,schema:'financial_saved_source_cursor_v3',context_signature:contextSignature,runs:runs.map(r=>({...r}))}:{schema:'financial_saved_source_cursor_v3',signature,context_signature:contextSignature,runs:runs.map(r=>({...r})),index:0,cursor:null,expected_revision:null,complete:runs.length>0,missing_required:0,classification_pending:[],checked_at:null,capabilities:faSourceCapabilities()};
+   if(!progress.retention)progress.retention=months.flatMap(month=>{const selected=runs.filter(r=>r.month===month);if(!selected.length||selected.some(r=>!Number.isSafeInteger(r.publication_revision)||r.publication_revision<1))return [];return [{kind:'COHORT',month,publication_revision:selected[0].publication_revision,lease_id:crypto.randomUUID(),slots:selected.map(r=>({slot_index:r.slot_index,run_id:r.run_id,revision:r.source_revision,start_date:r.start_date,end_date:r.end_date}))}];});
    if(mode==='sync'&&runs.length&&progress.index<runs.length){
-    const run=runs[progress.index],input={schema:'financial_source_request_v2',operation:'evidence',run_id:run.run_id,cursor:progress.cursor,limit:100,expected_revision:progress.expected_revision??run.source_revision};
+    const run=runs[progress.index],retention=progress.retention.find(row=>row.month===run.month),input={schema:retention?'financial_source_request_v4':'financial_source_request_v2',operation:'evidence',run_id:run.run_id,cursor:progress.cursor,limit:100,expected_revision:progress.expected_revision??run.source_revision,...(retention?{retention}:{})};
     const reply=await privateRead(input);
     if(reply.status===200){const frame=reply.body;if(frame.schema!=='financial_source_evidence_v2'||!sameFinancialScope(frame.scope,scope)||frame.run.run_id!==run.run_id||frame.cursor!==progress.cursor)throw Error('FINANCIAL_AUTOMATION_SOURCE_SCOPE_INVALID');
      const observed=faSourceStamp(frame.run.checked_at);if(observed===null||observed>stamp)throw Error('FINANCIAL_AUTOMATION_SOURCE_DATE_INVALID');
      let missing=0;const classificationPending=[];for(const fact of frame.facts){const result=await faSourceOrderEvent(scope,fact,policy,observed);events.push(result.event);classificationPending.push(...result.pending);if(result.missing)missing++;}
      observedCapabilities=frame.capabilities.sources;const captured=frame.capabilities.sources.map(({source,state,reason,collection_allowed,checked_at})=>({source,state,reason,collection_allowed,checked_at}));
      const sourceComplete=frame.coverage.base_complete===true&&frame.coverage.window_complete===true;
-     progress={...progress,cursor:frame.next_cursor,expected_revision:frame.run.revision,complete:progress.complete&&sourceComplete,missing_required:progress.missing_required+missing,classification_pending:[...new Set([...(progress.classification_pending??[]),...classificationPending])],checked_at:progress.checked_at&&progress.checked_at<observed?progress.checked_at:observed,capabilities:captured,last_page:{run_id:frame.run.run_id,revision:frame.run.revision,checked_at:observed,sha256:await financialDigest({run:frame.run,coverage:frame.coverage,facts:frame.facts.map(row=>[row.event_key,row.source_hash,row.checked_at])})}};
+     const observedWindows=(progress.observed_windows??[]).filter(row=>row.run_id!==frame.run.run_id);observedWindows.push({run_id:frame.run.run_id,start_date:frame.run.start_date??null,end_date:frame.run.end_date??null,cutoff_at:frame.run.cutoff_at??null});
+     progress={...progress,observed_windows:observedWindows,cursor:frame.next_cursor,expected_revision:frame.run.revision,complete:progress.complete&&sourceComplete,missing_required:progress.missing_required+missing,classification_pending:[...new Set([...(progress.classification_pending??[]),...classificationPending])],checked_at:progress.checked_at&&progress.checked_at<observed?progress.checked_at:observed,capabilities:captured,last_page:{run_id:frame.run.run_id,revision:frame.run.revision,checked_at:observed,sha256:await financialDigest({run:frame.run,coverage:frame.coverage,facts:frame.facts.map(row=>[row.event_key,row.source_hash,row.checked_at])})}};
      if(frame.has_more===false){progress.index++;progress.cursor=null;progress.expected_revision=null;}
-    }else{pending.push(/^FINANCIAL_[A-Z0-9_]+$/.test(reply.body?.error??'')?reply.body.error:'ORDERS_SOURCE_UNAVAILABLE');if(reply.status===409)progress={...progress,index:0,cursor:null,expected_revision:null,complete:true,missing_required:0,classification_pending:[],checked_at:null};}
+    }else{pending.push(/^FINANCIAL_[A-Z0-9_]+$/.test(reply.body?.error??'')?reply.body.error:'ORDERS_SOURCE_UNAVAILABLE');if(reply.status===409&&reply.body?.error==='FINANCIAL_SOURCE_CURSOR_STALE')progress={...progress,invalidated:true,index:0,cursor:null,expected_revision:null,complete:false,missing_required:0,classification_pending:[],checked_at:null};}
    }
    const finished=runs.length>0&&progress.index>=runs.length;
    // These existing runs select creation dates. A completed-date policy needs
    // a separately proven cohort covering older orders completed this period.
    const competenceCohort=policy?.recognition==='PAID_ORDER_CREATE_ESTIMATE';
-   const ordersComplete=finished&&progress.complete&&progress.missing_required===0&&competenceCohort;
-   const orderPending=[...(progress.classification_pending??[]),...(finished&&progress.complete?[]:['ORDER_EVIDENCE_COLLECTION_INCOMPLETE']),...(progress.missing_required?['ORDER_RECOGNITION_EVIDENCE_REQUIRED']:[]),...(!competenceCohort?['ORDERS_COMPETENCE_COHORT_COVERAGE_REQUIRED']:[])];
+   const windowsCover=faSourceWindowsCover(progress.observed_windows,period),periodObserved=faSourceWindowsCover(progress.observed_windows,period,{observed:true});
+   const ordersComplete=finished&&progress.complete&&progress.missing_required===0&&competenceCohort&&windowsCover&&periodObserved;
+   const orderPending=[...(progress.classification_pending??[]),...(finished&&progress.complete?[]:['ORDER_EVIDENCE_COLLECTION_INCOMPLETE']),...(progress.missing_required?['ORDER_RECOGNITION_EVIDENCE_REQUIRED']:[]),...(!windowsCover?['ORDER_CREATION_WINDOW_COVERAGE_REQUIRED']:[]),...(!periodObserved?['ORDER_CREATION_WINDOW_CUTOFF_REQUIRED']:[]),...(!competenceCohort?['ORDERS_COMPETENCE_COHORT_COVERAGE_REQUIRED']:[])];
    faSourceSetCoverage(coverage,'ORDERS',period,{complete:ordersComplete,pending:orderPending});
    if(policy?.revenue_base==='GROSS_COMPONENTS')pending.push('GROSS_COMPONENTS_RECONCILIATION_REQUIRED');
    pending.push(...orderPending,...coverage.filter(r=>r.state==='UNKNOWN').flatMap(r=>r.pending));
@@ -106,7 +144,7 @@ function faSourceRotate(env,services,ordersRead){return async args=>{
  const signature=await financialDigest([args.scope,args.period,args.policy?.policy_id??null,args.policy?.revision??null]);
  const saved=args.checkpoint?.schema==='financial_multi_source_cursor_v1'&&args.checkpoint.signature===signature?args.checkpoint:null;
  const progress=saved?structuredClone(saved):{schema:'financial_multi_source_cursor_v1',signature,lane:0,order_checkpoint:null,order_done:false,ads_done:false,inventory_done:false,inventory_checkpoint:null,returns_done:false,cash_index:0,cash_checkpoint:null,coverage:[],pending:{orders:[],ads:[],cash:[]},observations:{},completed:false};
- if(progress.completed){progress.completed=false;progress.lane=0;progress.order_done=false;progress.ads_done=false;progress.inventory_done=false;progress.inventory_checkpoint=null;progress.returns_done=false;progress.cash_index=0;progress.cash_checkpoint=null;}
+ if(progress.completed){progress.completed=false;progress.lane=0;progress.order_done=false;progress.order_checkpoint=null;progress.ads_done=false;progress.inventory_done=false;progress.inventory_checkpoint=null;progress.returns_done=false;progress.cash_index=0;progress.cash_checkpoint=null;}
  const scope=args.scope,period=args.period,events=[],obligations=[];let cutoff=null,inventory=null,observedCapabilities=null;
  const cashTargetCount=period.start_date.slice(0,7)===period.end_date.slice(0,7)?2:4;
  for(let skipped=0;skipped<5;skipped++){const done=progress.lane===0?progress.order_done:progress.lane===1?progress.ads_done:progress.lane===2?progress.cash_index>=cashTargetCount:progress.lane===3?progress.inventory_done:progress.returns_done;if(!done)break;progress.lane=(progress.lane+1)%5;}
@@ -126,7 +164,7 @@ function faSourceRotate(env,services,ordersRead){return async args=>{
    progress.observations.cash={...(progress.observations.cash??{}),[target.source]:result.counts};progress.cash_checkpoint=result.checkpoint;
    // A missing transport/permission is an observed dependency, not an endless
    // pagination cursor that prevents preparing a provisional close.
-   if(result.has_more===false||result.coverage.some(r=>['UNAVAILABLE','FORBIDDEN'].includes(r.state))){progress.cash_index++;progress.cash_checkpoint=null;}
+   if(result.has_more===false||result.coverage.some(r=>['UNAVAILABLE','FORBIDDEN'].includes(r.state))||result.pending.includes('IMPORTED_CASH_CURSOR_STALE')){progress.cash_index++;progress.cash_checkpoint=null;}
   }
   progress.lane=3;
  }else if(progress.lane===3){

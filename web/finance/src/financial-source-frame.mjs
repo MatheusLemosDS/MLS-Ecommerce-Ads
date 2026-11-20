@@ -46,6 +46,13 @@ export function createFinancialSourceProtocol(){
   return !(v.status==='AVAILABLE'&&(v.missing_fields.length||v.invalid_fields.length)||v.status==='INVALID'&&v.invalid_fields.length===0||v.invalid_fields.length&&v.status!=='INVALID');
  }
  function request(v){try{
+  if(v?.schema==='financial_source_request_v4'){
+   if(!exact(v,['schema','operation','run_id','cursor','limit','expected_revision','retention'])||v.operation!=='evidence'||!uuid(v.run_id)||!nullable(v.cursor,hash)||!int(v.limit,1,100)||!int(v.expected_revision,1,2147483647))return null;
+   const r=v.retention;if(!exact(r,['kind','month','publication_revision','lease_id','slots'])||r.kind!=='COHORT'||typeof r.month!=='string'||!/^20\d\d-(0[1-9]|1[0-2])$/.test(r.month)||!int(r.publication_revision,1,2147483647)||!uuid(r.lease_id)||!arr(r.slots,3)||!r.slots.length)return null;
+   const seen=new Set();for(let index=0;index<r.slots.length;index++){const s=r.slots[index];if(!exact(s,['slot_index','run_id','revision','start_date','end_date'])||s.slot_index!==index||!uuid(s.run_id)||seen.has(s.run_id)||!int(s.revision,1,2147483647)||!date(s.start_date)||!date(s.end_date)||s.start_date!==r.month+'-'+String(index*15+1).padStart(2,'0')||s.end_date.slice(0,7)!==r.month||s.end_date<s.start_date||Date.parse(s.end_date)-Date.parse(s.start_date)>14*86400000||index<r.slots.length-1&&Number(s.end_date.slice(8))!==index*15+15)return null;seen.add(s.run_id);}
+   if(!r.slots.some(s=>s.run_id===v.run_id&&s.revision===v.expected_revision))return null;
+   return JSON.parse(JSON.stringify(v));
+  }
   if(v?.schema==='financial_source_request_v3'){
    if(!exact(v,['schema','operation','run_id','cursor','limit','expected_revision','order_hash','item_id','model_id'])||v.operation!=='original-items'||!uuid(v.run_id)||!nullable(v.cursor,itemCursor)||!int(v.limit,1,100)||!nullable(v.expected_revision,n=>int(n,1,2147483647))||v.cursor!==null&&v.expected_revision===null)return null;
    const list=v.order_hash===null&&v.item_id===null&&v.model_id===null,lookup=hash(v.order_hash)&&itemId(v.item_id)&&modelId(v.model_id)&&v.cursor===null&&v.limit===1;
@@ -82,7 +89,7 @@ export function createFinancialSourceProtocol(){
   if(v.next_cursor!==null&&(v.facts.length===0||v.next_cursor!==v.facts.at(-1).event_key)||v.facts.length>c.orders_total)return null;
   return JSON.parse(JSON.stringify(v));
  }catch{return null;}}
- function matches(command,frame){const q=request(command),r=response(frame);if(q===null||r===null)return false;if(q.schema==='financial_source_request_v3')return r.schema==='financial_source_original_items_v3'&&r.run.run_id===q.run_id&&(q.cursor===null?r.cursor===null:r.cursor!==null&&['order_hash','item_id','model_id'].every(k=>r.cursor[k]===q.cursor[k]))&&r.items.length<=q.limit&&(q.expected_revision===null||q.expected_revision===r.run.revision)&&['order_hash','item_id','model_id'].every(k=>r.selection[k]===q[k]);return q.operation==='capabilities'?r.schema==='financial_source_capabilities_v1':r.schema===(q.schema==='financial_source_request_v2'?'financial_source_evidence_v2':'financial_source_evidence_v1')&&r.run.run_id===q.run_id&&r.cursor===q.cursor&&r.facts.length<=q.limit&&(q.expected_revision===null||q.expected_revision===r.run.revision);}
+ function matches(command,frame){const q=request(command),r=response(frame);if(q===null||r===null)return false;if(q.schema==='financial_source_request_v3')return r.schema==='financial_source_original_items_v3'&&r.run.run_id===q.run_id&&(q.cursor===null?r.cursor===null:r.cursor!==null&&['order_hash','item_id','model_id'].every(k=>r.cursor[k]===q.cursor[k]))&&r.items.length<=q.limit&&(q.expected_revision===null||q.expected_revision===r.run.revision)&&['order_hash','item_id','model_id'].every(k=>r.selection[k]===q[k]);return q.operation==='capabilities'?r.schema==='financial_source_capabilities_v1':r.schema===(['financial_source_request_v2','financial_source_request_v4'].includes(q.schema)?'financial_source_evidence_v2':'financial_source_evidence_v1')&&r.run.run_id===q.run_id&&r.cursor===q.cursor&&r.facts.length<=q.limit&&(q.expected_revision===null||q.expected_revision===r.run.revision);}
  return Object.freeze({projectRequest:request,projectResponse:response,responseMatches:matches});
 }
 export const projectFinancialSourceRequest=v=>createFinancialSourceProtocol().projectRequest(v);

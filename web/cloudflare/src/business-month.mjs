@@ -7,11 +7,13 @@ import {buildBusinessMonthProducts,projectBusinessMonthProducts} from './busines
 import {TAX_POLICY_SCHEMA,businessTaxPolicyFromSnapshot,businessMonthTax} from './business-tax-policy.mjs';
 import {COST_RULE_SCHEMA,costRuleSchemaForEnvironment,costRuleSnapshotQueries,costRuleReferenceFromSnapshot,mergeCatalogCostReference} from './cost-rules.mjs';
 import {catalogClassificationQueries,catalogClassificationsFromSnapshot} from './catalog-classification.mjs';
-import {BUSINESS_MONTH_PUBLICATION_SCHEMA,completedBusinessMonthPublicationStatements,saveCompletedBusinessMonth,readCompletedBusinessMonth} from './business-month-publication.mjs';
+import {BUSINESS_MONTH_PUBLICATION_SCHEMA,completedBusinessMonthPublicationStatements,saveCompletedBusinessMonth,readCompletedBusinessMonth,businessMonthSourceRetentionManifest,retainCompletedBusinessMonthSources,businessMonthPublicationSnapshotStatements} from './business-month-publication.mjs';
 import {BUSINESS_MONTH_ADS_HISTORY_SCHEMA,businessMonthAdsHistoryQueries,businessMonthAdsHistoryStatements} from './business-month-ads-history.mjs';
 import {EXPENSE_LEDGER_SCHEMA} from './expense-ledger.mjs';
 import {buildExpenseSchedule} from './expense-schedule.mjs';
 import {unwrapBusinessMonthVariantSource,captureBusinessMonthVariantAttribution} from './business-variant-attribution.mjs';
+import {BUSINESS_MONTH_SOURCE_RECOVERY_SCHEMA,readBusinessMonthSourceRecovery,recordBusinessMonthMissingSource,businessMonthSourceRecoveryFence,completeBusinessMonthSourceRecovery} from './business-month-source-recovery.mjs';
+import {BUSINESS_MONTH_COHORT_SOURCE_RECOVERY_SCHEMA,readBusinessMonthCohortRecovery,recordBusinessMonthCohortMissingSource,businessMonthCohortRecoveryFence,completeBusinessMonthCohortRecovery} from './business-month-cohort-source-recovery.mjs';
 
 export class BusinessMonthError extends Error {
  constructor(code,status=400,diagnostic=null){super(code);this.status=status;if(diagnostic!==null)this.diagnostic=Object.freeze({...diagnostic});}
@@ -30,6 +32,8 @@ export function businessMonthClientFrame(frame,contract='business-month-v1'){
  return legacy;
 }
 export const BUSINESS_MONTH_SCHEMA=[
+ ...BUSINESS_MONTH_SOURCE_RECOVERY_SCHEMA,
+ ...BUSINESS_MONTH_COHORT_SOURCE_RECOVERY_SCHEMA,
  ...EXPENSE_LEDGER_SCHEMA,
  ...BUSINESS_MONTH_PUBLICATION_SCHEMA,
  ...BUSINESS_MONTH_ADS_HISTORY_SCHEMA,
@@ -159,11 +163,8 @@ export async function readBusinessMonthDisplay(env,{month},{now=()=>Date.now()}=
  const stamp=Math.floor(now()/1000),db=env.ADMIN_DB,range=businessMonthRange(month,stamp);
  const observed=await businessMonthLoadRun(db,month,range,stamp);
  let published=await readCompletedBusinessMonth(env,month,{now});
- // Bootstrap a completed pre-publication deployment without waiting for a
- // provider refresh. A concurrent collector cannot publish a stale CAS view.
- if(observed?.complete&&(!published||published.row.revision<observed.row.revision)){
-  published=await saveCompletedBusinessMonth(env,month,observed,{now})||await readCompletedBusinessMonth(env,month,{now});
- }
+ // An old complete active frame remains visible, but only a mutating collector
+ // can acknowledge Finance retention and publish it. GET never creates pins.
  if(!published)return {display:active,active,display_source:'ACTIVE',audit_scope:null,source_frames:null,expense_schedule:null};
  const savedRange={start_date:published.payload.start_date,end_date:published.payload.end_date,slots:published.payload.slots,current:range.current};
  const displayed=await businessMonthBundle(db,month,savedRange,stamp,published,{withExpenseSchedule:true}),display=displayed.frame,expense_schedule=displayed.expense_schedule;
@@ -185,10 +186,22 @@ async function businessMonthOperation(env,input,services,{now=()=>Date.now(),act
  if(!businessMonthReady.has(db)){await db.batch(costRuleSchemaForEnvironment(env,BUSINESS_MONTH_SCHEMA).map(sql=>db.prepare(sql)));businessMonthReady.add(db);}
  if(expenseOperation)await businessMonthSaveExpenses(db,input,actor,stamp);
  let observed=await businessMonthLoadRun(db,input.month,range,stamp,true);
+ let cohortRecovery=null;if(operation==='start'||operation==='step'){try{cohortRecovery=await readBusinessMonthCohortRecovery(db,input.month,observed,stamp);}catch{businessMonthFail('BUSINESS_MONTH_STORAGE_INVALID',503);}}
+ if(operation==='start'||operation==='step'){
+  // The durable App publication is the commit outbox. A crash after its CAS
+  // leaves a permanently protected candidate in Finance; the next POST
+  // confirms the actual winner, never a stale caller's proposed publication.
+  const actual=observed?await readCompletedBusinessMonth(env,input.month,{now,snapshot:observed.publicationSnapshot}):null;
+  if(actual){try{await retainCompletedBusinessMonthSources(env,input.month,actual,{operation:'confirm',now,retain:services?.retainFinanceBusinessPeriodPublication??null});}catch{
+   // Legacy publications can predate the outbox protocol or reference an
+   // already missing run. Keep their copies while a fresh collector recovers
+   // sources. A new publication still requires its own successful prepare.
+  }}
+ }
  const legacyProducts=observed?.complete&&observed.payload.slots.some(slot=>!Object.hasOwn(slot.frame,'product_breakdown'));
- if(!observed||observed.payload.end_date!==range.end_date||operation==='start'&&observed.complete&&(legacyProducts||stamp-observed.row.created_at>(range.current?60:900))){
-  if(operation!=='start'&&operation!=='read'&&operation!=='ads'&&!expenseOperation)businessMonthFail('BUSINESS_MONTH_START_REQUIRED',409);
-  observed=await businessMonthCreateRun(db,input.month,range,stamp,observed);
+ if(cohortRecovery||!observed||observed.payload.end_date!==range.end_date||operation==='start'&&observed.complete&&(legacyProducts||stamp-observed.row.created_at>(range.current?60:900))){
+  if(!cohortRecovery&&operation!=='start'&&operation!=='read'&&operation!=='ads'&&!expenseOperation)businessMonthFail('BUSINESS_MONTH_START_REQUIRED',409);
+  observed=await businessMonthCreateRun(db,input.month,range,stamp,observed,cohortRecovery);
  }
  let result=null;
  try{
@@ -269,13 +282,16 @@ async function businessMonthSaveExpenses(db,input,actor,stamp){
  if(results[1].meta.changes!==1)businessMonthFail('BUSINESS_MONTH_STORAGE_INVALID',503);
 }
 
-async function businessMonthLoadRun(db,month,range,stamp,allowPreviousScope=false){
- // Stable slot rows and their parent references must share one read snapshot.
- // Otherwise a concurrent step could replace a slot between these two reads.
- const snapshot=await db.batch([
+function businessMonthRunSnapshotStatements(db,month){return [
   db.prepare('SELECT revision,payload,created_at,updated_at FROM business_month_runs WHERE month=?').bind(month),
   db.prepare('SELECT slot_index,run_id,revision,payload FROM business_month_frames WHERE month=? ORDER BY slot_index').bind(month),
- ]);
+  db.prepare('SELECT * FROM business_month_source_recoveries WHERE month=? AND parent_revision=(SELECT revision FROM business_month_runs WHERE month=?) AND replacement_run_id IS NULL ORDER BY slot_index LIMIT 4').bind(month,month),
+  db.prepare('SELECT * FROM business_month_cohort_source_recoveries WHERE month=? AND parent_revision=(SELECT revision FROM business_month_runs WHERE month=?) AND replacement_parent_revision IS NULL ORDER BY slot_index LIMIT 4').bind(month,month),
+  ...businessMonthPublicationSnapshotStatements(db,month),
+ ];}
+async function businessMonthLoadRun(db,month,range,stamp,allowPreviousScope=false,captured=null){
+ // Parent, active frames, recovery fences and committed outbox share a snapshot.
+ const snapshot=captured??await db.batch(businessMonthRunSnapshotStatements(db,month));
  const row=snapshot[0].results[0];
  if(!row)return null;
  let payload;try{payload=JSON.parse(row.payload);}catch{businessMonthFail('BUSINESS_MONTH_STORAGE_INVALID',503);}
@@ -312,23 +328,48 @@ async function businessMonthLoadRun(db,month,range,stamp,allowPreviousScope=fals
   if(frame)ids.add(frame.run_id);return {...expected,frame};
  });
  if(referenced.size!==storedFrames.size)businessMonthFail('BUSINESS_MONTH_STORAGE_INVALID',503);
- return {row,storedPayload:payload,payload:{start_date:range.start_date,end_date:range.end_date,slots},complete:slots.every(slot=>slot.frame?.status==='COMPLETE')};
+ return {row,storedPayload:payload,payload:{start_date:range.start_date,end_date:range.end_date,slots},complete:slots.every(slot=>slot.frame?.status==='COMPLETE'),recoveryRows:snapshot[2].results,cohortRecoveryRows:snapshot[3].results,publicationSnapshot:snapshot.slice(4,6)};
 }
-async function businessMonthCreateRun(db,month,range,stamp,observed){
+async function businessMonthCreateRun(db,month,range,stamp,observed,cohortRecovery=null){
  const payload=JSON.stringify({start_date:range.start_date,end_date:range.end_date,slots:range.slots});
- const mutation=observed?db.prepare('UPDATE business_month_runs SET revision=revision+1,payload=?,created_at=?,updated_at=? WHERE month=? AND revision=? AND payload=?').bind(payload,stamp,stamp,month,observed.row.revision,observed.row.payload):db.prepare('INSERT INTO business_month_runs(month,revision,payload,created_at,updated_at) VALUES(?,1,?,?,?) ON CONFLICT(month) DO UPDATE SET revision=business_month_runs.revision+1,payload=excluded.payload,created_at=excluded.created_at,updated_at=excluded.updated_at WHERE business_month_runs.payload NOT LIKE ?').bind(month,payload,stamp,stamp,'%"end_date":"'+range.end_date+'"%');
- await db.batch([...completedBusinessMonthPublicationStatements(db,month,observed,{now:()=>stamp*1000}),mutation,db.prepare('DELETE FROM business_month_frames WHERE month=? AND changes()=1').bind(month)]);
- const latest=await businessMonthLoadRun(db,month,range,stamp);if(!latest)businessMonthFail('BUSINESS_MONTH_CHANGED_RELOAD',409);return latest;
+ const fence=businessMonthCohortRecoveryFence(cohortRecovery);
+ const mutation=observed?db.prepare('UPDATE business_month_runs SET revision=revision+1,payload=?,created_at=?,updated_at=? WHERE month=? AND revision=? AND payload=?'+fence.sql).bind(payload,stamp,stamp,month,observed.row.revision,observed.row.payload,...fence.values):db.prepare('INSERT INTO business_month_runs(month,revision,payload,created_at,updated_at) VALUES(?,1,?,?,?) ON CONFLICT(month) DO UPDATE SET revision=business_month_runs.revision+1,payload=excluded.payload,created_at=excluded.created_at,updated_at=excluded.updated_at WHERE business_month_runs.payload NOT LIKE ?').bind(month,payload,stamp,stamp,'%"end_date":"'+range.end_date+'"%');
+ const writes=[mutation,db.prepare('DELETE FROM business_month_frames WHERE month=? AND changes()=1').bind(month),...(cohortRecovery?[completeBusinessMonthCohortRecovery(db,cohortRecovery,payload,stamp)]:[])],offset=writes.length;
+ const captured=await db.batch([...writes,...businessMonthRunSnapshotStatements(db,month)]);
+ const latest=await businessMonthLoadRun(db,month,range,stamp,false,captured.slice(offset));if(!latest)businessMonthFail('BUSINESS_MONTH_CHANGED_RELOAD',409);return latest;
 }
 async function businessMonthAdvance(env,db,month,range,stamp,observed,services){
+ const retainSources=async(value,options={})=>{try{return await retainCompletedBusinessMonthSources(env,month,value,{now:()=>stamp*1000,retain:services?.retainFinanceBusinessPeriodPublication??null,...options});}catch(error){
+  if(error?.message==='BUSINESS_MONTH_SOURCE_RETENTION_RUN_NOT_FOUND'&&observed.payload.slots.some(slot=>slot.frame!==null)){try{await recordBusinessMonthCohortMissingSource(db,month,observed,stamp);}catch{businessMonthFail('BUSINESS_MONTH_STORAGE_INVALID',503);}}
+  throw error;
+ }};
  const index=observed.payload.slots.findIndex(slot=>slot.frame===null||slot.frame.status==='RUNNING');
- if(index<0||observed.payload.slots.some(slot=>slot.frame?.status==='LIMIT_REACHED'))return observed;
+ if(index<0){
+  if(observed.complete){
+   await retainSources(observed);
+   const published=await saveCompletedBusinessMonth(env,month,observed,{now:()=>stamp*1000});
+   if(published)await retainCompletedBusinessMonthSources(env,month,published,{operation:'confirm',now:()=>stamp*1000,retain:services?.retainFinanceBusinessPeriodPublication??null});
+  }
+  return observed;
+ }
+ if(observed.payload.slots.some(slot=>slot.frame?.status==='LIMIT_REACHED'))return observed;
  if(typeof services?.getFinanceBusinessPeriod!=='function')businessMonthFail('BUSINESS_MONTH_SOURCE_UNAVAILABLE',503);
- const slot=observed.payload.slots[index],selection=slot.frame?{operation:'step',run_id:slot.frame.run_id}:{operation:'start',start_date:slot.start_date,end_date:slot.end_date};
- let source;try{source=await services.getFinanceBusinessPeriod(env,selection,{includeVariants:true});}catch{businessMonthFail('BUSINESS_MONTH_SOURCE_UNAVAILABLE',503);}
+ const slot=observed.payload.slots[index];let recovery;
+ try{recovery=await readBusinessMonthSourceRecovery(db,month,index,slot,observed,stamp);}catch{businessMonthFail('BUSINESS_MONTH_STORAGE_INVALID',503);}
+ const selection=slot.frame&&!recovery?{operation:'step',run_id:slot.frame.run_id}:{operation:'start',start_date:slot.start_date,end_date:slot.end_date};
+ const retention=businessMonthSourceRetentionManifest(month,observed,{kind:'COHORT',now:()=>stamp*1000});
+ let source;try{source=await services.getFinanceBusinessPeriod(env,selection,{includeVariants:true,...(retention?{retention}:{})});}catch{businessMonthFail('BUSINESS_MONTH_SOURCE_UNAVAILABLE',503);}
  // Only this exact, bounded envelope can turn a private transport failure into
  // an owner-facing code. Provider text and unknown fields never cross here.
  if(businessMonthExact(source,['schema','status','diagnostic'])&&source.schema==='finance_business_period_v1'&&source.status==='UNAVAILABLE'){
+  if(businessMonthExact(source.diagnostic,['code','http'])&&source.diagnostic.code==='FINANCE_BUSINESS_RETENTION_RUN_NOT_FOUND'&&source.diagnostic.http===404&&retention!==null){
+   try{await recordBusinessMonthCohortMissingSource(db,month,observed,stamp);}catch{businessMonthFail('BUSINESS_MONTH_STORAGE_INVALID',503);}
+   throw new BusinessMonthError('BUSINESS_MONTH_SOURCE_RETENTION_RUN_NOT_FOUND',503,{code:'FINANCE_BUSINESS_RETENTION_RUN_NOT_FOUND',http:404});
+  }
+  if(!recovery&&slot.frame?.status==='RUNNING'&&businessMonthExact(source.diagnostic,['code','http'])&&source.diagnostic.code==='FINANCE_BUSINESS_RUN_NOT_FOUND'&&source.diagnostic.http===404){
+   try{await recordBusinessMonthMissingSource(db,month,index,slot,observed,stamp);}catch{businessMonthFail('BUSINESS_MONTH_STORAGE_INVALID',503);}
+   throw new BusinessMonthError('BUSINESS_MONTH_SOURCE_RUN_NOT_FOUND',503,{code:'FINANCE_BUSINESS_RUN_NOT_FOUND',http:404});
+  }
   const diagnostic=source.diagnostic,codes=['UNAVAILABLE','CONFIGURATION','NETWORK_ERROR','TIMEOUT','HTTP_ERROR','REDIRECT_REJECTED','CONTENT_TYPE_INVALID','BODY_LIMIT','BODY_READ_ERROR','JSON_INVALID','FRAME_INVALID','SCOPE_MISMATCH','RESPONSE_INVALID'];
   if(businessMonthExact(diagnostic,['code','http'])&&typeof diagnostic.code==='string'&&codes.some(suffix=>diagnostic.code==='FINANCE_BUSINESS_'+suffix)&&(diagnostic.http===null||Number.isInteger(diagnostic.http)&&diagnostic.http>=100&&diagnostic.http<=599)){
    let suffix=diagnostic.code.slice('FINANCE_BUSINESS_'.length);
@@ -338,27 +379,33 @@ async function businessMonthAdvance(env,db,month,range,stamp,observed,services){
   businessMonthFail('BUSINESS_MONTH_SOURCE_UNAVAILABLE',503);
  }
  const negotiated=await unwrapBusinessMonthVariantSource(source),frame=negotiated?.report??null;
- if(!frame||frame.start_date!==slot.start_date||frame.end_date!==slot.end_date||frame.checked_at>stamp+60||slot.frame&&(frame.run_id!==slot.frame.run_id||frame.revision<slot.frame.revision)||observed.payload.slots.some((entry,position)=>position!==index&&entry.frame?.run_id===frame.run_id))businessMonthFail('BUSINESS_MONTH_SOURCE_INVALID',503);
+ if(!frame||frame.start_date!==slot.start_date||frame.end_date!==slot.end_date||frame.checked_at>stamp+60||slot.frame&&(!recovery&&frame.run_id!==slot.frame.run_id||frame.run_id===slot.frame.run_id&&frame.revision<slot.frame.revision)||observed.payload.slots.some((entry,position)=>position!==index&&entry.frame?.run_id===frame.run_id))businessMonthFail('BUSINESS_MONTH_SOURCE_INVALID',503);
  const payload={...observed.payload,slots:observed.payload.slots.map((entry,position)=>position===index?{...entry,frame}:entry)};
  // Full frames each fit one bounded row. The parent keeps only three compact
  // references, so a legal month cannot exceed D1's per-value size limit.
- const writes=[],storedPayload={...payload,slots:payload.slots.map((entry,position)=>{
+ const fence=businessMonthSourceRecoveryFence(recovery),writes=[],storedPayload={...payload,slots:payload.slots.map((entry,position)=>{
   if(entry.frame===null)return entry;
   const next=entry.frame,reference={schema:'business_month_frame_ref_v1',run_id:next.run_id,revision:next.revision};
   if(position===index||observed.storedPayload.slots[position].frame?.schema!=='business_month_frame_ref_v1'){
    const raw=JSON.stringify(next);if(new TextEncoder().encode(raw).byteLength>1048576)businessMonthFail('BUSINESS_MONTH_SOURCE_INVALID',503);
-   writes.push(db.prepare('INSERT INTO business_month_frames(month,slot_index,run_id,revision,payload) SELECT ?,?,?,?,? WHERE EXISTS(SELECT 1 FROM business_month_runs WHERE month=? AND revision=? AND payload=?) ON CONFLICT(month,slot_index) DO UPDATE SET run_id=excluded.run_id,revision=excluded.revision,payload=excluded.payload').bind(month,position,next.run_id,next.revision,raw,month,observed.row.revision,observed.row.payload));
+   writes.push(db.prepare('INSERT INTO business_month_frames(month,slot_index,run_id,revision,payload) SELECT ?,?,?,?,? WHERE EXISTS(SELECT 1 FROM business_month_runs WHERE month=? AND revision=? AND payload=?)'+fence.sql+' ON CONFLICT(month,slot_index) DO UPDATE SET run_id=excluded.run_id,revision=excluded.revision,payload=excluded.payload').bind(month,position,next.run_id,next.revision,raw,month,observed.row.revision,observed.row.payload,...fence.values));
   }
   return {...entry,frame:reference};
  })};
  const raw=JSON.stringify(storedPayload),updatedAt=Math.max(stamp,frame.checked_at),parentIndex=writes.length;
- writes.push(db.prepare('UPDATE business_month_runs SET revision=revision+1,payload=?,updated_at=? WHERE month=? AND revision=? AND payload=?').bind(raw,updatedAt,month,observed.row.revision,observed.row.payload));
+ writes.push(db.prepare('UPDATE business_month_runs SET revision=revision+1,payload=?,updated_at=? WHERE month=? AND revision=? AND payload=?'+fence.sql).bind(raw,updatedAt,month,observed.row.revision,observed.row.payload,...fence.values));
  const next={row:{revision:observed.row.revision+1,payload:raw,created_at:observed.row.created_at,updated_at:updatedAt},storedPayload,payload,complete:payload.slots.every(slot=>slot.frame?.status==='COMPLETE')};
+ if(frame.status==='COMPLETE'){
+  await retainSources(next,{kind:next.complete?'PUBLICATION':'COHORT',now:()=>updatedAt*1000});
+ }
+ if(recovery)writes.push(completeBusinessMonthSourceRecovery(db,recovery,frame,next,updatedAt));
  writes.push(...completedBusinessMonthPublicationStatements(db,month,next,{now:()=>updatedAt*1000}));
- const written=(await db.batch(writes))[parentIndex];
+ const publicationIndex=writes.length;if(next.complete)writes.push(...businessMonthPublicationSnapshotStatements(db,month));
+ const committed=await db.batch(writes),written=committed[parentIndex];
  if(written.meta.changes!==1){const latest=await businessMonthLoadRun(db,month,range,Math.max(stamp,frame.checked_at));if(!latest)businessMonthFail('BUSINESS_MONTH_CHANGED_RELOAD',409);return latest;}
+ if(next.complete){const actual=await readCompletedBusinessMonth(env,month,{now:()=>updatedAt*1000,snapshot:committed.slice(publicationIndex)});if(actual)await retainCompletedBusinessMonthSources(env,month,actual,{operation:'confirm',now:()=>updatedAt*1000,retain:services?.retainFinanceBusinessPeriodPublication??null});}
  if(negotiated.variant_financials)await captureBusinessMonthVariantAttribution(db,month,frame,negotiated.variant_financials,{capture_revision:next.row.revision,parent_payload:raw,slot_index:index});
- return businessMonthLoadRun(db,month,range,Math.max(stamp,frame.checked_at));
+ return {...next,recoveryRows:[],cohortRecoveryRows:[],publicationSnapshot:next.complete?committed.slice(publicationIndex):observed.publicationSnapshot};
 }
 
 // Shared by the read-only weekly adapter after validating an immutable monthly

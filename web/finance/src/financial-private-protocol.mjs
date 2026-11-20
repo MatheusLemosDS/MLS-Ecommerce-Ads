@@ -1,14 +1,16 @@
 import {FINANCIAL_SOURCE_PATH,FINANCIAL_SOURCE_REQUEST_MAXIMUM,FINANCIAL_SOURCE_RESPONSE_MAXIMUM,projectFinancialSourceRequest,projectFinancialSourceResponse,financialSourceResponseMatches} from './financial-source-frame.mjs';
 import {FINANCIAL_ALLOCATION_PATH,FINANCIAL_ALLOCATION_REQUEST_MAXIMUM,FINANCIAL_ALLOCATION_RESPONSE_MAXIMUM,projectFinancialAllocationRequest,projectFinancialAllocationResponse,financialAllocationResponseMatches} from './financial-allocation-frame.mjs';
 import {FINANCIAL_OBLIGATION_PATH,FINANCIAL_OBLIGATION_REQUEST_MAXIMUM,FINANCIAL_OBLIGATION_RESPONSE_MAXIMUM,projectFinancialObligationRequest,projectFinancialObligationResponse,financialObligationResponseMatches} from './financial-obligation-frame.mjs';
+import {FINANCE_BUSINESS_RETENTION_PATH,FINANCE_BUSINESS_RETENTION_REQUEST_MAXIMUM,FINANCE_BUSINESS_RETENTION_RESPONSE_MAXIMUM,projectBusinessPeriodRetentionRequest,projectBusinessPeriodRetentionResponse,businessPeriodRetentionResponseMatches} from './business-period-retention-frame.mjs';
 
 export function financialPrivateProtocol(kind){
  if(kind==='sources')return {path:FINANCIAL_SOURCE_PATH,requestMaximum:FINANCIAL_SOURCE_REQUEST_MAXIMUM,responseMaximum:FINANCIAL_SOURCE_RESPONSE_MAXIMUM,request:projectFinancialSourceRequest,response:projectFinancialSourceResponse};
  if(kind==='allocations')return {path:FINANCIAL_ALLOCATION_PATH,requestMaximum:FINANCIAL_ALLOCATION_REQUEST_MAXIMUM,responseMaximum:FINANCIAL_ALLOCATION_RESPONSE_MAXIMUM,request:projectFinancialAllocationRequest,response:projectFinancialAllocationResponse};
  if(kind==='obligations')return {path:FINANCIAL_OBLIGATION_PATH,requestMaximum:FINANCIAL_OBLIGATION_REQUEST_MAXIMUM,responseMaximum:FINANCIAL_OBLIGATION_RESPONSE_MAXIMUM,request:projectFinancialObligationRequest,response:projectFinancialObligationResponse};
+ if(kind==='retention')return {path:FINANCE_BUSINESS_RETENTION_PATH,requestMaximum:FINANCE_BUSINESS_RETENTION_REQUEST_MAXIMUM,responseMaximum:FINANCE_BUSINESS_RETENTION_RESPONSE_MAXIMUM,request:projectBusinessPeriodRetentionRequest,response:projectBusinessPeriodRetentionResponse};
  return null;
 }
-export function financialPrivateKind(path){return path===FINANCIAL_SOURCE_PATH?'sources':path===FINANCIAL_ALLOCATION_PATH?'allocations':path===FINANCIAL_OBLIGATION_PATH?'obligations':null;}
+export function financialPrivateKind(path){return path===FINANCIAL_SOURCE_PATH?'sources':path===FINANCIAL_ALLOCATION_PATH?'allocations':path===FINANCIAL_OBLIGATION_PATH?'obligations':path===FINANCE_BUSINESS_RETENTION_PATH?'retention':null;}
 export async function readFinancialPrivateJson(response,maximum,signal){
  if(!(response instanceof Response)||response.redirected||!response.body||!/^application\/json(?:\s*;\s*charset\s*=\s*(?:utf-8|"utf-8"))?\s*$/i.test(response.headers.get('content-type')||''))throw Error('FINANCIAL_PRIVATE_RESPONSE_INVALID');
  const length=response.headers.get('content-length');if(length!==null&&(!/^\d+$/.test(length)||!Number.isSafeInteger(Number(length))||Number(length)>maximum))throw Error('FINANCIAL_PRIVATE_RESPONSE_LIMIT');
@@ -17,7 +19,8 @@ export async function readFinancialPrivateJson(response,maximum,signal){
  finally{signal?.removeEventListener('abort',cancel);cancel();try{reader.releaseLock();}catch{}}
 }
 export function financialPrivateResponseMatches(command,value){
- if(['financial_source_request_v1','financial_source_request_v2','financial_source_request_v3'].includes(command?.schema))return financialSourceResponseMatches(command,value);
+ if(['financial_source_request_v1','financial_source_request_v2','financial_source_request_v3','financial_source_request_v4'].includes(command?.schema))return financialSourceResponseMatches(command,value);
+ if(command?.schema==='finance_business_period_retention_request_v1')return businessPeriodRetentionResponseMatches(command,value);
  if(command?.schema==='financial_cash_allocation_request_v1')return financialAllocationResponseMatches(command,value);
  if(command?.schema==='financial_obligation_source_request_v1')return financialObligationResponseMatches(command,value);
  return false;

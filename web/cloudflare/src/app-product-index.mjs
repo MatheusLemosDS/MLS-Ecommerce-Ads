@@ -1,4 +1,4 @@
-import {projectProductIndexRequest,projectProductIndexFrame,productIndexRequestMatches} from '../../finance/src/product-index-frame.mjs';
+import {projectProductIndexRequest,projectProductIndexFrame,productIndexRequestMatches,projectProductIndexDiagnostic} from '../../finance/src/product-index-frame.mjs';
 
 export async function getFinanceProductIndex(env,input,{fetchImpl=env?.COMMERCIAL_FETCH??(request=>fetch(request)),timeoutMs=45000}={}){
  const requestBody=projectProductIndexRequest(input),failure=(code,http=null)=>({schema:'product_index_v1',status:'UNAVAILABLE',diagnostic:{code,http}});
@@ -16,7 +16,9 @@ export async function getFinanceProductIndex(env,input,{fetchImpl=env?.COMMERCIA
   finally{cancel();try{reader.releaseLock();}catch{}reader=undefined;}
   const raw=new Uint8Array(length);let offset=0;for(const piece of chunks){raw.set(piece,offset);offset+=piece.length;}
   let value;try{value=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(raw));}catch{return failure('FINANCE_PRODUCT_INDEX_APP_RESPONSE_INVALID');}
-  if(response.status!==200)return failure('FINANCE_PRODUCT_INDEX_APP_HTTP_ERROR',response.status);
+  const diagnostic=projectProductIndexDiagnostic(Object.getOwnPropertyDescriptor(value||{},'diagnostic')?.value,{app:true});
+  if(response.status!==200)return diagnostic?failure(diagnostic.code,diagnostic.http):failure('FINANCE_PRODUCT_INDEX_APP_HTTP_ERROR',response.status);
+  if(diagnostic&&Object.getOwnPropertyDescriptor(value,'status')?.value==='UNAVAILABLE')return failure(diagnostic.code,diagnostic.http);
   const frame=projectProductIndexFrame(value,env.COMMERCIAL_CONTEXT?.profile??undefined);return frame&&productIndexRequestMatches(requestBody,frame)?frame:failure('FINANCE_PRODUCT_INDEX_APP_RESPONSE_INVALID');
  };
  try{return await Promise.race([run(),deadline]);}catch{return failure(controller.signal.aborted?'FINANCE_PRODUCT_INDEX_APP_TIMEOUT':'FINANCE_PRODUCT_INDEX_APP_UPSTREAM_FAILED');}finally{clearTimeout(timer);controller.abort();cancel();}

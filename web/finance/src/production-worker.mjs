@@ -22,6 +22,9 @@ import {FINANCIAL_SOURCE_PATH} from './financial-source-frame.mjs';
 import {createFinancialSourceWorker} from './financial-source-worker.mjs';
 import {FINANCIAL_ALLOCATION_PATH,createFinancialAllocationWorker} from './financial-allocation-worker.mjs';
 import {FINANCIAL_OBLIGATION_PATH,createFinancialObligationWorker} from './financial-obligation-worker.mjs';
+import {FINANCE_BUSINESS_RETENTION_PATH} from './business-period-retention-frame.mjs';
+import {createBusinessPeriodRetentionWorker} from './business-period-retention-worker.mjs';
+import {retainFinanceBusinessPeriodPublication} from './business-period-retention.mjs';
 
 // Deployment entry only. Configuration and FINANCE_CONNECTION_ENABLED='true'
 // are still required; importing this entry never makes a provider request.
@@ -31,6 +34,7 @@ const financeConnectionWorker=createFinanceWorker({
   variantCatalog: runFinanceVariantCatalog,
   storePeriod: runFinanceStorePeriod,
   businessPeriod: runFinanceBusinessPeriod,
+  businessRetention:retainFinanceBusinessPeriodPublication,
   dailyOrders: runFinanceDailyOrders,
   productionOrders: runFinanceProductionOrders,
   productIndex: runFinanceProductIndex,
@@ -50,6 +54,7 @@ const externalCashPeriodWorker=createExternalCashPeriodWorker({readPeriodSummary
 const financialSourceWorker=createFinancialSourceWorker();
 const financialAllocationWorker=createFinancialAllocationWorker();
 const financialObligationWorker=createFinancialObligationWorker();
+const businessPeriodRetentionWorker=createBusinessPeriodRetentionWorker();
 export default {
  async fetch(request,env,ctx){
   let url;try{url=new URL(request.url);}catch{return financeConnectionWorker.fetch(request,env,ctx);}
@@ -58,6 +63,7 @@ export default {
   if(url.pathname===FINANCIAL_SOURCE_PATH)return financialSourceWorker.fetch(request,env);
   if(url.pathname===FINANCIAL_ALLOCATION_PATH)return financialAllocationWorker.fetch(request,env);
   if(url.pathname===FINANCIAL_OBLIGATION_PATH)return financialObligationWorker.fetch(request,env);
+  if(url.pathname===FINANCE_BUSINESS_RETENTION_PATH)return businessPeriodRetentionWorker.fetch(request,env);
   return financeConnectionWorker.fetch(request,env,ctx);
  },
 };

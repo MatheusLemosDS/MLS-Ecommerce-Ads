@@ -41,7 +41,12 @@ export function createAuthorizedFinancialBankConnector({adapter=null,consent=nul
   async function allowed(scope,phase){if(await authorize({scope,phase,capability:'bank.read'})!==true)fail('AUTHORIZATION_REVOKED',403);}
   const activeConsent=scope=>own(consent)&&consent.active===true&&same(consent,scope)&&instant(consent.expires_at)&&Date.parse(consent.expires_at)>now()&&id(consent.evidence_id);
   return Object.freeze({
-    async capability(input){const scope=scopeFor(input);await allowed(scope,'before-capability');const available=!!adapter&&typeof adapter.readStatement==='function'&&id(adapter.id)&&activeConsent(scope);await allowed(scope,'after-capability');return {schema:'financial_bank_connector_capability_v1',scope,state:available?'AVAILABLE':'UNAVAILABLE',reason:!adapter?'NO_AUTHORIZED_CONNECTOR':!available?'CONSENT_MISSING_EXPIRED_OR_SCOPE_MISMATCH':null,read_only:true,fallback:'CSV_OFX_REVIEWED_IMPORT'};},
+    async capability(input){
+      const scope=scopeFor(input);await allowed(scope,'before-capability');
+      const initialAvailability=!!adapter&&typeof adapter.readStatement==='function'&&id(adapter.id)&&activeConsent(scope);
+      await allowed(scope,'after-capability');const available=initialAvailability&&activeConsent(scope);
+      return {schema:'financial_bank_connector_capability_v1',scope,state:available?'AVAILABLE':'UNAVAILABLE',reason:!adapter?'NO_AUTHORIZED_CONNECTOR':!available?'CONSENT_MISSING_EXPIRED_OR_SCOPE_MISMATCH':null,read_only:true,fallback:'CSV_OFX_REVIEWED_IMPORT'};
+    },
     async readStatement(input){
       if(!own(input)||!instant(input.start_at)||!instant(input.end_at)||Date.parse(input.start_at)>=Date.parse(input.end_at))fail('CONNECTOR_INTERVAL_INVALID');
       const scope=scopeFor(input.scope);await allowed(scope,'before-read');
@@ -52,7 +57,9 @@ export function createAuthorizedFinancialBankConnector({adapter=null,consent=nul
       const projection=projectFinancialBankBalance(statement);
       const snapshotBalance=b=>b===null||b===undefined?null:{...scope,amount_cents:b.amount_cents,at:b.at,evidence_id:b.evidence_id,confirmed:true};
       const sanitized={scope,opening:snapshotBalance(statement.opening),closing:snapshotBalance(statement.closing),coverage:{state:statement.coverage.state,start_at:statement.coverage.start_at,end_at:statement.coverage.end_at,evidence_id:statement.coverage.evidence_id??null,confirmed:statement.coverage.confirmed===true},transactions:statement.transactions.map(t=>({...scope,record_id:t.record_id,amount_cents:t.amount_cents,at:t.at,status:'POSTED',evidence_id:t.evidence_id}))};
-      await allowed(scope,'before-response');return {schema:'financial_bank_connector_result_v1',scope,state:'AVAILABLE',reason:null,statement:sanitized,projection};
+      await allowed(scope,'before-response');
+      if(!activeConsent(scope))fail('CONNECTOR_CONSENT_REVOKED',403);
+      return {schema:'financial_bank_connector_result_v1',scope,state:'AVAILABLE',reason:null,statement:sanitized,projection};
     },
   });
 }

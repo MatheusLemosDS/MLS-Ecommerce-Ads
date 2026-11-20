@@ -4,7 +4,7 @@ import {financialDigest} from '../src/financial-event-ledger.mjs';
 import {appendFinancialEvent} from '../src/financial-event-store.mjs';
 import {readFinancialAutomationState} from '../src/financial-automation-store.mjs';
 import {financialAccountingPeriod} from '../src/financial-accounting-schedule.mjs';
-import {readFinancialInventoryWorkspace,mutateFinancialInventory,financialInventorySources} from '../src/financial-inventory-bridge.mjs';
+import {readFinancialInventoryWorkspace,readFinancialInventorySalesPage,mutateFinancialInventory,financialInventorySources} from '../src/financial-inventory-bridge.mjs';
 import {mutateIncurredProduction,readIncurredProduction} from '../src/incurred-production.mjs';
 import {mutatePhysicalReturns,readPhysicalReturns} from '../src/physical-returns.mjs';
 import {readReturnManufacturingLinksWorkspace,mutateReturnManufacturingLinksWorkspace} from '../src/return-manufacturing-links-workspace.mjs';
@@ -95,4 +95,19 @@ test('a later physical inspection cannot silently keep an old resale valuation c
  const f=await fixture(t);await mutateFinancialInventory(f.env,f.register,f.options);await mutateFinancialInventory(f.env,f.allocate(),f.options);const selection=await received(f);await mutateFinancialInventory(f.env,command('value-return',selection,2,uuid(50)),f.options);
  await mutatePhysicalReturns(f.env,{revision:selection.physical_revision,request_id:uuid(51),action:'inspect',case_hash:caseHash,line_id:uuid(12),partition:{resellable:0,repair:0,damaged:2,mismatch:0,quarantine:0},identity,reason:'Synthetic later inspection corrected condition'},'synthetic-owner',{now:f.options.now});
  const src=await financialInventorySources(f.env,{scope,period:financialAccountingPeriod({kind:'MONTH',anchor:'2026-11'})},f.options);assert.equal(src.events[0].quality,'REVIEW');assert.deepEqual(src.events[0].postings,[]);assert.ok(src.pending.includes('INVENTORY_RECOGNITION_SOURCE_REVIEW'));
+});
+
+test('inventory sale choices reach items beyond the first 100 with one bounded read per page',async t=>{
+ const f=await fixture(t),seen=[],first=Array.from({length:100},(_,index)=>({...f.proof,item_id:String(1000+index),model_id:'0',quantity:2})),last={...f.proof,item_id:'1100',model_id:'0',quantity:2};f.options.listOriginalItems=()=>{throw Error('legacy helper must not truncate paginated choices');};f.options.listOriginalItemsPage=async({scope:selected,month,cursor})=>{assert.deepEqual(selected,scope);assert.equal(month,'2026-10');seen.push(cursor);return {schema:'financial_original_items_page_v1',scope,month,items:cursor===null?first:[last],has_more:cursor===null,next_cursor:cursor===null?'next_page':null};};
+ const before=await readFinancialAutomationState(f.env,{scope,kind:'INVENTORY',history:true},f.options),initial=await readFinancialInventoryWorkspace(f.env,{scope,month:'2026-10'},f.options);assert.equal(initial.candidates.sales.rows.length,100);assert.equal(initial.candidates.sales.has_more,true);assert.deepEqual(seen,[null]);
+ const next=await readFinancialInventorySalesPage(f.env,{scope,month:'2026-10',cursor:initial.candidates.sales.next_cursor,expected_revision:initial.revision},f.options);assert.deepEqual(seen,[null,'next_page']);assert.equal(next.schema,'financial_inventory_sales_page_v1');assert.equal(next.sales.rows.length,1);assert.equal(next.sales.rows[0].selection.item_id,'1100');assert.equal(next.sales.rows[0].quantity,2);assert.equal(next.sales.rows[0].selection.model_id,'0');assert.equal(Object.hasOwn(next.sales.rows[0].selection,'pieces_per_selling_unit'),false);assert.equal(next.sales.has_more,false);assert.equal(next.sales.next_cursor,null);assert.deepEqual(await readFinancialAutomationState(f.env,{scope,kind:'INVENTORY',history:true},f.options),before,'browsing candidates creates no inventory revisions');
+});
+
+test('inventory sale pagination rejects changed revisions and foreign pages without replacing the selected scope',async t=>{
+ const f=await fixture(t);let calls=0;f.options.listOriginalItemsPage=async({month})=>{calls++;return {schema:'financial_original_items_page_v1',scope:{...scope,organization_id:'foreign-company'},month,items:[],has_more:false,next_cursor:null};};const input={scope,month:'2026-10',cursor:'next_page',expected_revision:0};
+ await assert.rejects(readFinancialInventorySalesPage(f.env,{...input,expected_revision:1},f.options),error=>error.status===409);assert.equal(calls,0);await assert.rejects(readFinancialInventorySalesPage(f.env,{...input,cursor:'invalid/token'},f.options),error=>error.status===400);assert.equal(calls,0);await assert.rejects(readFinancialInventorySalesPage(f.env,input,f.options),error=>error.status===403);assert.equal(calls,1);f.revoke();await assert.rejects(readFinancialInventorySalesPage(f.env,input,f.options),error=>error.status===403);assert.equal(calls,1);
+});
+
+test('inventory pagination can advance an empty recognized-sales page without treating unknown sales as allocatable',async t=>{
+ const f=await fixture(t);f.options.listOriginalItemsPage=async({month})=>({schema:'financial_original_items_page_v1',scope,month,items:[{...f.proof,order_hash:'f'.repeat(64)}],has_more:true,next_cursor:'another_page'});const result=await readFinancialInventorySalesPage(f.env,{scope,month:'2026-10',cursor:'next_page',expected_revision:0},f.options);assert.deepEqual(result.sales.rows,[]);assert.equal(result.sales.has_more,true);assert.equal(result.sales.next_cursor,'another_page');
 });

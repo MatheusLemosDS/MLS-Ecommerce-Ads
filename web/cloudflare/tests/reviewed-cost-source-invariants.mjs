@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import {execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
 import {readFileSync} from 'node:fs';
+import {REVIEWED_BUSINESS_MONTH_SOURCE_ADAPTER,normalizeReviewedBusinessMonthSource} from './reviewed-business-month-source-adapter.mjs';
 
 const baselineCommit='bd01f64d7e290abb259e9c9dc2646496494a87f0';
 const digest=value=>createHash('sha256').update(value).digest('hex');
@@ -74,7 +75,12 @@ function assertFinancialSections(name,current,baseline){
 }
 export function assertReviewedCostSources({readSource=name=>readFileSync(new URL('../src/'+name,import.meta.url),'utf8')}={}){
  for(const [name,pins] of Object.entries(REVIEWED_COST_SOURCE_PINS)){
-  const baseline=execFileSync('git',['show',baselineCommit+':web/cloudflare/src/'+name],{cwd:new URL('../../../',import.meta.url),encoding:'utf8'}),current=readSource(name);
+  const baseline=execFileSync('git',['show',baselineCommit+':web/cloudflare/src/'+name],{cwd:new URL('../../../',import.meta.url),encoding:'utf8'}),observed=readSource(name);
+  // The separately reviewed source-lifecycle adapter checks direct financial
+  // sections before reversing twelve exact hunks to the original commercial
+  // bytes. Every existing pin and the complete commercial-to-legacy comparison
+  // below remain unchanged; an unknown source never enters this adapter.
+  const current=name==='business-month.mjs'&&digest(observed)===REVIEWED_BUSINESS_MONTH_SOURCE_ADAPTER.source_sha256?normalizeReviewedBusinessMonthSource(observed,execFileSync('git',['show',REVIEWED_BUSINESS_MONTH_SOURCE_ADAPTER.commercial_commit+':web/cloudflare/src/'+name],{cwd:new URL('../../../',import.meta.url),encoding:'utf8'})):observed;
   assert.equal(digest(baseline),pins.legacy,'original financial baseline remains pinned: '+name);
   assert.ok(Object.values(pins).includes(digest(current)),'only exact reviewed legacy/commercial source bytes: '+name);
   assertFinancialSections(name,current,baseline);

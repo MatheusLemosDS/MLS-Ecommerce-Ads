@@ -2,6 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readHistoricalCostSchedule} from '../src/business-cost-history.mjs';
 import {COST_DEFAULTS} from '../src/production-costs.mjs';
+import {D1} from './sqlite-d1.mjs';
+import {startDatedCostScan,stepDatedCostScan,readDatedCostEvidence,reviewDatedCostEvidence,readApprovedDatedCostIdentitySnapshot} from '../src/dated-cost-evidence.mjs';
 
 // Synthetic D1 audit only: no accounts, orders, cash or provider calls.
 const when=(day,hour='12:00:00')=>day+'T'+hour+'.000Z';
@@ -48,6 +50,17 @@ test('ambiguous change day stays pending; do not fabricate its price',async()=>{
  assert.equal(value.known_production_cost_cents,2200);
  assert.equal(value.production_cost_cents,null);
  assert.deepEqual(value.unmapped_variants,[{item_id:'123',model_id:'1',quantity:1}]);
+});
+
+test('explicit reviewed dated identity cannot resolve a price-changing audit day or accept a forged approval object',async t=>{
+ const database=new D1();t.after(()=>database.db.close());const env={ADMIN_DB:database},month='2026-11',end_date='2026-11-15',now=()=>Date.parse('2026-11-19T18:00:00Z');
+ let scan=await startDatedCostScan(env,{month,end_date,item_ids:['123']},{now});
+ scan=await stepDatedCostScan(env,{scan_id:scan.scan_id,revision:scan.revision},request=>({schema:'historical_variant_evidence_v1',shop_id:1178167501,checked_at:Math.floor(now()/1000),...request,has_more:false,next_cursor:null,coverage:{orders_seen:1,target_orders:1,target_lines:1,target_units:1},evidence_complete:true,products:[{item_id:'123',variants:[{model_id:'1',line_count:1,quantity:1,item_names:['Camiseta adulta'],model_names:['M'],missing_item_name_lines:0,missing_model_name_lines:0,status_counts:[{status:'COMPLETED',line_count:1,quantity:1}],conflict:false}]}],omitted:{target_lines:0,target_units:0}}),{now});assert.equal(scan.status,'COMPLETE');
+ const proposal=(await readDatedCostEvidence(env,{month,end_date},{now})).publications[0];await reviewDatedCostEvidence(env,{scan_id:proposal.scan_id,revision:0,publication_sha256:proposal.publication_sha256,decision:'APPROVE'},'synthetic-owner',{now});
+ const dates=Array.from({length:15},(_,index)=>month+'-'+String(index+1).padStart(2,'0')),groups=dates.map(date=>({date,items:Number(date.slice(8))>=13?[line()]:[]})),f=fixture(dates,{groups,bindingRows:history([{at:when('2026-11-01'),payload:[]}])});f.input.month=month;
+ const identity=await readApprovedDatedCostIdentitySnapshot(database,{month,end_date,items:f.input.items,stamp:f.input.stamp}),value=await readHistoricalCostSchedule(f.database,{...f.input,datedIdentity:identity});
+ assert.equal(value.state,'AVAILABLE');assert.deepEqual(value.days.slice(12).map(row=>row.production_cost_cents),[1000,null,1200]);assert.equal(value.known_production_cost_cents,2200);assert.equal(value.production_cost_cents,null);assert.deepEqual(value.day_evidence[13].pending,['AUDIT_DAY_AMBIGUOUS']);
+ const forged=await readHistoricalCostSchedule(f.database,{...f.input,datedIdentity:{...identity}});assert.equal(forged.state,'UNAVAILABLE');assert.equal(forged.reason,'DATED_EVIDENCE_INVALID');
 });
 
 test('broken audited history returns unavailable instead of newest cost',async()=>{

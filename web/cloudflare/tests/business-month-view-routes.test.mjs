@@ -1,4 +1,5 @@
 import test from 'node:test';
+import {createBusinessPeriodRetentionFixture} from './business-period-retention-fixture.mjs';
 import assert from 'node:assert/strict';
 import {adminFetch} from '../src/admin.mjs';
 import {businessMonth} from '../src/business-month.mjs';
@@ -28,7 +29,7 @@ const viewPath=()=>'/api/admin/finance/business-month-view?month='+month();
 const priorityPath='/api/admin/finance/business-month-request';
 const state=auth=>({...auth.env.ADMIN_DB.db.prepare('SELECT * FROM business_sync_state WHERE id=1').get()});
 function sources(){
- const calls={finance:0,ads:0};return {calls,getFinanceBusinessPeriod:async(_,{operation,start_date,end_date})=>{
+ const calls={finance:0,ads:0};return {calls,retainFinanceBusinessPeriodPublication:createBusinessPeriodRetentionFixture(),getFinanceBusinessPeriod:async(_,{operation,start_date,end_date})=>{
   calls.finance++;assert.equal(operation,'start');const at=stamp();
   return {schema:'finance_business_period_v1',run_id:crypto.randomUUID(),revision:1,status:'COMPLETE',start_date,end_date,cutoff_at:at-1,checked_at:at,currency:'BRL',monetary_unit:'UNCONFIRMED',pages_read:1,duplicate_orders:0,coverage:{orders:0,paid:0,completed:0,ongoing:0,cancelled:0,cancel_pending:0,unpaid:0,other:0,unknown:0,payment_covered:0,payment_missing:0,returns:0,returns_unknown:0},known_sales_base_raw:'0',sales_base_raw:'0',known_expected_repass_raw:'0',expected_repass_raw:'0',known_ads_adjustment_raw:'0',ads_adjustment_raw:'0',invoice_tax:{schema:'store_invoice_tax_v1',rate_bps:200,basis:'PAYMENT_GOODS_VALUE_PER_ORDER_ESTIMATE',rounding:'HALF_UP_PER_ORDER',covered_orders:0,unavailable_orders:0,known_base_raw:'0',known_tax_raw:'0'},items:[],diagnostic:null,basis:'CREATE_TIME_PAID_ORDER_ESTIMATE_NOT_SETTLED'};
  },getAdsCalendar:async()=>{calls.ads++;throw Error('test did not authorize Ads');}};

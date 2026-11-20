@@ -1,3 +1,4 @@
+import {createBusinessPeriodRetentionFixture} from './business-period-retention-fixture.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {build} from 'esbuild';
@@ -48,7 +49,7 @@ for(const minify of [false,true])test(`the deployable Worker prices the approved
   const bindings=[{item_id:'101',model_id:'1',selling_unit:'SINGLE_GARMENT',size:'P',operator_confirmed:true},{item_id:'102',model_id:'2',selling_unit:'SINGLE_GARMENT',size:'G1',operator_confirmed:true},{item_id:'103',model_id:'3',selling_unit:'ONE_MALE_ONE_FEMALE_KIT',male_size:'M',female_size:'G',operator_confirmed:true}];
   db.prepare('UPDATE variant_bindings_state SET payload=?,revision=14').run(JSON.stringify(bindings));
   await storeCatalogClassificationFrame(env,{schema:'variant_catalog_v1',checked_at:stamp(),products:[{item_id:itemId,catalog_fingerprint:'a'.repeat(64),selling_unit:'SINGLE_GARMENT',bindings:[],unresolved_count:2,cost_catalog:{schema:'product_cost_catalog_v1',product_name:title,variants:[{model_id:'102',attributes:[{name:'Tamanho',value:'2'}]},{model_id:'114',attributes:[{name:'Tamanho',value:'14'}]}]},diagnostic:{axes:[{name:'Tamanho',options:['2','14'],option_count:2}],model_count:2,reasons:[{code:'OPTION_NOT_RECOGNIZED',count:2}]}}]});
-  let windows=0;const sources={getFinanceBusinessPeriod:async(_,selection)=>finance(selection,++windows),getAdsCalendar:async(_,selection)=>ads(selection)};
+  let windows=0;const sources={retainFinanceBusinessPeriodPublication:createBusinessPeriodRetentionFixture(),getFinanceBusinessPeriod:async(_,selection)=>finance(selection,++windows),getAdsCalendar:async(_,selection)=>ads(selection)};
   let frame=await businessMonth(env,{operation:'start',month},sources);while(frame.status==='RUNNING')frame=await businessMonth(env,{operation:'step',month},sources);
   await businessMonth(env,{operation:'ads',month},sources);await businessMonth(env,{operation:'expenses',month,revision:0,external_expenses_cents:0,recharge_treatment:'ADS_RECHARGE'},sources);
   const path='finance/cost-diagnostics?month='+month+'&evidence=history-v2',before=await call(path);

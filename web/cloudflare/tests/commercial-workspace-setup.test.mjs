@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {createHash} from 'node:crypto';
 import {D1} from './sqlite-d1.mjs';
-import {SCHEMA} from '../src/admin.mjs';
+import {SCHEMA,scheduledWork} from '../src/admin.mjs';
 import {migrateAccountDatabase,accountChange,accountCommit,accountGet} from '../src/account-store.mjs';
 import {resolveServiceCommercialPrincipal,tenantAuthorizationGuard} from '../src/account-service.mjs';
 import {commercialContextFromPrincipal,bindCommercialEnvironment} from '../src/commercial-context.mjs';
@@ -42,4 +43,14 @@ test('revoked membership, cross-company wrappers and changed schema cannot prepa
  await assert.rejects(prepareCommercialWorkspace({...f.A.scoped,ADMIN_DB:f.B.scoped.ADMIN_DB},f.env,f.A.principal,SCHEMA,{now:f.now}),/FORBIDDEN/);assert.equal(await accountGet(f.raw,'workspace_setup',f.B.principal.organizationId,f.B.principal.storeId),null);
  const member=await accountGet(f.raw,'membership',f.A.principal.organizationId,f.A.principal.userId);await accountCommit(f.raw,[accountChange('membership',f.A.principal.organizationId,{...member,state:'REMOVED'},member.revision)]);await assert.rejects(prepareCommercialWorkspace(f.A.scoped,f.env,f.A.principal,SCHEMA,{now:f.now,cursor:12}),/PREPARATION_CONFLICT/);assert.equal((await accountGet(f.raw,'workspace_setup',f.A.principal.organizationId,f.A.principal.storeId)).cursor,12);
  await assert.rejects(prepareCommercialWorkspace(f.B.scoped,f.env,f.B.principal,[...SCHEMA,'CREATE TABLE IF NOT EXISTS unknown_commercial_table(id TEXT)'],{now:f.now}),/SQL_TABLE_FORBIDDEN/);assert.equal(await accountGet(f.raw,'workspace_setup',f.B.principal.organizationId,f.B.principal.storeId),null);
+});
+
+test('the exact main4cf workspace schema keeps previously READY stores valid while collector metadata initializes outside its identity',async t=>{
+ assert.equal(SCHEMA.length,114);assert.equal(createHash('sha256').update(JSON.stringify(SCHEMA)).digest('hex'),'8731b21c0b4b7d0650b245bcbe2ae0c1d2898822fc8ff6e4e0051e769c3ea066');
+ const lazy=['business_month_source_recoveries','business_month_cohort_source_recoveries','business_history_sync_fairness'];for(const table of lazy)assert.ok(SCHEMA.every(sql=>!sql.includes('CREATE TABLE IF NOT EXISTS '+table+'(')),table+' cannot alter the existing commercial setup hash');
+ const f=await fixture(t);let prepared;do{prepared=await prepareCommercialWorkspace(f.A.scoped,f.env,f.A.principal,SCHEMA,{now:f.now,cursor:prepared?.completed??0});}while(prepared.state!=='READY');
+ const prior=await accountGet(f.raw,'workspace_setup',f.A.principal.organizationId,f.A.principal.storeId);assert.equal(prior.schema_hash,'6f76c6aae021f0d3437e949ae84cb05028a90d3a522d81f51ce3fdcd82022f75');assert.equal(prior.total,98);const writes=f.raw.batches.length;
+ assert.equal((await assertCommercialWorkspaceReady(f.A.scoped,f.env,f.A.principal,SCHEMA)).state,'READY');assert.equal((await prepareCommercialWorkspace(f.A.scoped,f.env,f.A.principal,SCHEMA,{now:f.now})).replayed,true);assert.equal(f.raw.batches.length,writes,'accepting the prior READY hash performs no migration or implicit schema bypass');
+ const db=new D1();t.after(()=>db.db.close());let providerReads=0;const result=await scheduledWork({ADMIN_DB:db},{getFinanceBusinessPeriod:async()=>{providerReads++;throw Error('NO_PROVIDER_IN_SCHEMA_SETUP');}},()=>Date.parse('2026-11-20T12:01:00.000Z'));assert.equal(result.collection,'MAINTENANCE');assert.equal(providerReads,0);
+ for(const table of lazy){assert.ok(db.db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name=?").get(table));assert.equal(db.db.prepare('SELECT COUNT(*) AS n FROM '+table).get().n,0,'technical metadata initialization never creates a historical fact');}
 });

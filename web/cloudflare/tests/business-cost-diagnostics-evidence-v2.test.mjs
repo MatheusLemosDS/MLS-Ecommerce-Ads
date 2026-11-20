@@ -1,3 +1,4 @@
+import {createBusinessPeriodRetentionFixture} from './business-period-retention-fixture.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {D1} from './sqlite-d1.mjs';
@@ -24,7 +25,7 @@ function calendar(selection){
 async function fixture(t,{items=[item()]}={}){
  const db=new D1(),env={ADMIN_DB:db};t.after(()=>db.db.close());await db.batch(SCHEMA.map(sql=>db.prepare(sql)));
  db.db.prepare('INSERT OR REPLACE INTO variant_bindings_state(id,revision,payload,updated_at) VALUES(1,3,?,?)').run('[]',new Date(clock).toISOString());db.db.prepare('INSERT OR REPLACE INTO production_costs_state(id,revision,payload,updated_at) VALUES(1,7,?,?)').run(JSON.stringify({...COST_DEFAULTS,inclusive_plus_cents:2140}),new Date(clock).toISOString());
- const calls={finance:0,ads:0},services={getFinanceBusinessPeriod:async(_,selection)=>finance(selection,++calls.finance,calls.finance===1?items:[]),getAdsCalendar:async(_,selection)=>{calls.ads++;return calendar(selection);}};
+ const calls={finance:0,ads:0},services={retainFinanceBusinessPeriodPublication:createBusinessPeriodRetentionFixture({now}),getFinanceBusinessPeriod:async(_,selection)=>finance(selection,++calls.finance,calls.finance===1?items:[]),getAdsCalendar:async(_,selection)=>{calls.ads++;return calendar(selection);}};
  let frame=await businessMonth(env,{operation:'start',month},services,{now});while(frame.status==='RUNNING')frame=await businessMonth(env,{operation:'step',month},services,{now});await businessMonth(env,{operation:'ads',month},services,{now});await businessMonth(env,{operation:'expenses',month,revision:0,external_expenses_cents:0,recharge_treatment:'UNCONFIRMED'},services,{now});
  return {db,env,calls,read:()=>readBusinessCostDiagnosticsEvidenceV2(env,{month},{now}),v1:()=>readBusinessCostDiagnosticsEvidence(env,{month},{now})};
 }

@@ -48,7 +48,10 @@ function faProjectionBalances(values,scope,checked_at){
 }
 function faProjectionPosition(account,family,events,balances,coverage,period){
  const entries=events.filter(e=>e.quality==='CONFIRMED'&&faProjectionDailyAdsInside(e,period)&&faProjectionIn(e.settlement_at??e.event_at,period)&&e.postings.some(p=>p.account===account));
- const relevant=balances.filter(b=>b.account===account&&(b.as_of===period.start_at||b.as_of===period.end_at)),refs=new Set([...relevant.map(x=>x.account_ref),...entries.flatMap(e=>e.postings.filter(p=>p.account===account).map(p=>p.account_ref))]);
+ // Declared source accounts remain in the position even when no balance or
+ // movement arrived for them. Otherwise an entirely missing account could be
+ // omitted and the remaining accounts could incorrectly certify a close.
+ const relevant=balances.filter(b=>b.account===account&&(b.as_of===period.start_at||b.as_of===period.end_at)),refs=new Set([...coverage.filter(x=>x.family===family).flatMap(x=>x.account_refs),...relevant.map(x=>x.account_ref),...entries.flatMap(e=>e.postings.filter(p=>p.account===account).map(p=>p.account_ref))]);
  const pending=faProjectionFamilyPending(coverage,[family]),accounts=[];
  if(!refs.size)pending.push(account+'_BALANCE_EVIDENCE_REQUIRED');
  for(const ref of [...refs].sort()){
@@ -141,12 +144,24 @@ export function projectFinancialInventory({scope,lots=[],allocations=[],as_of,co
   if(lot.produced_at>=as_of)continue;
   stock.set(lot.lot_id,{...lot,remaining:BigInt(lot.quantity),sold:0n,returned_resale:0n,returned_loss:0n,lost:0n});
  }
- const ordered=[...allocations].sort((a,b)=>String(a.competence_at).localeCompare(String(b.competence_at))||String(a.allocation_id).localeCompare(String(b.allocation_id)));
  const allIds=new Set();
- for(const allocation of ordered){
+ for(const allocation of allocations){
   financialCanonicalJSON(allocation);
   if(!allocation||!sameFinancialScope(allocation.scope,selected)||!faProjectionToken(allocation.allocation_id)||allIds.has(allocation.allocation_id)||!faProjectionToken(allocation.lot_id)||!faProjectionToken(allocation.component_ref)||!['SALE','RETURN_RESALE','RETURN_LOSS','STOCK_LOSS','REPAIR_COST','REPACK_COST'].includes(allocation.kind)||!faProjectionInt(allocation.quantity)||allocation.quantity<1||!faProjectionISO(allocation.competence_at)||!faProjectionToken(allocation.evidence_ref)||allocation.original_allocation_id!==null&&!faProjectionToken(allocation.original_allocation_id)||allocation.incremental_cost_cents!==null&&(!faProjectionInt(allocation.incremental_cost_cents)||allocation.incremental_cost_cents<0)||typeof allocation.quantity_verified!=='boolean'||typeof allocation.origin_verified!=='boolean'||typeof allocation.condition_confirmed!=='boolean')faProjectionFail('INVENTORY_ALLOCATION_INVALID');
-  allIds.add(allocation.allocation_id);if(allocation.competence_at>=as_of)continue;
+  allIds.add(allocation.allocation_id);
+ }
+ const chronological=[...allocations].sort((a,b)=>a.competence_at.localeCompare(b.competence_at)||a.allocation_id.localeCompare(b.allocation_id)),byId=new Map(chronological.map(row=>[row.allocation_id,row])),scheduled=new Set(),ordered=[];
+ for(const allocation of chronological){
+  if(scheduled.has(allocation.allocation_id))continue;
+  // A native timestamp can have equal precision for the sale and its return.
+  // Their explicit origin establishes causality within that instant; IDs do
+  // not. Actual earlier returns still fail the normal origin validation.
+  const original=allocation.kind.startsWith('RETURN_')?byId.get(allocation.original_allocation_id):null;
+  if(original?.kind==='SALE'&&original.competence_at===allocation.competence_at&&!scheduled.has(original.allocation_id)){ordered.push(original);scheduled.add(original.allocation_id);}
+  ordered.push(allocation);scheduled.add(allocation.allocation_id);
+ }
+ for(const allocation of ordered){
+  if(allocation.competence_at>=as_of)continue;
   const lot=stock.get(allocation.lot_id);if(!lot||lot.component_ref!==allocation.component_ref||allocation.competence_at<lot.produced_at)faProjectionFail('INVENTORY_ORIGIN_MISMATCH');
   movements.set(allocation.allocation_id,allocation);
   if(!allocation.quantity_verified||!allocation.origin_verified||allocation.kind.startsWith('RETURN_')&&!allocation.condition_confirmed){pending.push('PHYSICAL_QUANTITY_OR_CONDITION_UNVERIFIED');continue;}

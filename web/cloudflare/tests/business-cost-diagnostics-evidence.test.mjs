@@ -1,3 +1,4 @@
+import {createBusinessPeriodRetentionFixture} from './business-period-retention-fixture.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
@@ -22,7 +23,7 @@ function calendar(selection){
 }
 async function fixture(t,{items=realPairs}={}){
  const db=new D1(),env={ADMIN_DB:db};t.after(()=>db.db.close());db.db.exec('CREATE TABLE variant_bindings_state(id INTEGER PRIMARY KEY,revision INTEGER,payload TEXT,updated_at TEXT);CREATE TABLE production_costs_state(id INTEGER PRIMARY KEY,revision INTEGER,payload TEXT,updated_at TEXT)');db.db.prepare('INSERT INTO variant_bindings_state VALUES(1,3,?,?)').run('[]',new Date(clock).toISOString());db.db.prepare('INSERT INTO production_costs_state VALUES(1,7,?,?)').run(JSON.stringify(COST_DEFAULTS),new Date(clock).toISOString());
- const calls={finance:0,ads:0},services={getFinanceBusinessPeriod:async(_,selection)=>financial(selection,++calls.finance,calls.finance===1?items:[]),getAdsCalendar:async(_,selection)=>{calls.ads++;return calendar(selection);}};
+ const calls={finance:0,ads:0},services={retainFinanceBusinessPeriodPublication:createBusinessPeriodRetentionFixture({now}),getFinanceBusinessPeriod:async(_,selection)=>financial(selection,++calls.finance,calls.finance===1?items:[]),getAdsCalendar:async(_,selection)=>{calls.ads++;return calendar(selection);}};
  let frame=await businessMonth(env,{operation:'start',month},services,{now});while(frame.status==='RUNNING')frame=await businessMonth(env,{operation:'step',month},services,{now});await businessMonth(env,{operation:'ads',month},services,{now});await businessMonth(env,{operation:'expenses',month,revision:0,external_expenses_cents:0,recharge_treatment:'UNCONFIRMED'},services,{now});
  const batches=[],prepare=db.prepare.bind(db),batch=db.batch.bind(db);let beforeDiagnostic=null;db.prepare=sql=>{const statement=prepare(sql);statement.sql=sql;return statement;};db.batch=async statements=>{if(statements.some(statement=>statement.sql?.includes('SELECT item_id,diagnostic,checked_at,failure_count FROM catalog_classification_source_diagnostics'))){batches.push(statements.length);if(beforeDiagnostic){const hook=beforeDiagnostic;beforeDiagnostic=null;await hook();}}return batch(statements);};
  return {env,db,calls,batches,setHook:hook=>{beforeDiagnostic=hook;},legacy:()=>readBusinessCostDiagnostics(env,{month},{now}),read:()=>readBusinessCostDiagnosticsEvidence(env,{month},{now})};

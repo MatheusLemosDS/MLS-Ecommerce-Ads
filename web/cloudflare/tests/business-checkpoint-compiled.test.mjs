@@ -3,14 +3,19 @@ import assert from 'node:assert/strict';
 import {build} from 'esbuild';
 import {fileURLToPath} from 'node:url';
 import {D1} from './sqlite-d1.mjs';
+import {createBusinessPeriodRetentionFixture} from './business-period-retention-fixture.mjs';
+import {FINANCE_BUSINESS_RETENTION_PATH} from '../../finance/src/business-period-retention-frame.mjs';
 
 for(const minify of [false,true])test(`deployable monthly reads persist their private explanation after compilation (minify=${minify})`,async()=>{
  const compiled=await build({entryPoints:[fileURLToPath(new URL('../../../dist/app-worker.mjs',import.meta.url))],bundle:true,write:false,format:'esm',platform:'browser',target:'es2022',minify});
  const {default:worker}=await import('data:text/javascript;base64,'+Buffer.from(compiled.outputFiles[0].text).toString('base64'));
  const origin='https://app.compiled.test',env={ADMIN_DB:new D1(),ADMIN_SESSION_SECRET:'compiled-checkpoint-session-12345678901234567890',ADMIN_USERNAME:'compiled-checkpoint-owner',ADMIN_PASSWORD:'compiled-checkpoint-password-123456',APP_INTERNAL_SECRET:'fixture-private-checkpoint-key'};
  const savedFetch=globalThis.fetch,calls=[];
+ const retentionCalls=[],retention=createBusinessPeriodRetentionFixture({calls:retentionCalls});
  globalThis.fetch=async request=>{
-  const url=new URL(request.url);assert.equal(url.origin,'https://auth.brazacommerce.com.br');assert.equal(url.pathname,'/internal/shopee/finance/business-period');
+  const url=new URL(request.url);assert.equal(url.origin,'https://auth.brazacommerce.com.br');
+  if(url.pathname===FINANCE_BUSINESS_RETENTION_PATH){assert.equal(request.method,'POST');assert.equal(request.headers.get('x-braza-app-key'),env.APP_INTERNAL_SECRET);assert.equal(request.headers.has('cookie'),false);const reply=await retention(env,await request.json());return Response.json(reply.body,{status:reply.status});}
+  assert.equal(url.pathname,'/internal/shopee/finance/business-period');
   assert.equal(request.headers.get('x-braza-app-key'),env.APP_INTERNAL_SECRET);assert.equal(request.headers.has('cookie'),false);
   const input=await request.json(),at=Math.floor(Date.now()/1000);calls.push(input);assert.equal(input.operation,'start');
   return Response.json({schema:'finance_business_period_v1',run_id:'11111111-1111-4111-8111-'+input.start_date.slice(8).padStart(12,'0'),revision:2,status:'COMPLETE',start_date:input.start_date,end_date:input.end_date,cutoff_at:at-2,checked_at:at,source_checked_at:{oldest_at:at-2,latest_at:at},currency:'BRL',monetary_unit:'UNCONFIRMED',pages_read:1,page_capacity:20,duplicate_orders:0,coverage:{orders:0,paid:0,completed:0,ongoing:0,cancelled:0,cancel_pending:0,unpaid:0,other:0,unknown:0,payment_covered:0,payment_missing:0,returns:0,returns_unknown:0},known_sales_base_raw:'0',sales_base_raw:'0',known_expected_repass_raw:'0',expected_repass_raw:'0',known_ads_adjustment_raw:'0',ads_adjustment_raw:'0',invoice_tax:{schema:'store_invoice_tax_v1',rate_bps:200,basis:'PAYMENT_GOODS_VALUE_PER_ORDER_ESTIMATE',rounding:'HALF_UP_PER_ORDER',covered_orders:0,unavailable_orders:0,known_base_raw:'0',known_tax_raw:'0'},items:[],diagnostic:null,basis:'CREATE_TIME_PAID_ORDER_ESTIMATE_NOT_SETTLED'});

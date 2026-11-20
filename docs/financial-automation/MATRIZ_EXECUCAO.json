@@ -1146,7 +1146,14 @@
         "web/cloudflare/tests/tenant-migration.test.mjs",
         "web/cloudflare/tests/tenant-sql-isolation.test.mjs"
       ],
-      "validacao_publicada_limite": "Regressão completa, bytes e release pública conferidos nos recibos; isso não certifica fontes ou saldos da conta real."
+      "validacao_publicada_limite": "Regressão completa, bytes e release pública conferidos nos recibos; isso não certifica fontes ou saldos da conta real.",
+      "incremento_20261120": {
+        "implementacao": "IMPLEMENTED_IN_WORKTREE",
+        "testes": "FOCUSED_PASS_FULL_SUITE_PENDING",
+        "publicacao": "NOT_PUBLISHED",
+        "aceite_operacional": "NOT_PERFORMED",
+        "evidencia": "docs/financial-automation/validation/finance-completion-20261120.json"
+      }
     },
     {
       "id": "FINAUTO-02",
@@ -1396,6 +1403,13 @@
         "source_revision_after": 2,
         "events_after": 113,
         "financial_account_acceptance": false
+      },
+      "incremento_20261120": {
+        "implementacao": "IMPLEMENTED_IN_WORKTREE",
+        "testes": "FOCUSED_PASS_FULL_SUITE_PENDING",
+        "publicacao": "NOT_PUBLISHED",
+        "aceite_operacional": "NOT_PERFORMED",
+        "evidencia": "docs/financial-automation/validation/finance-completion-20261120.json"
       }
     },
     {
@@ -1588,6 +1602,13 @@
         "source_revision_after": 2,
         "events_after": 113,
         "financial_account_acceptance": false
+      },
+      "incremento_20261120": {
+        "implementacao": "IMPLEMENTED_IN_WORKTREE",
+        "testes": "FOCUSED_PASS_FULL_SUITE_PENDING",
+        "publicacao": "NOT_PUBLISHED",
+        "aceite_operacional": "NOT_PERFORMED",
+        "evidencia": "docs/financial-automation/validation/finance-completion-20261120.json"
       }
     },
     {
@@ -1793,7 +1814,14 @@
         "web/cloudflare/tests/financial-accounting-policy.test.mjs",
         "web/cloudflare/tests/financial-accounting-projection.test.mjs",
         "web/finance/tests/financial-bank-connector.test.mjs"
-      ]
+      ],
+      "incremento_20261120": {
+        "implementacao": "IMPLEMENTED_IN_WORKTREE",
+        "testes": "FOCUSED_PASS_FULL_SUITE_PENDING",
+        "publicacao": "NOT_PUBLISHED",
+        "aceite_operacional": "NOT_PERFORMED",
+        "evidencia": "docs/financial-automation/validation/finance-completion-20261120.json"
+      }
     },
     {
       "id": "FINAUTO-08",
@@ -2289,7 +2317,14 @@
         "web/cloudflare/tests/financial-close-store.test.mjs",
         "web/cloudflare/tests/financial-inventory-bridge.test.mjs",
         "web/finance/tests/financial-source-original-items-v3.test.mjs"
-      ]
+      ],
+      "incremento_20261120": {
+        "implementacao": "IMPLEMENTED_IN_WORKTREE",
+        "testes": "FOCUSED_PASS_FULL_SUITE_PENDING",
+        "publicacao": "NOT_PUBLISHED",
+        "aceite_operacional": "NOT_PERFORMED",
+        "evidencia": "docs/financial-automation/validation/finance-completion-20261120.json"
+      }
     },
     {
       "id": "FINAUTO-13",
@@ -2486,7 +2521,14 @@
         "web/cloudflare/tests/financial-obligation-app-source.test.mjs",
         "web/finance/tests/financial-obligation-frame.test.mjs",
         "web/finance/tests/financial-obligation-worker.test.mjs"
-      ]
+      ],
+      "incremento_20261120": {
+        "implementacao": "IMPLEMENTED_IN_WORKTREE",
+        "testes": "FOCUSED_PASS_FULL_SUITE_PENDING",
+        "publicacao": "NOT_PUBLISHED",
+        "aceite_operacional": "NOT_PERFORMED",
+        "evidencia": "docs/financial-automation/validation/finance-completion-20261120.json"
+      }
     },
     {
       "id": "FINAUTO-15",
@@ -2650,7 +2692,14 @@
       "arquivos_de_teste": [
         "web/cloudflare/tests/financial-accounting-policy.test.mjs",
         "web/cloudflare/tests/financial-accounting-projection.test.mjs"
-      ]
+      ],
+      "incremento_20261120": {
+        "implementacao": "IMPLEMENTED_IN_WORKTREE",
+        "testes": "FOCUSED_PASS_FULL_SUITE_PENDING",
+        "publicacao": "NOT_PUBLISHED",
+        "aceite_operacional": "NOT_PERFORMED",
+        "evidencia": "docs/financial-automation/validation/finance-completion-20261120.json"
+      }
     },
     {
       "id": "FINAUTO-17",
@@ -2849,7 +2898,14 @@
       "arquivos_de_teste": [
         "web/cloudflare/tests/financial-automation-service.test.mjs",
         "web/cloudflare/tests/financial-close-store.test.mjs"
-      ]
+      ],
+      "incremento_20261120": {
+        "implementacao": "IMPLEMENTED_IN_WORKTREE",
+        "testes": "FOCUSED_PASS_FULL_SUITE_PENDING",
+        "publicacao": "NOT_PUBLISHED",
+        "aceite_operacional": "NOT_PERFORMED",
+        "evidencia": "docs/financial-automation/validation/finance-completion-20261120.json"
+      }
     },
     {
       "id": "FINAUTO-19",
@@ -3045,7 +3101,14 @@
         "web/cloudflare/tests/financial-event-store.test.mjs",
         "web/cloudflare/tests/financial-inventory-bridge.test.mjs",
         "web/cloudflare/tests/financial-returns-tracker.test.mjs"
-      ]
+      ],
+      "incremento_20261120": {
+        "implementacao": "IMPLEMENTED_IN_WORKTREE",
+        "testes": "FOCUSED_PASS_FULL_SUITE_PENDING",
+        "publicacao": "NOT_PUBLISHED",
+        "aceite_operacional": "NOT_PERFORMED",
+        "evidencia": "docs/financial-automation/validation/finance-completion-20261120.json"
+      }
     },
     {
       "id": "FINAUTO-21",
@@ -3151,7 +3214,14 @@
         "web/cloudflare/tests/financial-automation-client-chrome.test.mjs",
         "web/cloudflare/tests/financial-automation-client.test.mjs",
         "web/cloudflare/tests/financial-automation-service.test.mjs"
-      ]
+      ],
+      "incremento_20261120": {
+        "implementacao": "IMPLEMENTED_IN_WORKTREE",
+        "testes": "FOCUSED_PASS_FULL_SUITE_PENDING",
+        "publicacao": "NOT_PUBLISHED",
+        "aceite_operacional": "NOT_PERFORMED",
+        "evidencia": "docs/financial-automation/validation/finance-completion-20261120.json"
+      }
     },
     {
       "id": "FINAUTO-22",
@@ -3405,6 +3475,13 @@
         "source_revision_after": 2,
         "events_after": 113,
         "financial_account_acceptance": false
+      },
+      "incremento_20261120": {
+        "implementacao": "IMPLEMENTED_IN_WORKTREE",
+        "testes": "FOCUSED_PASS_FULL_SUITE_PENDING",
+        "publicacao": "NOT_PUBLISHED",
+        "aceite_operacional": "NOT_PERFORMED",
+        "evidencia": "docs/financial-automation/validation/finance-completion-20261120.json"
       }
     },
     {
@@ -3604,7 +3681,14 @@
         "web/finance/tests/financial-source-events.test.mjs",
         "web/finance/tests/financial-source-original-items-v3.test.mjs",
         "web/finance/tests/financial-source-worker.test.mjs"
-      ]
+      ],
+      "incremento_20261120": {
+        "implementacao": "IMPLEMENTED_IN_WORKTREE",
+        "testes": "FOCUSED_PASS_FULL_SUITE_PENDING",
+        "publicacao": "NOT_PUBLISHED",
+        "aceite_operacional": "NOT_PERFORMED",
+        "evidencia": "docs/financial-automation/validation/finance-completion-20261120.json"
+      }
     },
     {
       "id": "FINAUTO-25",
@@ -3933,6 +4017,13 @@
         "source_revision_after": 2,
         "events_after": 113,
         "financial_account_acceptance": false
+      },
+      "incremento_20261120": {
+        "implementacao": "IMPLEMENTED_IN_WORKTREE",
+        "testes": "FOCUSED_PASS_FULL_SUITE_PENDING",
+        "publicacao": "NOT_PUBLISHED",
+        "aceite_operacional": "NOT_PERFORMED",
+        "evidencia": "docs/financial-automation/validation/finance-completion-20261120.json"
       }
     },
     {
@@ -4283,6 +4374,13 @@
         "source_revision_after": 2,
         "events_after": 113,
         "financial_account_acceptance": false
+      },
+      "incremento_20261120": {
+        "implementacao": "IMPLEMENTED_IN_WORKTREE",
+        "testes": "FOCUSED_PASS_FULL_SUITE_PENDING",
+        "publicacao": "NOT_PUBLISHED",
+        "aceite_operacional": "NOT_PERFORMED",
+        "evidencia": "docs/financial-automation/validation/finance-completion-20261120.json"
       }
     }
   ],
@@ -5118,5 +5216,55 @@
     "evidencia": "docs/financial-automation/validation/final-local-20261113.json",
     "publicacao": "docs/financial-automation/publication-live-20261113.json",
     "conta_real": "NAO_VALIDADA"
+  },
+  "incremento_financeiro_20261120": {
+    "schema": "mls_finance_completion_increment_v1",
+    "recorded_at": "2026-11-20",
+    "base_commit": "4cfdf465b2fda58dd27ae693126b7fe1625f69d6",
+    "branch": "fix/finance-completion-20261120",
+    "release_id": "2026-11-20.1",
+    "implementation": "IMPLEMENTED_IN_WORKTREE",
+    "validation": "FOCUSED_PASS_FULL_SUITE_PENDING",
+    "git_delivery": "NOT_PUSHED",
+    "publication": "NOT_PUBLISHED",
+    "operational_acceptance": "NOT_PERFORMED",
+    "live_last_verified_release": "2026-11-17.3",
+    "live_last_verified_at_utc": "2026-11-20T20:02:20Z",
+    "financial_completeness": "PARTIAL",
+    "m2_closed": false,
+    "commercial_writes_allowed": false,
+    "report": "docs/MLS_FINANCE_COMPLETION_2026_11_20.md",
+    "evidence": "docs/financial-automation/validation/finance-completion-20261120.json",
+    "implemented": [
+      "Immutable source cohort continuation and exact declared/cutoff window coverage",
+      "Durable two-phase source retention with CAS confirmation and renewable source leases",
+      "Previous-month continuation and protected source-lane fairness",
+      "Account positions require all declared account balances",
+      "Causal same-instant inventory returns",
+      "Durable original obligation retry command without freshness extension",
+      "Bank consent checks after final asynchronous gates",
+      "Finance refresh after interrupted hidden reads",
+      "Historical calendar close identity and immutable rectification",
+      "Explicit original sale-item pagination beyond100 choices",
+      "Independent dated historical name/composition evidence with manual hash/revision review",
+      "Shared source lease checked atomically for manual and scheduled dated evidence",
+      "Account transport deadline across body/fetch/response",
+      "Pinned compatible dependency security update"
+    ],
+    "not_proven": [
+      "Full current candidate CI and authenticated generated-Worker QA",
+      "Main versus Live catalogue/adult-cost visibility/DTF parity before any deployment",
+      "Recovery of five already absent September/October source runs through authorized new collection",
+      "Real bank/native wallet/payout adapters and account coverage",
+      "Approved accounting policy, tax/expense facts and Ads timezone evidence",
+      "Physical production/returns source matching and real financial close acceptance"
+    ],
+    "next_actions": [
+      "Finish scheduler RPC budget verification without increasing limits",
+      "Run complete Node/Python/build/security/source invariants on final candidate",
+      "Replay saved real historical aggregates on exact final financial module hashes",
+      "Deliver a reviewable Git increment with separate CI/publication/acceptance evidence",
+      "Preserve published operation and validate any deployment specifically before site publication"
+    ]
   }
 }

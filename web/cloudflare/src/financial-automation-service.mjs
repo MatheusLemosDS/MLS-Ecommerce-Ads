@@ -1,5 +1,5 @@
 import {FinancialLedgerError,normalizeFinancialScope,sameFinancialScope,financialCanonicalJSON,financialDigest} from './financial-event-ledger.mjs';
-import {readFinancialInventoryWorkspace,mutateFinancialInventory} from './financial-inventory-bridge.mjs';
+import {readFinancialInventoryWorkspace,readFinancialInventorySalesPage,mutateFinancialInventory} from './financial-inventory-bridge.mjs';
 import {isCommercialContext,assertCommercialCapability} from './commercial-context.mjs';
 import {financialClock,financialScopeKey,assertFinancialAccess,financialDatabase} from './financial-event-store.mjs';
 import {readFinancialClose,mutateFinancialClose,financialCloseIdentity,financialCloseGates} from './financial-close-store.mjs';
@@ -30,6 +30,16 @@ export function financialAutomationPermissions(env,current){
 }
 export function financialAutomationClosePeriod(period){return {kind:period.kind==='MONTH'?'MONTH':'WEEK',start_at:period.start_at,end_at:period.end_at,timezone:period.timezone,calendar_id:period.calendar};}
 function modelPeriod(period){return financialAccountingPeriod({kind:period.kind==='MONTH'?'MONTH':'CIVIL_WEEK',anchor:period.start_at,week_starts_on:period.calendar_id==='CIVIL_MONDAY_SUNDAY'?'MONDAY':'FRIDAY'});}
+async function closingMutationPeriod(env,scope,body,config,options){
+ const currentWeek=config.payload?.policy?.financial_week==='CIVIL_MONDAY_SUNDAY'?'MONDAY':'FRIDAY',weeks=body.close_id!==null&&body.operation!=='prepare'&&body.kind==='CIVIL_WEEK'?['FRIDAY','MONDAY']:[currentWeek],candidates=[];
+ for(const week_starts_on of weeks){const period=financialAutomationClosePeriod(financialAccountingPeriod({kind:body.kind,anchor:body.anchor,week_starts_on}));if(body.close_id===null||await financialCloseIdentity(scope,period,body.basis)===body.close_id)candidates.push(period);}
+ if(candidates.length!==1)fail('CLOSE_SCOPE_REJECTED',403);const selected=candidates[0],existing=await readFinancialClose(env,{scope,period:selected,basis:body.basis},options);
+ if(body.close_id!==null&&body.close_id!==existing.close_id)fail('CLOSE_SCOPE_REJECTED',403);
+ // A selected historical version keeps its verified immutable calendar. The
+ // current policy selects new preparations; it cannot retarget an old identity.
+ if(body.close_id!==null&&body.operation!=='prepare'){if(!existing.current)fail('CLOSE_SCOPE_REJECTED',403);return existing.current.period;}
+ return selected;
+}
 async function configuration(env,scope,options){const value=await readFinancialAutomationState(env,{scope,kind:'CONFIG',history:true},options);if(value.payload!==null){if(value.payload.schema!=='financial_automation_configuration_v1'||typeof value.payload.auto_close!=='boolean'||!projectFinancialAccountingPolicy(value.payload.policy,{scope}))fail('CONFIGURATION_INVALID',503);}return value;}
 export async function readFinancialAutomationConfiguration(env,scope,options={}){return configuration(env,scope,options);}
 function policyForPeriod(config,period){
@@ -110,7 +120,12 @@ export async function handleFinancialAutomation(request,env,{current,services={}
   if(url.pathname===path+'/inventory'&&request.method==='GET'){
    const entries=[...url.searchParams];if(entries.length!==1||entries[0][0]!=='month')fail('REQUEST_INVALID');const month=selectedMonth(entries[0][1],financialClock(options));
    if(env.COMMERCIAL_CONTEXT)for(const capability of ['production.read','orders.read'])assertCommercialCapability(env.COMMERCIAL_CONTEXT,capability);
-   return json(await readFinancialInventoryWorkspace(env,{scope,month},{...options,listOriginalItems:services.listFinancialOriginalItems?(command=>services.listFinancialOriginalItems({...command,now:options.now??Date.now})):services.listOriginalItems,includeReturnCandidates:permissions.financial_inventory_returns_read}));
+   return json(await readFinancialInventoryWorkspace(env,{scope,month},{...options,listOriginalItems:services.listFinancialOriginalItems?(command=>services.listFinancialOriginalItems({...command,now:options.now??Date.now})):services.listOriginalItems,listOriginalItemsPage:services.listFinancialOriginalItemsPage?(command=>services.listFinancialOriginalItemsPage({...command,now:options.now??Date.now})):services.listOriginalItemsPage,includeReturnCandidates:permissions.financial_inventory_returns_read}));
+  }
+  if(url.pathname===path+'/inventory/sales'&&request.method==='GET'){
+   const entries=[...url.searchParams];if(entries.length!==3||new Set(entries.map(([key])=>key)).size!==3||!['month','cursor','expected_revision'].every(key=>url.searchParams.has(key)))fail('REQUEST_INVALID');const month=selectedMonth(url.searchParams.get('month'),financialClock(options)),cursor=url.searchParams.get('cursor'),revision=url.searchParams.get('expected_revision');if(!cursor||cursor.length>2048||!/^[A-Za-z0-9_-]+$/.test(cursor)||!/^(0|[1-9][0-9]{0,9})$/.test(revision)||!integer(Number(revision)))fail('REQUEST_INVALID');
+   if(env.COMMERCIAL_CONTEXT)for(const capability of ['production.read','orders.read'])assertCommercialCapability(env.COMMERCIAL_CONTEXT,capability);
+   return json(await readFinancialInventorySalesPage(env,{scope,month,cursor,expected_revision:Number(revision)},{...options,listOriginalItemsPage:services.listFinancialOriginalItemsPage?(command=>services.listFinancialOriginalItemsPage({...command,now:options.now??Date.now})):services.listOriginalItemsPage}));
   }
   if(request.method!=='POST')fail('METHOD_NOT_ALLOWED',405);if(url.search)fail('REQUEST_INVALID');if(!permissions.financial_configure)fail('FORBIDDEN',403);await csrf(request,current);const body=await bodyOf(request),stamp=financialClock(options);
   if(url.pathname===path+'/inventory'){
@@ -134,7 +149,7 @@ export async function handleFinancialAutomation(request,env,{current,services={}
   }
   if(url.pathname===path+'/close'){
    if(!exact(body,['operation','kind','anchor','basis','close_id','expected_revision','request_id','reason','confirmed'])||!['prepare','finalize','rectify'].includes(body.operation)||!['MONTH','CIVIL_WEEK'].includes(body.kind)||!['ACCRUAL','BANK_CASH'].includes(body.basis)||body.close_id!==null&&!hash(body.close_id)||!integer(body.expected_revision)||!uuid(body.request_id)||!reason(body.reason)||body.confirmed!==true)fail('REQUEST_INVALID');
-   const config=await configuration(env,scope,options),period=financialAccountingPeriod({kind:body.kind,anchor:body.anchor,week_starts_on:config.payload?.policy?.financial_week==='CIVIL_MONDAY_SUNDAY'?'MONDAY':'FRIDAY'}),selected=financialAutomationClosePeriod(period),existing=await readFinancialClose(env,{scope,period:selected,basis:body.basis},options);if(body.close_id!==null&&body.close_id!==existing.close_id)fail('CLOSE_SCOPE_REJECTED',403);
+   const config=await configuration(env,scope,options),selected=await closingMutationPeriod(env,scope,body,config,options);
    const result=await mutateFinancialAutomationClose(env,{scope,period:selected,basis:body.basis,action:body.operation,expected_version:body.expected_revision,request_id:body.request_id,reason:body.reason},options);return json({...result,summary:publicClose(result)});
   }
   fail('NOT_FOUND',404);

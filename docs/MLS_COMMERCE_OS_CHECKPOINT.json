@@ -30,8 +30,8 @@
     "merge_commit": "9c418fd3010f46957d1ce52345baacd76041c788"
   },
   "current_phase": "M2_FINANCE_RETURNS_RECONCILIATION",
-  "working_branch": "feature/v41-layout-commercial-live-20261112",
-  "current_status": "V41_PUBLISHED_VERIFIED_TECHNICAL_PUBLIC_SCOPE",
+  "working_branch": "fix/finance-completion-20261120",
+  "current_status": "FINANCE_REPAIR_VALIDATION_IN_PROGRESS",
   "completed_this_phase": [
     "Conciliação de liberações por pedido com estados VERIFIED, LOCATED_UNVERIFIED, AMBIGUOUS e NOT_LOCATED",
     "Repasse-base, ajuste, repasse após ajuste e liberação exibidos sem dupla dedução",
@@ -129,12 +129,11 @@
     }
   },
   "next_actions": [
-    "Concluir a CI documental e a integração normal da PR118; publicação não comprova merge.",
-    "Conferir o relatório semanal com fabricação real, fontes financeiras e arquivos bancários do proprietário, mantendo as bases separadas.",
-    "Solicitar/liberar Order API no aplicativo TikTok Shop existente e preparar piloto oficial de leitura; acesso ainda não concedido.",
-    "Adaptar XLSX do relatório Shopee real, distinguindo renda por pedido de transferência agrupada.",
-    "Cadastrar aplicativo Mercado Livre e preparar piloto oficial de leitura.",
-    "Concluir M2/M2.2 com devoluções e fabricação reais, Seller Centre e Nubank no mesmo recorte, sem dupla contagem."
+    "Finish scheduler RPC budget verification without increasing limits",
+    "Run complete Node/Python/build/security/source invariants on final candidate",
+    "Replay saved real historical aggregates on exact final financial module hashes",
+    "Deliver a reviewable Git increment with separate CI/publication/acceptance evidence",
+    "Preserve published operation and validate any deployment specifically before site publication"
   ],
   "m0_followup": [
     "Conferir visual autenticado em desktop e celular durante M1; corrigir apenas branding/layout sem renomear infraestrutura"
@@ -143,33 +142,54 @@
     "Mission Control M1.1 (opção 3) integrado com 7 painéis independentes; conferir visual autenticado desktop/celular e retorno às telas antigas"
   ],
   "latest_increment": {
-    "status": "PUBLISHED_VERIFIED",
-    "verification_scope": "TECHNICAL_PUBLIC_ONLY",
-    "release_id": "2026-11-13.3",
-    "release": "2026-11-13.3",
-    "source_commit": "f68525ea1d136350ece9942433352accdf97d992",
-    "prepared_source_commit": "3cf489e33071b32bc73e2efaf2aecfc62618d46a",
-    "ci_run": 43531882471,
-    "node_tests_pass": 4432,
-    "python_tests_pass": 67,
-    "receipt": "docs/financial-automation/publication-live-20261113.json",
-    "public_verification": "docs/financial-automation/publication-live-20261113.json",
-    "verified_at": "2026-11-14T00:22:15.598Z",
-    "published": true,
-    "pull_request": 121,
-    "owner_live_qa": "NOT_PERFORMED",
-    "account_financial_acceptance": false,
+    "schema": "mls_finance_completion_increment_v1",
+    "recorded_at": "2026-11-20",
+    "base_commit": "4cfdf465b2fda58dd27ae693126b7fe1625f69d6",
+    "branch": "fix/finance-completion-20261120",
+    "release_id": "2026-11-20.1",
+    "implementation": "IMPLEMENTED_IN_WORKTREE",
+    "validation": "FOCUSED_PASS_FULL_SUITE_PENDING",
+    "git_delivery": "NOT_PUSHED",
+    "publication": "NOT_PUBLISHED",
+    "operational_acceptance": "NOT_PERFORMED",
+    "live_last_verified_release": "2026-11-17.3",
+    "live_last_verified_at_utc": "2026-11-20T20:02:20Z",
+    "financial_completeness": "PARTIAL",
     "m2_closed": false,
-    "m22_closed": false,
-    "git_integration": "CHECK_PR121_CURRENT_STATE",
-    "workers": {
-      "finance": "50b31451-c6cf-4456-bd09-be5d1956e0da",
-      "auth": "dfd2fc99-728f-4f29-96ee-a4b256c5640a",
-      "app": "9bfc21d6-dec9-4fa6-89d8-7ea1dec50993"
-    },
-    "owner_live_authenticated_qa": "NOT_PERFORMED",
-    "natural_resume_observed_at": "2026-11-14T00:33:17.899767+00:00",
-    "natural_resume_scope": "ORIGINAL_NOVEMBER_ADS_LANE_ONLY"
+    "commercial_writes_allowed": false,
+    "report": "docs/MLS_FINANCE_COMPLETION_2026_11_20.md",
+    "evidence": "docs/financial-automation/validation/finance-completion-20261120.json",
+    "implemented": [
+      "Immutable source cohort continuation and exact declared/cutoff window coverage",
+      "Durable two-phase source retention with CAS confirmation and renewable source leases",
+      "Previous-month continuation and protected source-lane fairness",
+      "Account positions require all declared account balances",
+      "Causal same-instant inventory returns",
+      "Durable original obligation retry command without freshness extension",
+      "Bank consent checks after final asynchronous gates",
+      "Finance refresh after interrupted hidden reads",
+      "Historical calendar close identity and immutable rectification",
+      "Explicit original sale-item pagination beyond100 choices",
+      "Independent dated historical name/composition evidence with manual hash/revision review",
+      "Shared source lease checked atomically for manual and scheduled dated evidence",
+      "Account transport deadline across body/fetch/response",
+      "Pinned compatible dependency security update"
+    ],
+    "not_proven": [
+      "Full current candidate CI and authenticated generated-Worker QA",
+      "Main versus Live catalogue/adult-cost visibility/DTF parity before any deployment",
+      "Recovery of five already absent September/October source runs through authorized new collection",
+      "Real bank/native wallet/payout adapters and account coverage",
+      "Approved accounting policy, tax/expense facts and Ads timezone evidence",
+      "Physical production/returns source matching and real financial close acceptance"
+    ],
+    "next_actions": [
+      "Finish scheduler RPC budget verification without increasing limits",
+      "Run complete Node/Python/build/security/source invariants on final candidate",
+      "Replay saved real historical aggregates on exact final financial module hashes",
+      "Deliver a reviewable Git increment with separate CI/publication/acceptance evidence",
+      "Preserve published operation and validate any deployment specifically before site publication"
+    ]
   },
   "incident": {
     "id": "INCIDENT_2026_10_27_PANEL_AGENT_REGRESSION",
@@ -7517,5 +7537,92 @@
       "finance": "d41571a9",
       "source_distinct_from_pr_base": true
     }
+  },
+  "previous_increment_before_finance_completion_20261120": {
+    "status": "PUBLISHED_VERIFIED",
+    "verification_scope": "TECHNICAL_PUBLIC_ONLY",
+    "release_id": "2026-11-13.3",
+    "release": "2026-11-13.3",
+    "source_commit": "f68525ea1d136350ece9942433352accdf97d992",
+    "prepared_source_commit": "3cf489e33071b32bc73e2efaf2aecfc62618d46a",
+    "ci_run": 43531882471,
+    "node_tests_pass": 4432,
+    "python_tests_pass": 67,
+    "receipt": "docs/financial-automation/publication-live-20261113.json",
+    "public_verification": "docs/financial-automation/publication-live-20261113.json",
+    "verified_at": "2026-11-14T00:22:15.598Z",
+    "published": true,
+    "pull_request": 121,
+    "owner_live_qa": "NOT_PERFORMED",
+    "account_financial_acceptance": false,
+    "m2_closed": false,
+    "m22_closed": false,
+    "git_integration": "CHECK_PR121_CURRENT_STATE",
+    "workers": {
+      "finance": "50b31451-c6cf-4456-bd09-be5d1956e0da",
+      "auth": "dfd2fc99-728f-4f29-96ee-a4b256c5640a",
+      "app": "9bfc21d6-dec9-4fa6-89d8-7ea1dec50993"
+    },
+    "owner_live_authenticated_qa": "NOT_PERFORMED",
+    "natural_resume_observed_at": "2026-11-14T00:33:17.899767+00:00",
+    "natural_resume_scope": "ORIGINAL_NOVEMBER_ADS_LANE_ONLY"
+  },
+  "previous_next_actions_before_finance_completion_20261120": [
+    "Concluir a CI documental e a integração normal da PR118; publicação não comprova merge.",
+    "Conferir o relatório semanal com fabricação real, fontes financeiras e arquivos bancários do proprietário, mantendo as bases separadas.",
+    "Solicitar/liberar Order API no aplicativo TikTok Shop existente e preparar piloto oficial de leitura; acesso ainda não concedido.",
+    "Adaptar XLSX do relatório Shopee real, distinguindo renda por pedido de transferência agrupada.",
+    "Cadastrar aplicativo Mercado Livre e preparar piloto oficial de leitura.",
+    "Concluir M2/M2.2 com devoluções e fabricação reais, Seller Centre e Nubank no mesmo recorte, sem dupla contagem."
+  ],
+  "finance_completion_20261120": {
+    "schema": "mls_finance_completion_increment_v1",
+    "recorded_at": "2026-11-20",
+    "base_commit": "4cfdf465b2fda58dd27ae693126b7fe1625f69d6",
+    "branch": "fix/finance-completion-20261120",
+    "release_id": "2026-11-20.1",
+    "implementation": "IMPLEMENTED_IN_WORKTREE",
+    "validation": "FOCUSED_PASS_FULL_SUITE_PENDING",
+    "git_delivery": "NOT_PUSHED",
+    "publication": "NOT_PUBLISHED",
+    "operational_acceptance": "NOT_PERFORMED",
+    "live_last_verified_release": "2026-11-17.3",
+    "live_last_verified_at_utc": "2026-11-20T20:02:20Z",
+    "financial_completeness": "PARTIAL",
+    "m2_closed": false,
+    "commercial_writes_allowed": false,
+    "report": "docs/MLS_FINANCE_COMPLETION_2026_11_20.md",
+    "evidence": "docs/financial-automation/validation/finance-completion-20261120.json",
+    "implemented": [
+      "Immutable source cohort continuation and exact declared/cutoff window coverage",
+      "Durable two-phase source retention with CAS confirmation and renewable source leases",
+      "Previous-month continuation and protected source-lane fairness",
+      "Account positions require all declared account balances",
+      "Causal same-instant inventory returns",
+      "Durable original obligation retry command without freshness extension",
+      "Bank consent checks after final asynchronous gates",
+      "Finance refresh after interrupted hidden reads",
+      "Historical calendar close identity and immutable rectification",
+      "Explicit original sale-item pagination beyond100 choices",
+      "Independent dated historical name/composition evidence with manual hash/revision review",
+      "Shared source lease checked atomically for manual and scheduled dated evidence",
+      "Account transport deadline across body/fetch/response",
+      "Pinned compatible dependency security update"
+    ],
+    "not_proven": [
+      "Full current candidate CI and authenticated generated-Worker QA",
+      "Main versus Live catalogue/adult-cost visibility/DTF parity before any deployment",
+      "Recovery of five already absent September/October source runs through authorized new collection",
+      "Real bank/native wallet/payout adapters and account coverage",
+      "Approved accounting policy, tax/expense facts and Ads timezone evidence",
+      "Physical production/returns source matching and real financial close acceptance"
+    ],
+    "next_actions": [
+      "Finish scheduler RPC budget verification without increasing limits",
+      "Run complete Node/Python/build/security/source invariants on final candidate",
+      "Replay saved real historical aggregates on exact final financial module hashes",
+      "Deliver a reviewable Git increment with separate CI/publication/acceptance evidence",
+      "Preserve published operation and validate any deployment specifically before site publication"
+    ]
   }
 }

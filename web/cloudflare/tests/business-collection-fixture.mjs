@@ -6,6 +6,7 @@ import {buildAdsMeasurement} from '../src/ads-measurement.mjs';
 import {buildAdsCalendar} from '../src/ads-calendar.mjs';
 import {createFinanceStore} from '../../finance/src/connection-store.mjs';
 import {runFinanceBusinessPeriod} from '../../finance/src/business-period.mjs';
+import {createBusinessPeriodRetentionFixture} from './business-period-retention-fixture.mjs';
 
 // These tests exercise the real private Finance collector and the real App
 // orchestrator. Only Shopee's three read APIs and Ads' upstream data are fake.
@@ -39,7 +40,7 @@ export async function collectionFixture({returns=false,allPaid=false,daily=false
  ADMIN_DB.db.prepare('INSERT INTO production_costs_state VALUES(1,7,?,?)').run(JSON.stringify(COST_DEFAULTS),new Date(initial).toISOString());
  const env={ADMIN_DB},financeEnv={FINANCE_DB,FINANCE_CONNECTION_ENABLED:'true',FINANCE_TOKEN_ENCRYPTION_KEY:Buffer.alloc(32,19).toString('base64'),SHOPEE_FINANCE_PARTNER_KEY:'PRIVATE_INTEGRATION_KEY'};
  const store=await createFinanceStore(financeEnv,{now});await store.setup();await store.saveTokens({access_token:'PRIVATE_INTEGRATION_ACCESS',refresh_token:'PRIVATE_INTEGRATION_REFRESH',expires_at:initial/1000+14400});
- const calls={finance:[],financeFrames:[],ads:[],list:[],detail:[],payment:[],financeBudgets:[]},state={failIndex:null,failed:false,active:0,maxActive:0,paymentHook:null,listHook:null,detailHook:null};
+ const calls={finance:[],financeFrames:[],ads:[],list:[],detail:[],payment:[],financeBudgets:[],retention:[],retentionInline:[],retentionInlineProof:[]},state={failIndex:null,failed:false,active:0,maxActive:0,paymentHook:null,listHook:null,detailHook:null};
  const fetchImpl=async request=>{
   const url=new URL(request.url);assert.equal(url.origin,'https://partner.shopeemobile.com');assert.equal(request.method,'GET');
   if(url.pathname===list){
@@ -57,9 +58,18 @@ export async function collectionFixture({returns=false,allPaid=false,daily=false
   if(state.paymentHook){const fault=await state.paymentHook({index,clock,request});if(fault instanceof Response)return fault;}
   return provider({order_sn:serial(index),return_order_sn_list:returns&&index===2?['PRIVATE_INTEGRATION_RETURN']:[],order_income:{order_sn:serial(index),original_cost_of_goods_sold:65.25,escrow_amount:47.51,ads_escrow_top_up_fee_or_technical_support_fee:0,items:[{item_id:item(index),model_id:0,line_item_id:index+1,quantity_purchased:1}]}});
  };
+ const retention=createBusinessPeriodRetentionFixture({now,financeEnv,calls:calls.retention});
+ const retentionInline=createBusinessPeriodRetentionFixture({now,financeEnv,calls:calls.retentionInline});
  const services={
-  getFinanceBusinessPeriod:async(_,selection)=>{
+  retainFinanceBusinessPeriodPublication:retention,
+  getFinanceBusinessPeriod:async(_,selection,options={})=>{
    calls.finance.push(selection);const startCalls=FINANCE_DB.calls,startFetches=calls.list.length+calls.detail.length+calls.payment.length;
+   if(options.retention){
+    const command={schema:'finance_business_period_retention_request_v1',operation:'retain',...options.retention,lease_id:options.retention.lease_id??null},before={provider:calls.list.length+calls.detail.length+calls.payment.length,bindings:calls.finance.length+calls.retention.length};
+    const reply=await retentionInline(env,command);if(reply.status!==200)throw Error(reply.body.error);
+    const stored=FINANCE_DB.db.prepare("SELECT partner_id,shop_id,month,publication_revision,payload,lease_id,expires_at FROM finance_business_period_retentions WHERE kind='COHORT' AND lease_id=?").get(command.lease_id);
+    calls.retentionInlineProof.push({command:structuredClone(command),response:structuredClone(reply.body),stored:structuredClone(stored),before,after:{provider:calls.list.length+calls.detail.length+calls.payment.length,bindings:calls.finance.length+calls.retention.length}});
+   }
    const frame=await runFinanceBusinessPeriod(financeEnv,{...selection,fetchImpl,now,timeoutMs:paymentTimeoutMs,includeDaily:daily});calls.financeFrames.push(frame);
    calls.financeBudgets.push({operation:selection.operation,d1:FINANCE_DB.calls-startCalls,fetches:calls.list.length+calls.detail.length+calls.payment.length-startFetches});return frame;
   },

@@ -6,10 +6,12 @@ import {D1} from './sqlite-d1.mjs';
 import {variantOrderFixture} from './mls-variant-order-fixture.mjs';
 import {projectBusinessPeriodFrame} from '../../finance/src/business-period-frame.mjs';
 import {projectBusinessPeriodVariantsFrame} from '../../finance/src/business-variant-attribution.mjs';
-import {businessMonth,projectBusinessMonth} from '../src/business-month.mjs';
+import {businessMonth as collectBusinessMonth,projectBusinessMonth} from '../src/business-month.mjs';
+import {createBusinessPeriodRetentionFixture} from './business-period-retention-fixture.mjs';
 import {COST_DEFAULTS} from '../src/production-costs.mjs';
 import {BUSINESS_MONTH_VARIANT_ATTRIBUTION_SCHEMA,unwrapBusinessMonthVariantSource,captureBusinessMonthVariantAttribution,buildBusinessMonthVariantContributions,projectBusinessMonthVariantContributions,readBusinessMonthVariantContributions} from '../src/business-variant-attribution.mjs';
 
+const businessMonth=(env,input,services,options={})=>collectBusinessMonth(env,input,{retainFinanceBusinessPeriodPublication:createBusinessPeriodRetentionFixture({now:options.now??Date.now}),...services},options);
 const digest=value=>createHash('sha256').update(value).digest('hex');
 const pair=(f,id,model='1')=>f.variant_contributions.variants.find(row=>row.item_id===id&&row.model_id===model);
 const now=()=>Date.UTC(2026,10,2,12);

@@ -41,6 +41,7 @@ function legacyUsed(recordExpression){
 /** authorize is checked around all operations; a commercial DB wrapper supplies its atomic SQL guard. */
 export function createFinancialCashAllocationStore(db,{scope,actor_id,authorize,resolveRecords,resolveAutomaticRule=null,guardRecords=null,legacy_cash_tenant=null,now=()=>Date.now()}={}){
   const business=financialAllocationScope(scope),tenant=financialCashAllocationTenant(business);
+  const poolTenant=legacy_cash_tenant??tenant;
   if(!db?.prepare||!db?.batch||!id(actor_id)||typeof authorize!=='function'||typeof resolveRecords!=='function'||typeof now!=='function'||guardRecords!==null&&typeof guardRecords!=='function'||legacy_cash_tenant!==null&&(typeof legacy_cash_tenant!=='string'||!legacy_cash_tenant.length||legacy_cash_tenant.length>400))fail('CONFIGURATION');
   const allowed=async(operation,phase)=>{if(await authorize({scope:business,operation,phase})!==true)fail('AUTHORIZATION_REVOKED',403);};
   const stamp=()=>{const t=now();if(!Number.isSafeInteger(t)||t<1000||t>9999999999999)fail('CLOCK_INVALID');return Math.floor(t/1000);};
@@ -64,18 +65,19 @@ export function createFinancialCashAllocationStore(db,{scope,actor_id,authorize,
     const ids=[...new Set([...(input.left??[]),...(input.right??[]),...(input.adjustments??[])].map(x=>x?.record_id))];if(!ids.length||ids.length>220||ids.some(x=>!id(x)))fail('REQUEST_INVALID',400);
     const resolved=await resolveRecords(ids,{scope:business});await allowed('read','after-source-read');
     if(!Array.isArray(resolved))fail('SOURCE_RECORDS_UNAVAILABLE');
-    const reservations=await used(ids,p);
-    if(p.legacy){const selected=resolved.filter(row=>row.legacy_record_id).map(row=>({record_id:row.record_id,legacy_record_id:row.legacy_record_id}));if(selected.length){
+    const reservations=await used(ids,p),pooledReservations=new Map();
+    const selected=resolved.filter(row=>typeof row?.legacy_record_id==='string').map(row=>({record_id:row.record_id,legacy_record_id:row.legacy_record_id}));if(selected.length){
       // An explicitly shared legacy source is one pool of money, even when
       // reached through two authorized business namespaces. Count its active
       // allocations globally by the trusted legacy key, not twice per book.
-      const rows=await db.prepare(`WITH wanted AS(SELECT json_extract(value,'$.record_id') record_id,json_extract(value,'$.legacy_record_id') legacy_record_id FROM json_each(?)) SELECT wanted.record_id,CAST(${p.present?financialCashLegacyUsageSql('wanted.legacy_record_id','?'):'0'} AS TEXT) new_used,CAST(${legacyUsed('wanted.legacy_record_id')} AS TEXT) old_used FROM wanted`).bind(JSON.stringify(selected),...(p.present?[legacy_cash_tenant]:[]),legacy_cash_tenant).all();
+      const poolQuery=p.present?`SELECT legacy_record_id,CAST(SUM(amount_cents) AS TEXT) new_used,CAST(MIN(capacity_cents) AS TEXT) minimum_capacity,CAST(MAX(capacity_cents) AS TEXT) maximum_capacity FROM finance_financial_cash_items i WHERE (legacy_cash_tenant=? OR legacy_cash_tenant IS NULL AND tenant=?) AND legacy_record_id IN(SELECT legacy_record_id FROM wanted) AND ${active('i')} GROUP BY legacy_record_id`:"SELECT NULL legacy_record_id,'0' new_used,NULL minimum_capacity,NULL maximum_capacity WHERE 0";
+      const rows=await db.prepare(`WITH wanted AS(SELECT json_extract(value,'$.record_id') record_id,json_extract(value,'$.legacy_record_id') legacy_record_id FROM json_each(?)),pools AS(${poolQuery}) SELECT wanted.record_id,wanted.legacy_record_id,COALESCE(pools.new_used,'0') new_used,CAST(${p.legacy?legacyUsed('wanted.legacy_record_id'):'0'} AS TEXT) old_used,pools.minimum_capacity,pools.maximum_capacity FROM wanted LEFT JOIN pools ON pools.legacy_record_id=wanted.legacy_record_id`).bind(JSON.stringify(selected),...(p.present?[poolTenant,tenant]:[]),...(p.legacy?[poolTenant]:[])).all();
       if(!Array.isArray(rows?.results)||rows.results.length!==selected.length)fail('STORAGE_INVALID');
-      for(const row of rows.results){const total=BigInt(exactNumber(row.new_used))+BigInt(exactNumber(row.old_used));if(total>BigInt(Number.MAX_SAFE_INTEGER))fail('AMOUNT_OVERFLOW',400);reservations.set(row.record_id,Number(total));}
-    }}
+      for(const row of rows.results){const total=BigInt(exactNumber(row.new_used))+BigInt(exactNumber(row.old_used));if(total>BigInt(Number.MAX_SAFE_INTEGER))fail('AMOUNT_OVERFLOW',400);if(pooledReservations.has(row.legacy_record_id)&&pooledReservations.get(row.legacy_record_id)!==Number(total))fail('STORAGE_INVALID');pooledReservations.set(row.legacy_record_id,Number(total));const source=resolved.find(value=>value.record_id===row.record_id);if(row.minimum_capacity!==null&&Number.isSafeInteger(source?.amount_cents)){const capacity=Number(BigInt(source.amount_cents)<0n?-BigInt(source.amount_cents):BigInt(source.amount_cents));if(exactNumber(row.minimum_capacity)!==capacity||exactNumber(row.maximum_capacity)!==capacity)fail('RECORD_CAPACITY_AMBIGUOUS',409);}}
+    }
     let automatic;
     if(input.rule_id!==undefined){if(!id(input.rule_id)||typeof resolveAutomaticRule!=='function')fail('AUTOMATIC_RULE_NOT_AUTHORIZED',403);automatic=await resolveAutomaticRule(input.rule_id,{scope:business});}
-    return {group:projectFinancialAllocation({...input,scope:business,...(automatic===undefined?{}:{automatic_rule:automatic})},{records:resolved,used_cents:reservations}),records:resolved};
+    return {group:projectFinancialAllocation({...input,scope:business,...(automatic===undefined?{}:{automatic_rule:automatic})},{records:resolved,used_cents:reservations,pool_used_cents:pooledReservations}),records:resolved};
   }
   async function persist(input,operation,response,statements,requestHash){
     const t=stamp();statements.push(db.prepare('INSERT INTO finance_financial_cash_audit(tenant,revision,operation,group_id,request_id,actor_id,created_at) VALUES(?,?,?,?,?,?,?)').bind(tenant,response.revision,operation,response.group_id,input.request_id,actor_id,t));
@@ -104,13 +106,15 @@ export function createFinancialCashAllocationStore(db,{scope,actor_id,authorize,
       const caps=JSON.stringify(group.usage),statements=stateStatements(input.expected_revision);
       if(guardRecords!==null){const guards=await guardRecords(records,{scope:business});if(!Array.isArray(guards)||guards.length>220||guards.some(statement=>typeof statement?.run!=='function'))fail('SOURCE_GUARD_INVALID');statements.push(...guards);}
       const currentUsage=`COALESCE((SELECT SUM(i.amount_cents) FROM finance_financial_cash_items i WHERE i.tenant=? AND i.record_id=json_extract(j.value,'$.record_id') AND ${active('i')}),0)`;
-      const legacyUsage=`COALESCE((SELECT SUM(i.amount_cents) FROM finance_financial_cash_items i WHERE i.legacy_cash_tenant=? AND i.legacy_record_id=json_extract(j.value,'$.legacy_record_id') AND ${active('i')}),0)`;
-      const legacy=p.legacy?`CASE WHEN json_extract(j.value,'$.legacy_record_id') IS NOT NULL THEN ${legacyUsage} ELSE ${currentUsage} END+${legacyUsed("json_extract(j.value,'$.legacy_record_id')")}`:currentUsage;
+      const legacyUsage=`COALESCE((SELECT SUM(i.amount_cents) FROM finance_financial_cash_items i WHERE (i.legacy_cash_tenant=? OR i.legacy_cash_tenant IS NULL AND i.tenant=?) AND i.legacy_record_id=json_extract(j.value,'$.legacy_record_id') AND ${active('i')}),0)`;
+      const legacy=`CASE WHEN json_extract(j.value,'$.legacy_record_id') IS NOT NULL THEN ${legacyUsage} ELSE ${currentUsage} END`+(p.legacy?`+${legacyUsed("json_extract(j.value,'$.legacy_record_id')")}`:'');
+      const newUsage="CASE WHEN json_extract(j.value,'$.legacy_record_id') IS NOT NULL THEN (SELECT SUM(json_extract(n.value,'$.new_cents')) FROM json_each(?) n WHERE json_extract(n.value,'$.legacy_record_id')=json_extract(j.value,'$.legacy_record_id')) ELSE json_extract(j.value,'$.new_cents') END";
+      const inconsistentCapacity=`json_extract(j.value,'$.legacy_record_id') IS NOT NULL AND EXISTS(SELECT 1 FROM finance_financial_cash_items i WHERE (i.legacy_cash_tenant=? OR i.legacy_cash_tenant IS NULL AND i.tenant=?) AND i.legacy_record_id=json_extract(j.value,'$.legacy_record_id') AND i.capacity_cents<>json_extract(j.value,'$.capacity_cents') AND ${active('i')})`;
       // Keep the cap expression explicit: both independent matchers reserve inside this transaction.
-      statements.push(guard(`NOT EXISTS(SELECT 1 FROM json_each(?) j WHERE (${legacy})+json_extract(j.value,'$.new_cents')>json_extract(j.value,'$.capacity_cents'))`,caps,...(p.legacy?[legacy_cash_tenant,tenant,legacy_cash_tenant]:[tenant])));
+      statements.push(guard(`NOT EXISTS(SELECT 1 FROM json_each(?) j WHERE (${legacy})+(${newUsage})>json_extract(j.value,'$.capacity_cents') OR (${inconsistentCapacity}))`,caps,poolTenant,tenant,tenant,...(p.legacy?[poolTenant]:[]),caps,poolTenant,tenant));
       statements.push(db.prepare('INSERT INTO finance_financial_cash_groups(tenant,group_id,revision,relation,payload_json,actor_id,confirmed_at) VALUES(?,?,?,?,?,?,?)').bind(tenant,groupId,payload.revision,group.relation,JSON.stringify(payload),actor_id,t));
       const savedItems=[...group.left.map(i=>({...i,side:'LEFT'})),...group.right.map(i=>({...i,side:'RIGHT'})),...group.adjustments].map(item=>{const cap=group.usage.find(i=>i.record_id===item.record_id);return {...item,capacity_cents:cap.capacity_cents,legacy_record_id:cap.legacy_record_id};});
-      statements.push(db.prepare("INSERT INTO finance_financial_cash_items(tenant,group_id,record_id,record_revision,side,amount_cents,capacity_cents,legacy_cash_tenant,legacy_record_id) SELECT ?,?,json_extract(value,'$.record_id'),json_extract(value,'$.record_revision'),json_extract(value,'$.side'),json_extract(value,'$.amount_cents'),json_extract(value,'$.capacity_cents'),?,json_extract(value,'$.legacy_record_id') FROM json_each(?)").bind(tenant,groupId,legacy_cash_tenant,JSON.stringify(savedItems)));
+      statements.push(db.prepare("INSERT INTO finance_financial_cash_items(tenant,group_id,record_id,record_revision,side,amount_cents,capacity_cents,legacy_cash_tenant,legacy_record_id) SELECT ?,?,json_extract(value,'$.record_id'),json_extract(value,'$.record_revision'),json_extract(value,'$.side'),json_extract(value,'$.amount_cents'),json_extract(value,'$.capacity_cents'),CASE WHEN json_extract(value,'$.legacy_record_id') IS NOT NULL THEN ? ELSE NULL END,json_extract(value,'$.legacy_record_id') FROM json_each(?)").bind(tenant,groupId,poolTenant,JSON.stringify(savedItems)));
       return persist(input,'confirm',response,statements,requestHash);
     },
     async reverse(value){

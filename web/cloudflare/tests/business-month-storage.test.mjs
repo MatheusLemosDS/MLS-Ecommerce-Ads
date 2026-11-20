@@ -1,4 +1,5 @@
 import test from 'node:test';
+import {createBusinessPeriodRetentionFixture} from './business-period-retention-fixture.mjs';
 import assert from 'node:assert/strict';
 import {D1} from './sqlite-d1.mjs';
 import {COST_DEFAULTS} from '../src/production-costs.mjs';
@@ -29,7 +30,7 @@ function environment(){
  ADMIN_DB.db.prepare('INSERT INTO production_costs_state VALUES(1,1,?,?)').run(JSON.stringify(COST_DEFAULTS),new Date(clock).toISOString());return {ADMIN_DB};
 }
 function source(options={}){let sequence=0;const frames=new Map(),calls=[];return {calls,frames,getFinanceBusinessPeriod:async(_,selection)=>{calls.push(selection);if(selection.operation==='start'){const value=frame({start_date:selection.start_date,end_date:selection.end_date},++sequence,options);frames.set(value.run_id,value);return structuredClone(value);}return structuredClone(frames.get(selection.run_id));}};}
-const run=(env,services,operation='start',extra={},time=now)=>businessMonth(env,{operation,month:'2026-10',...extra},services,{now:time});
+const run=(env,services,operation='start',extra={},time=now)=>businessMonth(env,{operation,month:'2026-10',...extra},{retainFinanceBusinessPeriodPublication:createBusinessPeriodRetentionFixture({now:time}),...services},{now:time});
 async function finish(env,services){let value=await run(env,services);while(value.status==='RUNNING')value=await run(env,services,'step');return value;}
 const stored=env=>({parent:env.ADMIN_DB.db.prepare('SELECT * FROM business_month_runs').all(),frames:env.ADMIN_DB.db.prepare('SELECT * FROM business_month_frames ORDER BY month,slot_index').all()});
 const fail=error=>error instanceof BusinessMonthError&&error.message==='BUSINESS_MONTH_STORAGE_INVALID';

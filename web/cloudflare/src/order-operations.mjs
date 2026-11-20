@@ -31,7 +31,13 @@ function ooSelection(input,stamp){
 // immutable representation beside its SHA permits period-wide SQL counters
 // and filters without loading all historical lines into the Worker.
 const ooSQLLines="(SELECT json_group_array(json_object('unit_key',l.unit_key,'line_key',l.line_key,'payload',l.payload,'source_hash',l.source_hash)) FROM (SELECT unit_key,line_key,payload,source_hash FROM production_dtf_lines WHERE order_id=o.order_id AND missing=0 ORDER BY line_key,unit_key) l)";
-const ooSQLChanged='(e.to_stage IS NOT NULL AND e.lines_json<>'+ooSQLLines+')';
+// A confirmed print recipe is local DTF metadata, not a changed commercial
+// line. Compare its original provider payload while retaining raw payload/hash
+// snapshots for audit and the transactional source fence below.
+const ooSQLProviderPayload=p=>"CASE WHEN json_valid("+p+") THEN CASE WHEN (SELECT COUNT(*) FROM json_each("+p+"))=8 AND json_type("+p+",'$.source_sku')='text' AND json_type("+p+",'$.recipe_request_id')='text' THEN json_remove(json_set("+p+",'$.sku',json_extract("+p+",'$.source_sku')),'$.source_sku','$.recipe_request_id') ELSE "+p+" END ELSE "+p+" END";
+const ooSQLProviderLines=j=>"(SELECT json_group_array(json_object('unit_key',json_extract(x.value,'$.unit_key'),'line_key',json_extract(x.value,'$.line_key'),'payload',''||"+ooSQLProviderPayload("json_extract(x.value,'$.payload')")+")) FROM json_each("+j+") x)";
+// CASE guarantees lazy branches even if SQLite changes its AND planning.
+const ooSQLChanged="(CASE WHEN e.to_stage IS NULL THEN 0 WHEN e.lines_json="+ooSQLLines+" THEN 0 ELSE ("+ooSQLProviderLines('e.lines_json')+"<>"+ooSQLProviderLines(ooSQLLines)+" OR EXISTS(SELECT 1 FROM json_each(e.lines_json) h JOIN production_dtf_lines l ON l.unit_key=json_extract(h.value,'$.unit_key') WHERE l.payload=json_extract(h.value,'$.payload') AND l.source_hash<>json_extract(h.value,'$.source_hash'))) END)";
 const ooSQLStage="CASE WHEN o.status IN('SHIPPED','TO_CONFIRM_RECEIVE') THEN 'SHIPPED' WHEN o.status='COMPLETED' THEN 'COMPLETED' WHEN o.status='CANCELLED' THEN 'CANCELLED' WHEN o.status='UNPAID' THEN 'UNPAID' WHEN o.status NOT IN('READY_TO_SHIP','PROCESSED','RETRY_SHIP') OR o.source_hash='0000000000000000000000000000000000000000000000000000000000000000' OR "+ooSQLChanged+" THEN 'REVIEW' ELSE COALESCE(e.to_stage,'NOT_STARTED') END";
 
 export const ORDER_OPERATIONS_SCHEMA=[
@@ -72,8 +78,9 @@ function ooOrderRow(row,stamp){
 function ooLine(row){
  try{
   if(!ooSerial(row.order_id)||!ooHash(row.unit_key)||!ooHash(row.source_hash)||!ooInt(row.checked_at,1,9999999999)||typeof row.payload!=='string'||ooEncoder.encode(row.payload).byteLength>4096||row.missing!==0)throw Error();
-  const v=JSON.parse(row.payload);if(!ooExact(v,['item_id','model_id','sku','quantity','model_name','requires_pair'])||!ooId(v.item_id)||!ooId(v.model_id,true)||row.line_key!==v.item_id+':'+v.model_id||!ooText(v.sku,128,true)||!ooText(v.model_name,256,true)||!ooInt(v.quantity,1,10000)||typeof v.requires_pair!=='boolean')throw Error();
-  return {item_id:v.item_id,model_id:v.model_id,sku:v.sku,quantity:v.quantity,model_name:v.model_name,missing:false};
+  const v=JSON.parse(row.payload);const recipe=ooExact(v,['item_id','model_id','sku','quantity','model_name','requires_pair','source_sku','recipe_request_id']);
+  if(!(recipe||ooExact(v,['item_id','model_id','sku','quantity','model_name','requires_pair']))||recipe&&(!v.requires_pair||!ooText(v.source_sku,128,true)||!ooUuid(v.recipe_request_id))||!ooId(v.item_id)||!ooId(v.model_id,true)||row.line_key!==v.item_id+':'+v.model_id||!ooText(v.sku,recipe?1024:128,true)||recipe&&(!v.sku.length||v.sku.length>256)||!ooText(v.model_name,256,true)||!ooInt(v.quantity,1,10000)||typeof v.requires_pair!=='boolean')throw Error();
+  return {item_id:v.item_id,model_id:v.model_id,sku:recipe?v.source_sku:v.sku,quantity:v.quantity,model_name:v.model_name,missing:false};
  }catch{return null;}
 }
 async function ooSourceIntegrity(row,lines){
@@ -93,13 +100,13 @@ function ooProjectedOrder(row,rawLines,stamp,integrity){
  if(!integrity)blocked.push('SOURCE_CONFLICT');
  if(active.length===0||active.length>200)blocked.push('SOURCE_INCOMPLETE');
  const lines=good.filter(Boolean),selling_units=integrity?lines.reduce((n,v)=>n+v.quantity,0):null;
- return {identity:{platform:ooPlatform,shop_id:ooShop,order_id:row.order_id},source_hash:row.source_hash,provider:{status:row.status,created_at:row.create_time,updated_at:row.update_time,checked_at:row.checked_at,age_seconds:Math.max(0,stamp-row.checked_at),stale},operation:{stage:row.local_stage,updated_at:row.local_updated_at,reason:row.local_reason,lines_changed:row.local_stage!==null&&row.local_lines_json!==ooLinesCanonical(active)},display_stage:row.stage,can_update:blocked.length===0,blocked_reasons:blocked,lines:lines.slice(0,8),lines_total:row.line_count,lines_limited:row.line_count>8,selling_units};
+ return {identity:{platform:ooPlatform,shop_id:ooShop,order_id:row.order_id},source_hash:row.source_hash,provider:{status:row.status,created_at:row.create_time,updated_at:row.update_time,checked_at:row.checked_at,age_seconds:Math.max(0,stamp-row.checked_at),stale},operation:{stage:row.local_stage,updated_at:row.local_updated_at,reason:row.local_reason,lines_changed:row.local_stage!==null&&row.local_lines_changed===1},display_stage:row.stage,can_update:blocked.length===0,blocked_reasons:blocked,lines:lines.slice(0,8),lines_total:row.line_count,lines_limited:row.line_count>8,selling_units};
 }
 function ooEmpty(selected,stamp,revision,source=false){return {schema:'order_operations_workspace_v1',checked_at:stamp,revision,selection:selected,pagination:{page:selected.page,page_size:50,total_orders:0,pages:0,has_more:false},coverage:{state:source?'PARTIAL':'NOT_CAPTURED',source:'SAVED_SHOPEE_DTF_CACHE',period_complete:false,orders_in_period:0,oldest_checked_at:null,latest_checked_at:null,last_sync_at:null,history_next_date:null},platforms:[{platform:ooPlatform,shop_id:ooShop,connection:source?'SAVED_SOURCE':'NOT_CAPTURED'},{platform:'MERCADO_LIVRE_BR',shop_id:null,connection:'NOT_CONNECTED'},{platform:'TIKTOK_SHOP_BR',shop_id:null,connection:'NOT_CONNECTED'}],totals:{orders:0,by_stage:Object.fromEntries(ooDisplay.map(v=>[v,0]))},orders:[]};}
 export async function readOrderOperationsWorkspace(env,input,{now=()=>Date.now()}={}){
  try{
   const stamp=ooClock(now),selected=ooSelection(input,stamp),db=ooDB(env),probe=await ooProbe(db),state=await ooState(db,probe.store),empty=ooEmpty(selected,stamp,state.revision,probe.source);if(!probe.source)return empty;
-  const where=ooWhere(selected),join=ooJoin(probe.store),base='SELECT o.order_id,o.status,o.create_time,o.update_time,o.checked_at,o.source_hash,e.to_stage AS local_stage,e.reason AS local_reason,e.created_at AS local_updated_at,e.line_fingerprint AS local_line_fingerprint,e.lines_json AS local_lines_json,'+ooSQLStage+' AS stage FROM production_dtf_orders o'+join+' WHERE '+where.sql,filter=ooFilter(selected.status),filterArgs=['ALL','ACTIVE'].includes(selected.status)?[]:[selected.status];
+  const where=ooWhere(selected),join=ooJoin(probe.store),base='SELECT o.order_id,o.status,o.create_time,o.update_time,o.checked_at,o.source_hash,e.to_stage AS local_stage,e.reason AS local_reason,e.created_at AS local_updated_at,e.line_fingerprint AS local_line_fingerprint,e.lines_json AS local_lines_json,'+ooSQLStage+' AS stage,'+ooSQLChanged+' AS local_lines_changed FROM production_dtf_orders o'+join+' WHERE '+where.sql,filter=ooFilter(selected.status),filterArgs=['ALL','ACTIVE'].includes(selected.status)?[]:[selected.status];
   const result=await db.batch([
    db.prepare('SELECT stage,COUNT(*) AS orders,MIN(checked_at) AS oldest,MAX(checked_at) AS latest FROM ('+base+') orders GROUP BY stage').bind(...where.args),
    db.prepare('SELECT COUNT(*) AS total FROM ('+base+') orders WHERE '+filter).bind(...where.args,...filterArgs),

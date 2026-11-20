@@ -1,3 +1,5 @@
+Atualização financeira de 20/11/2026: implementação em `fix/finance-completion-20261120`, main base 4cfdf465b2fda58dd27ae693126b7fe1625f69d6. Validação completa em andamento; SEM PUBLICAÇÃO e SEM ACEITE FINANCEIRO REAL. Live 17.3 preservada. Consultar docs/MLS_FINANCE_COMPLETION_2026_11_20.md e docs/financial-automation/validation/finance-completion-20261120.json. Não reprecificar históricos desconhecidos, ampliar permissões ou publicar sobre a Live sem preservar catálogo/custos/DTF e validação específica.
+
 # Complemento financeiro — implementação e limites
 
 A implementação publicada adiciona ao MLS Finance resultado por competência, recebíveis/carteira, saques, banco, despesas, devoluções, conciliação e fechamentos versionados, preservando a V4.1 e a estimativa de vendas existente. Fontes não comprovadas permanecem parciais.

@@ -1,6 +1,6 @@
 import {MLS_BROWSER_ASSET_MANIFEST} from './browser-assets-manifest.mjs';
 
-const ids=new Set(['bank','month','orders','production','weekly','workspace']);
+const ids=new Set(['bank','dtf','month','orders','production','weekly','workspace']);
 const assetRows=()=>MLS_BROWSER_ASSET_MANIFEST.assets;
 const valid=row=>row&&ids.has(row.id)&&/^[a-f0-9]{64}$/.test(row.sha256)&&row.path==='/assets/mls/'+row.sha256+'.js'&&Number.isSafeInteger(row.bytes)&&row.bytes>0&&row.bytes<=(['month','workspace'].includes(row.id)?1048576:262144)&&/^sha256-[A-Za-z0-9+/]{43}=$/.test(row.integrity);
 
@@ -12,9 +12,10 @@ export function browserAssetScript(id){
 
 /** Register before the last parser-blocking workspace script; a failed asset never starts controllers. */
 export function browserWorkspaceFailureScript(){
- const row=assetRows().find(row=>row.id==='workspace');
- if(!valid(row))throw Error('BROWSER_ASSET_MANIFEST_INVALID');
- return 'document.addEventListener("error",function(event){const target=event.target;if(target?.tagName!=="SCRIPT")return;let url;try{url=new URL(target.src,location.href);}catch{return;}if(url.origin!==location.origin||url.pathname!=='+JSON.stringify(row.path)+'||url.search)return;const status=document.getElementById("message"),retry=document.getElementById("startupRetry");if(status){status.textContent="Não foi possível carregar o painel. Recarregue a página para tentar novamente.";status.setAttribute("role","alert");status.style.color="var(--negative,#b42318)";}if(retry){retry.hidden=false;retry.disabled=false;retry.textContent="Recarregar a página";retry.onclick=function(){location.reload();};}},true);';
+ const row=assetRows().find(row=>row.id==='workspace'),dtf=assetRows().find(row=>row.id==='dtf');
+ if(!valid(row)||dtf&&!valid(dtf))throw Error('BROWSER_ASSET_MANIFEST_INVALID');
+ const paths=[row.path,...(dtf?[dtf.path]:[])];
+ return 'document.addEventListener("error",function(event){const target=event.target;if(target?.tagName!=="SCRIPT")return;let url;try{url=new URL(target.src,location.href);}catch{return;}if(url.origin!==location.origin||!'+JSON.stringify(paths)+'.includes(url.pathname)||url.search)return;const status=document.getElementById("message"),retry=document.getElementById("startupRetry");if(status){status.textContent="Não foi possível carregar o painel. Recarregue a página para tentar novamente.";status.setAttribute("role","alert");status.style.color="var(--negative,#b42318)";}if(retry){retry.hidden=false;retry.disabled=false;retry.textContent="Recarregar a página";retry.onclick=function(){location.reload();};}},true);';
 }
 
 /** Only public, build-inventoried code can cross the ASSETS binding. */

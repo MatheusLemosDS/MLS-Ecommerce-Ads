@@ -1,0 +1,87 @@
+{
+  "schema": "mls_finance_completion_increment_v1",
+  "recorded_at": "2026-11-20",
+  "base_commit": "4cfdf465b2fda58dd27ae693126b7fe1625f69d6",
+  "branch": "fix/finance-completion-20261120",
+  "release_id": "2026-11-20.1",
+  "implementation": "IMPLEMENTED_IN_WORKTREE",
+  "validation": "FOCUSED_PASS_FULL_SUITE_PENDING",
+  "git_delivery": "NOT_PUSHED",
+  "publication": "NOT_PUBLISHED",
+  "operational_acceptance": "NOT_PERFORMED",
+  "live_last_verified_release": "2026-11-17.3",
+  "live_last_verified_at_utc": "2026-11-20T20:02:20Z",
+  "financial_completeness": "PARTIAL",
+  "m2_closed": false,
+  "commercial_writes_allowed": false,
+  "report": "docs/MLS_FINANCE_COMPLETION_2026_11_20.md",
+  "evidence": "docs/financial-automation/validation/finance-completion-20261120.json",
+  "implemented": [
+    "Immutable source cohort continuation and exact declared/cutoff window coverage",
+    "Durable two-phase source retention with CAS confirmation and renewable source leases",
+    "Previous-month continuation and protected source-lane fairness",
+    "Account positions require all declared account balances",
+    "Causal same-instant inventory returns",
+    "Durable original obligation retry command without freshness extension",
+    "Bank consent checks after final asynchronous gates",
+    "Finance refresh after interrupted hidden reads",
+    "Historical calendar close identity and immutable rectification",
+    "Explicit original sale-item pagination beyond100 choices",
+    "Independent dated historical name/composition evidence with manual hash/revision review",
+    "Shared source lease checked atomically for manual and scheduled dated evidence",
+    "Account transport deadline across body/fetch/response",
+    "Pinned compatible dependency security update"
+  ],
+  "not_proven": [
+    "Full current candidate CI and authenticated generated-Worker QA",
+    "Main versus Live catalogue/adult-cost visibility/DTF parity before any deployment",
+    "Recovery of five already absent September/October source runs through authorized new collection",
+    "Real bank/native wallet/payout adapters and account coverage",
+    "Approved accounting policy, tax/expense facts and Ads timezone evidence",
+    "Physical production/returns source matching and real financial close acceptance"
+  ],
+  "next_actions": [
+    "Finish scheduler RPC budget verification without increasing limits",
+    "Run complete Node/Python/build/security/source invariants on final candidate",
+    "Replay saved real historical aggregates on exact final financial module hashes",
+    "Deliver a reviewable Git increment with separate CI/publication/acceptance evidence",
+    "Preserve published operation and validate any deployment specifically before site publication"
+  ],
+  "python_tests": {
+    "passed": 67,
+    "failed": 0
+  },
+  "dependency_audit": {
+    "before": {
+      "moderate": 2,
+      "high": 1
+    },
+    "after": {
+      "total": 0
+    },
+    "wrangler": "4.153.0",
+    "undici_override": "7.30.2"
+  },
+  "historical_replay": {
+    "state": "PASS_CURRENT_WORKTREE_FINAL_SHA_PENDING",
+    "scope": [
+      "2026-11-13",
+      "2026-11-17"
+    ],
+    "integer_cents": true,
+    "all_five_days_match": true,
+    "known_units": 3,
+    "pending_units": 183,
+    "current_catalog_used_to_reprice_history": false,
+    "edit_day_unknown": true,
+    "remote_writes": 0
+  },
+  "scheduler_budget": {
+    "limit": 50,
+    "complete_cost_includes_retention_posts": true,
+    "observed_turns": [
+      42,
+      47
+    ]
+  }
+}

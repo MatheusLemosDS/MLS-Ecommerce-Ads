@@ -5,6 +5,7 @@ import {projectBusinessPeriodRequest,projectBusinessPeriodFrame} from './busines
 import {FINANCIAL_ORDER_EVIDENCE_SCHEMA,buildFinancialOrderEvidence,projectFinancialOrderEvidence} from './financial-order-evidence.mjs';
 import {FINANCIAL_ORDER_COMPONENTS_SCHEMA,buildFinancialOrderComponents} from './financial-order-components.mjs';
 import {buildBusinessPeriodVariantsFrame} from './business-variant-attribution.mjs';
+import {BUSINESS_PERIOD_RETENTION_SCHEMA,businessPeriodUnpinnedRun} from './business-period-retention.mjs';
 
 
 function createTenantBusinessPeriod(profile){
@@ -28,6 +29,7 @@ const businessCursor=value=>typeof value==='string'&&value.length>0&&value.lengt
 const businessHash=async value=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',businessEncoder.encode(value))),byte=>byte.toString(16).padStart(2,'0')).join('');
 const businessBuckets=['completed','ongoing','cancelled','cancel_pending','unpaid','other','unknown'];
 const BUSINESS_SCHEMA=[
+ ...BUSINESS_PERIOD_RETENTION_SCHEMA,
  ...FINANCIAL_ORDER_EVIDENCE_SCHEMA,
  ...FINANCIAL_ORDER_COMPONENTS_SCHEMA,
  `CREATE TABLE IF NOT EXISTS finance_business_period_runs (run_id TEXT PRIMARY KEY,partner_id INTEGER NOT NULL,shop_id INTEGER NOT NULL,revision INTEGER NOT NULL,status TEXT NOT NULL,start_date TEXT NOT NULL,end_date TEXT NOT NULL,time_from INTEGER NOT NULL,time_to INTEGER NOT NULL,cutoff_at INTEGER NOT NULL,checked_at INTEGER NOT NULL,created_at INTEGER NOT NULL,cursor TEXT NOT NULL,pages_read INTEGER NOT NULL,duplicate_orders INTEGER NOT NULL,lease_owner TEXT,lease_until INTEGER,last_error TEXT)`,
@@ -263,16 +265,18 @@ async function runFinanceBusinessPeriod(env,options={}){
   const freshness=input.end_date.slice(0,7)===today.slice(0,7)?60:900;
   const recentSql="SELECT r.run_id FROM finance_business_period_runs r WHERE partner_id=? AND shop_id=? AND start_date=? AND end_date=? AND ((status='COMPLETE' AND cutoff_at>=? AND NOT EXISTS(SELECT 1 FROM finance_business_period_orders o WHERE o.run_id=r.run_id AND NOT EXISTS(SELECT 1 FROM finance_business_order_evidence e WHERE e.run_id=o.run_id AND e.order_hash=o.order_hash AND e.source_hash=o.source_hash AND e.checked_at=o.checked_at))) OR (status='RUNNING' AND cutoff_at>=?)) ORDER BY created_at DESC,run_id DESC LIMIT 1",recentArgs=[...businessIdentity,input.start_date,input.end_date,initialTime-freshness,initialTime-900];
   const recent=await storage(()=>prepare(recentSql,recentArgs).first());if(recent)return output(await snapshot(recent.run_id));
-  const cutoff=initialTime-30*86400;
+  const cutoff=initialTime-30*86400,unpinned=businessPeriodUnpinnedRun('r',initialTime);
+  const expired='SELECT r.run_id FROM finance_business_period_runs r WHERE r.created_at<? AND r.partner_id=? AND r.shop_id=? AND (r.lease_owner IS NULL OR r.lease_until<=?) AND '+unpinned.sql,expiredArgs=[cutoff,...businessIdentity,initialTime,...unpinned.values];
   await storage(()=>db.batch([
-   prepare('DELETE FROM finance_financial_order_components WHERE run_id IN (SELECT run_id FROM finance_business_period_runs WHERE created_at<? AND partner_id=? AND shop_id=?)',[cutoff,...businessIdentity]),
-   prepare('DELETE FROM finance_business_order_evidence WHERE run_id IN (SELECT run_id FROM finance_business_period_runs WHERE created_at<? AND partner_id=? AND shop_id=?)',[cutoff,...businessIdentity]),
-   prepare('DELETE FROM finance_business_period_orders WHERE run_id IN (SELECT run_id FROM finance_business_period_runs WHERE created_at<? AND partner_id=? AND shop_id=?)',[cutoff,...businessIdentity]),
-   prepare('DELETE FROM finance_business_period_cursors WHERE run_id IN (SELECT run_id FROM finance_business_period_runs WHERE created_at<? AND partner_id=? AND shop_id=?)',[cutoff,...businessIdentity]),
-   prepare('DELETE FROM finance_business_period_payment_cache WHERE run_id IN (SELECT run_id FROM finance_business_period_runs WHERE created_at<? AND partner_id=? AND shop_id=?)',[cutoff,...businessIdentity]),
-   prepare('DELETE FROM finance_business_period_runs WHERE created_at<? AND partner_id=? AND shop_id=?',[cutoff,...businessIdentity]),
+   prepare('DELETE FROM finance_financial_order_components WHERE run_id IN ('+expired+')',expiredArgs),
+   prepare('DELETE FROM finance_business_order_evidence WHERE run_id IN ('+expired+')',expiredArgs),
+   prepare('DELETE FROM finance_business_period_orders WHERE run_id IN ('+expired+')',expiredArgs),
+   prepare('DELETE FROM finance_business_period_cursors WHERE run_id IN ('+expired+')',expiredArgs),
+   prepare('DELETE FROM finance_business_period_payment_cache WHERE run_id IN ('+expired+')',expiredArgs),
+   prepare('DELETE FROM finance_business_period_runs WHERE run_id IN ('+expired+')',expiredArgs),
   ]));
-  const evict="SELECT run_id FROM finance_business_period_runs WHERE partner_id=? AND shop_id=? AND cutoff_at<? AND (lease_owner IS NULL OR lease_until<=?) AND (SELECT COUNT(*) FROM finance_business_period_runs WHERE partner_id=? AND shop_id=?)>=60 ORDER BY created_at,run_id LIMIT 1",evictArgs=[...businessIdentity,initialTime-900,initialTime,...businessIdentity];
+  const scratch='SELECT COUNT(*) FROM finance_business_period_runs r WHERE r.partner_id=? AND r.shop_id=? AND '+unpinned.sql,scratchArgs=[...businessIdentity,...unpinned.values];
+  const evict="SELECT r.run_id FROM finance_business_period_runs r WHERE r.partner_id=? AND r.shop_id=? AND r.cutoff_at<? AND (r.lease_owner IS NULL OR r.lease_until<=?) AND "+unpinned.sql+' AND ('+scratch+")>=60 ORDER BY r.created_at,r.run_id LIMIT 1",evictArgs=[...businessIdentity,initialTime-900,initialTime,...unpinned.values,...scratchArgs];
   await storage(()=>db.batch([
    prepare('DELETE FROM finance_financial_order_components WHERE run_id IN ('+evict+')',evictArgs),
    prepare('DELETE FROM finance_business_order_evidence WHERE run_id IN ('+evict+')',evictArgs),
@@ -281,10 +285,10 @@ async function runFinanceBusinessPeriod(env,options={}){
    prepare('DELETE FROM finance_business_period_payment_cache WHERE run_id IN ('+evict+')',evictArgs),
    prepare('DELETE FROM finance_business_period_runs WHERE run_id IN ('+evict+')',evictArgs),
   ]));
-  const count=await storage(()=>prepare('SELECT COUNT(*) AS n FROM finance_business_period_runs WHERE partner_id=? AND shop_id=?',businessIdentity).first());if(!count||count.n>=60)throw businessFailure('RUN_LIMIT',409);
+  const count=await storage(()=>prepare('SELECT ('+scratch+') AS n',scratchArgs).first());if(!count||count.n>=60)throw businessFailure('RUN_LIMIT',409);
   const run_id=crypto.randomUUID(),cursorHash=await businessHash('');
   const created=await storage(()=>db.batch([
-   prepare("INSERT INTO finance_business_period_runs(run_id,partner_id,shop_id,revision,status,start_date,end_date,time_from,time_to,cutoff_at,checked_at,created_at,cursor,pages_read,duplicate_orders,lease_owner,lease_until,last_error) SELECT ?,?,?,1,'RUNNING',?,?,?,?,?,?,?,'',0,0,NULL,NULL,NULL WHERE NOT EXISTS("+recentSql+") AND (SELECT COUNT(*) FROM finance_business_period_runs WHERE partner_id=? AND shop_id=?)<60",[run_id,...businessIdentity,input.start_date,input.end_date,timeFrom,timeTo,initialTime,initialTime,initialTime,...recentArgs,...businessIdentity]),
+   prepare("INSERT INTO finance_business_period_runs(run_id,partner_id,shop_id,revision,status,start_date,end_date,time_from,time_to,cutoff_at,checked_at,created_at,cursor,pages_read,duplicate_orders,lease_owner,lease_until,last_error) SELECT ?,?,?,1,'RUNNING',?,?,?,?,?,?,?,'',0,0,NULL,NULL,NULL WHERE NOT EXISTS("+recentSql+") AND ("+scratch+")<60",[run_id,...businessIdentity,input.start_date,input.end_date,timeFrom,timeTo,initialTime,initialTime,initialTime,...recentArgs,...scratchArgs]),
    prepare('INSERT INTO finance_business_period_cursors(run_id,cursor_hash) SELECT ?,? WHERE EXISTS(SELECT 1 FROM finance_business_period_runs WHERE run_id=?)',[run_id,cursorHash,run_id]),
   ]));
   if(created[0]?.meta?.changes!==1){const winner=await storage(()=>prepare(recentSql,recentArgs).first());if(!winner)throw businessFailure('RUN_LIMIT',409);return output(await snapshot(winner.run_id));}
