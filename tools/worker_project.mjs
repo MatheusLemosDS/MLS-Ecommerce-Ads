@@ -5,6 +5,10 @@ import path from 'node:path';
 export const PROJECT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 export const TARGETS = Object.freeze({
   app: Object.freeze({name: 'brazacommerce-app', main: '../../dist/app-worker.mjs', baselineHashes: [
+    // Final dependency-resumption and consent guard; exact compiled artifact, full CI and Live gates remain required.
+    '01bca972e621e43278914685a5935b754a66a6ee1339e749e5884921256ec9fc',
+    // Reviewed Finance repair and published-operation parity; exact compiled bytes, CI and Live gates remain required.
+    '68fff83e36f0616e30ad4be0c0e6eb27069508719b51273d01989747b8bdfc0c',
     // Source completion-clock correction and matching shared release identity; exact reviewed compiled artifact.
     '3a5f01ae09ede502e4707f001976fc2a6094075ba26574e5e5d97b2e827687a9',
     '19d1ef1dc49d07da644a67372b9291f54b6443f0d72e9d0e3dfa7168661f2a05',
@@ -250,6 +254,8 @@ export const TARGETS = Object.freeze({
     'ed24e42b04378086f66e61a85415fbaea8e793d0dd329fdfa39ab28abd0a678c',
   ]}),
   auth: Object.freeze({name: 'brazacommerce-auth', main: '../../dist/auth-worker.mjs', baselineHashes: [
+    // Reviewed Finance repair and published-operation parity; exact compiled bytes, CI and Live gates remain required.
+    'b0470c5f7d43381fb5ee168012ced82895d7c42bcf84c813d4584a2bb5d80dbe',
     // Source completion-clock correction and matching shared release identity; exact reviewed compiled artifact.
     '20a301c45ddb6097a3b458ec6ef7d39686286cc43601f6211d3b865b250ea125',
     '076c925b67041aada25f8252db34c1464543976f3bfa532a98caa0124dd8f138',
@@ -311,6 +317,8 @@ export const TARGETS = Object.freeze({
     '47c83f87f191fd0e5ff503d9c4bcf4671cd986b0965e66e84f1a6ed952dac925',
   ]}),
   finance: Object.freeze({name: 'brazacommerce-finance', main: '../../dist/finance-worker.mjs', baselineHashes: [
+    // Reviewed Finance repair and published-operation parity; exact compiled bytes, CI and Live gates remain required.
+    'a5c5ab153113b3ce6a64619d3efce89618cde44116b4a3fea7b925f646a42266',
     // Financial automation candidate: exact local build and same-path Wrangler dry run; CI/Live gates remain mandatory.
     'ccce234f36f0a763942bf30e274360b9d1223b3594b6600adf3352fafd92efb4',
     '3e3f3d35a3e0037c251f7abda29cc8a64643ee255771d07f2893d32d8ef7d22a',

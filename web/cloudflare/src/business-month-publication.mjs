@@ -1,4 +1,6 @@
 import {projectBusinessPeriodFrame} from '../../finance/src/business-period-frame.mjs';
+import {getFinanceFinancialAutomation} from './app-financial-automation.mjs';
+import {projectBusinessPeriodRetentionManifest,projectBusinessPeriodRetentionResponse,businessPeriodRetentionResponseMatches} from '../../finance/src/business-period-retention-frame.mjs';
 
 // A publication owns its financial frame copies. It never points at the active
 // collector's replaceable slot rows and never stores the App's computed
@@ -32,6 +34,30 @@ function completedPayload(month,payload,stamp){
 }
 const reference=frame=>({schema:'business_month_publication_frame_ref_v1',run_id:frame.run_id,revision:frame.revision});
 const compact=payload=>({start_date:payload.start_date,end_date:payload.end_date,slots:payload.slots.map(slot=>({start_date:slot.start_date,end_date:slot.end_date,frame:reference(slot.frame)}))});
+export function businessMonthSourceRetentionManifest(month,observed,{kind='PUBLICATION',now=()=>Date.now()}={}){
+ const stamp=stampAt(now);if(!['PUBLICATION','COHORT'].includes(kind)||!integer(observed?.row?.revision,1,2147483647))return null;
+ let payload=observed?.payload;
+ if(kind==='COHORT'){
+  if(!Array.isArray(payload?.slots))return null;const prefix=[];for(const slot of payload.slots){if(slot?.frame?.status!=='COMPLETE')break;prefix.push(slot);}
+  if(!prefix.length)return null;payload={start_date:month+'-01',end_date:prefix.at(-1).end_date,slots:prefix};
+ }else if(observed.complete!==true)return null;
+ const complete=completedPayload(month,payload,stamp);if(!complete)return null;
+ const last=complete.slots.at(-1).frame;
+ return projectBusinessPeriodRetentionManifest({kind,month,publication_revision:kind==='PUBLICATION'?observed.row.revision:last.revision,slots:complete.slots.map((slot,index)=>({slot_index:index,run_id:slot.frame.run_id,revision:slot.frame.revision,start_date:slot.start_date,end_date:slot.end_date})),...(kind==='COHORT'?{lease_id:last.run_id}:{})});
+}
+// A fixed authenticated private POST acknowledges the exact source manifest
+// before any App publication CAS. A transport failure never certifies sources.
+export async function retainCompletedBusinessMonthSources(env,month,observed,{kind='PUBLICATION',operation=kind==='PUBLICATION'?'prepare':'retain',now=()=>Date.now(),retain=null}={}){
+ const manifest=businessMonthSourceRetentionManifest(month,observed,{kind,now});if(!manifest)return null;
+ const command={schema:'finance_business_period_retention_request_v1',operation,...manifest,lease_id:manifest.lease_id??null};
+ let result;try{result=await (retain??((binding,value)=>getFinanceFinancialAutomation(binding,'retention',value,{timeoutMs:5000})))(env,command);}catch{throw new BusinessMonthPublicationError('BUSINESS_MONTH_SOURCE_RETENTION_UNAVAILABLE');}
+ const frame=result?.status===200?projectBusinessPeriodRetentionResponse(result.body):null;
+ if(!frame||!businessPeriodRetentionResponseMatches(command,frame)){
+  const error=new BusinessMonthPublicationError(result?.status===404&&result?.body?.error==='FINANCE_BUSINESS_RETENTION_RUN_NOT_FOUND'?'BUSINESS_MONTH_SOURCE_RETENTION_RUN_NOT_FOUND':'BUSINESS_MONTH_SOURCE_RETENTION_UNAVAILABLE');
+  throw error;
+ }
+ return frame;
+}
 function sourceMatches(raw,payload){
  let source;try{source=JSON.parse(raw);}catch{return false;}if(!exact(source,['start_date','end_date','slots'])||source.start_date!==payload.start_date||source.end_date!==payload.end_date||!array(source.slots,3)||source.slots.length!==payload.slots.length)return false;
  return source.slots.every((slot,index)=>{const observed=payload.slots[index];if(!exact(slot,['start_date','end_date','frame'])||slot.start_date!==observed.start_date||slot.end_date!==observed.end_date)return false;
@@ -72,9 +98,10 @@ export async function saveCompletedBusinessMonth(env,month,observed,{now=()=>Dat
 
 // One consistent read snapshot; no active collector rows, provider calls,
 // pricing references or freshness-based erasure of a completed publication.
-export async function readCompletedBusinessMonth(env,month,{now=()=>Date.now()}={}){
+export function businessMonthPublicationSnapshotStatements(db,month){return [db.prepare('SELECT source_revision,source_created_at,source_updated_at,published_at,write_token,payload FROM business_month_publications WHERE month=?').bind(month),db.prepare('SELECT slot_index,write_token,run_id,revision,payload FROM business_month_publication_frames WHERE month=? ORDER BY slot_index').bind(month)];}
+export async function readCompletedBusinessMonth(env,month,{now=()=>Date.now(),snapshot=null}={}){
  const stamp=stampAt(now),db=dbOf(env);if(typeof month!=='string'||!/^\d{4}-(0[1-9]|1[0-2])$/.test(month)||month<'2000-01'||month>today(stamp).slice(0,7))return null;
- const snapshot=await db.batch([db.prepare('SELECT source_revision,source_created_at,source_updated_at,published_at,write_token,payload FROM business_month_publications WHERE month=?').bind(month),db.prepare('SELECT slot_index,write_token,run_id,revision,payload FROM business_month_publication_frames WHERE month=? ORDER BY slot_index').bind(month)]),header=snapshot?.[0]?.results?.[0],frames=snapshot?.[1]?.results;
+ const captured=snapshot??await db.batch(businessMonthPublicationSnapshotStatements(db,month));if(!Array.isArray(captured)||captured.length!==2||!Array.isArray(captured[0]?.results)||captured[0].results.length>1)fail();const header=captured[0].results[0],frames=captured[1]?.results;
  if(!header){if(!Array.isArray(frames)||frames.length)fail();return null;}
  if(!integer(header.source_revision,1,2147483647)||!integer(header.source_created_at,1,stamp+60)||!integer(header.source_updated_at,header.source_created_at,stamp+60)||!integer(header.published_at,1,stamp+60)||typeof header.write_token!=='string'||!/^[a-f0-9-]{36}$/.test(header.write_token)||typeof header.payload!=='string'||encoder.encode(header.payload).byteLength>8192||!Array.isArray(frames)||frames.length>3)fail();
  let storedPayload;try{storedPayload=JSON.parse(header.payload);}catch{fail();}const expected=range(month,storedPayload,stamp);if(!expected||frames.length!==expected.length)fail();

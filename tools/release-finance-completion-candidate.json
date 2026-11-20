@@ -1,0 +1,753 @@
+{
+  "schema": "mls_finance_completion_merge_candidate_v1",
+  "scope": "MERGE_ONLY",
+  "base_commit": "4cfdf465b2fda58dd27ae693126b7fe1625f69d6",
+  "prepared_source_commit": "5c205373fe11148a2733d13e223d86014d9b0d9e",
+  "owner_authorization": "OWNER_REQUESTED_FINANCE_COMPLETION_WITHOUT_SITE_PUBLICATION_2026_11_20",
+  "production_approved": false,
+  "live_authorization": false,
+  "commercial_writes_allowed": false,
+  "expected_hashes": {
+    "app": "01bca972e621e43278914685a5935b754a66a6ee1339e749e5884921256ec9fc",
+    "auth": "b0470c5f7d43381fb5ee168012ced82895d7c42bcf84c813d4584a2bb5d80dbe",
+    "finance": "a5c5ab153113b3ce6a64619d3efce89618cde44116b4a3fea7b925f646a42266"
+  },
+  "files": [
+    {
+      "path": "NEXT_CHAT_HANDOFF.txt",
+      "sha256": "cf9c0a0aad6a4a504dd1f6402687e3d3aef90af1eaa24d5be0f1429be80bcc47"
+    },
+    {
+      "path": "docs/MLS_CODEX_HANDOFF_2026_10_28.md",
+      "sha256": "db3fc09161fadfc8faca9a3b28b70f6e60ce1fb3c81d81779831de556e39694c"
+    },
+    {
+      "path": "docs/MLS_COMMERCE_OS_CHECKPOINT.json",
+      "sha256": "062801ae5767d1d66783a768db08082d4553ddbfbe0f0bfd590a433ba51d5bce"
+    },
+    {
+      "path": "docs/MLS_FINANCE_COMPLETION_2026_11_20.md",
+      "sha256": "8f13fd893fc5309859812cd7d6e4c9f04d90e7ba5d3169a0bb370a19b12068c9"
+    },
+    {
+      "path": "docs/ROADMAP_MLS_COMMERCE_OS.md",
+      "sha256": "67cc945d931b9f09277a79f263413775a3c6e9eccb69f8b47622a9a9a58f1d3c"
+    },
+    {
+      "path": "docs/financial-automation/MATRIZ_EXECUCAO.json",
+      "sha256": "f15663b4235ab80f2de469e9f9baa6bc164a85023ca4317a9d196387e2d64c5d"
+    },
+    {
+      "path": "docs/financial-automation/README.md",
+      "sha256": "5b0eeacd619495104f1be9c5a8f47a5ff9c3e86c8dec4014503cdfa81c3926e3"
+    },
+    {
+      "path": "docs/financial-automation/validation/finance-completion-20261120.json",
+      "sha256": "2034e4a93dfdf7808b142571396d2d859c528b78d9814941ec27157a6d2d7097"
+    },
+    {
+      "path": "package-lock.json",
+      "sha256": "4409908ac817f03105eb0c33ac243de786bee326440b0c4668531889b1e8236e"
+    },
+    {
+      "path": "package.json",
+      "sha256": "414befb162361a800ce16d4e8e012683102b4d1bb7d2412858696d1a6ac36a17"
+    },
+    {
+      "path": "previews/isolated-builds.json",
+      "sha256": "c85fb3d58a5529421d88a295c2c0b6dc3a3c479f8cc5020f2a73459e56ffad96"
+    },
+    {
+      "path": "tools/browser_assets.mjs",
+      "sha256": "909122d34ae53a8129a4996125311abc1ccf5fd98d0fab28cff4754396f3d234"
+    },
+    {
+      "path": "tools/build_finance_connection_candidate.py",
+      "sha256": "0a7b9effd449192e05f6190b46f3cf7233c5b2f7391d3f775a922c7cd318bbe4"
+    },
+    {
+      "path": "tools/complete_worker_module.mjs",
+      "sha256": "4dd7a86bbb8a4120b16247a3478c3cf17c93f041dcae9fcb68e0f34151ab57eb"
+    },
+    {
+      "path": "tools/release_preflight.mjs",
+      "sha256": "c0c8d750a7599e7226462125127f545bfed0f860c6641e329b36a7e108339860"
+    },
+    {
+      "path": "tools/tests/browser-assets.test.mjs",
+      "sha256": "cec3586006b5c846b953afb48783f87e400b577d39e25a2be711d6ca0edc9caf"
+    },
+    {
+      "path": "tools/tests/compact-worker-namespaces.test.mjs",
+      "sha256": "5ebb13c6831346ddd48f07327b661d0ac12f4fce24630fbb37ff3e3734d91adf"
+    },
+    {
+      "path": "tools/tests/complete-worker-module.test.mjs",
+      "sha256": "0dead42c307b4f62ef91142b2f6bb6412c0cfd8245cc20e6e6fff167d06aad6e"
+    },
+    {
+      "path": "tools/tests/finance-preview-branch.test.mjs",
+      "sha256": "04232677ea6e11f642679a4ba3f0f71683b2b1b36cc5882dfccfa80f5467e228"
+    },
+    {
+      "path": "tools/tests/mls-owner-preview.test.mjs",
+      "sha256": "1137b35b742c85006ef1098104456caf30030d5300525f915b7a15ed7fb649a7"
+    },
+    {
+      "path": "tools/tests/release-finance-completion-preflight.test.mjs",
+      "sha256": "1639ee4d17282c4200c0fbce16ef4f417613d3d3f8dfe0622417e26fa7a3a993"
+    },
+    {
+      "path": "tools/tests/verified-worker-deploy.test.mjs",
+      "sha256": "df5b3f6bfee5eccccc3da4918ab10dce3355ad28ce607c4a5761c5efd93a4940"
+    },
+    {
+      "path": "tools/verified_worker_deploy.mjs",
+      "sha256": "b6060f5836e2768274d059f44ae2c5e04624d9761c82e622cba3fa8669602138"
+    },
+    {
+      "path": "tools/worker_project.mjs",
+      "sha256": "331c9de4eb8fe0ec797babcf38baa7377846741435b0ab2fc2a81525d8e988bf"
+    },
+    {
+      "path": "web/cloudflare/build.py",
+      "sha256": "571d2b725fb92ed6565cd465d1c2014473005269509bc9407ef1bb36f50512b6"
+    },
+    {
+      "path": "web/cloudflare/src/admin-client.mjs",
+      "sha256": "247f657bae9f1387fd35368a071a98dfa973a8d6cb57b05789355d0d403fab68"
+    },
+    {
+      "path": "web/cloudflare/src/admin-view.mjs",
+      "sha256": "e1108b554e3269c4b39e4f5ad72d18f19147875e644e007b2fcdf68c18fc37d2"
+    },
+    {
+      "path": "web/cloudflare/src/admin.mjs",
+      "sha256": "90eb5006da3e27359ab59655fd4d312b1881d93954589d98ce32df5cb79d64c1"
+    },
+    {
+      "path": "web/cloudflare/src/app-business-period.mjs",
+      "sha256": "677239dc4594340f00540677fb268182228582ba3bd06eff00ad7345331a0a56"
+    },
+    {
+      "path": "web/cloudflare/src/app-product-index.mjs",
+      "sha256": "486f337c3699204f94596ad21b095c2d3cdefcc867adad45369fcdad159aafe0"
+    },
+    {
+      "path": "web/cloudflare/src/app-release-view.mjs",
+      "sha256": "263c672ca24ac6a0a66fa001b2732ab151bd7054f1ff4d9e101768875988f636"
+    },
+    {
+      "path": "web/cloudflare/src/app-release.mjs",
+      "sha256": "e43308f385574b3d95e877305ce063860ab9a1b79de5b76ded3cab605914abf8"
+    },
+    {
+      "path": "web/cloudflare/src/browser-assets-manifest.mjs",
+      "sha256": "6162eb92601bb20ebbe98349dcb6f274249e7911cc5581e8ea55a0673eb07fcd"
+    },
+    {
+      "path": "web/cloudflare/src/browser-assets.mjs",
+      "sha256": "3e8b275d8d137034d73d8c6983dfb9825a32da1850707ee4634e8464cba0e33f"
+    },
+    {
+      "path": "web/cloudflare/src/business-cost-history-client.mjs",
+      "sha256": "e74eff3fe99c8987df3288767f810bb1625dbe7854ed632e57c0d6e00ec5083b"
+    },
+    {
+      "path": "web/cloudflare/src/business-cost-history-report.mjs",
+      "sha256": "56b007f0098d44807f714943beb6a4333909d11606d5bcda7486514a091ae5c2"
+    },
+    {
+      "path": "web/cloudflare/src/business-cost-history.mjs",
+      "sha256": "a5d16b3b947c3baf4c694eb828fd14f90a9d85a922fddb904b0c49cf270fad15"
+    },
+    {
+      "path": "web/cloudflare/src/business-history-continuation.mjs",
+      "sha256": "6e8ae1e810ca8f26daf2acc8d6631b38cb1b002ad99092688165b6bbf2a09e93"
+    },
+    {
+      "path": "web/cloudflare/src/business-history-sync.mjs",
+      "sha256": "ad64b459261cede5c607dee51d71f661fd336a669deda716efc1ffcd8093ea02"
+    },
+    {
+      "path": "web/cloudflare/src/business-month-cohort-source-recovery.mjs",
+      "sha256": "2247a7a9c30d7195777fd00e8bd1515f5f584a1821f29116f81722c6ce0d4e56"
+    },
+    {
+      "path": "web/cloudflare/src/business-month-publication.mjs",
+      "sha256": "685011c916dbfc90e6e8cb27eb69dffb3f438a9ab354f1eece084515ad416fc6"
+    },
+    {
+      "path": "web/cloudflare/src/business-month-source-recovery.mjs",
+      "sha256": "dbd5520e290cb9527c52bfe0560758f18a0804c8e23209e7dcda83e812bdd4dc"
+    },
+    {
+      "path": "web/cloudflare/src/business-month.mjs",
+      "sha256": "11a67217aac34c8724d670102013e89c37ecc027f905734d22e3c3d3a6700dae"
+    },
+    {
+      "path": "web/cloudflare/src/business-sync.mjs",
+      "sha256": "c8a79f06b57b158af8e066263a7203c4ee7c60767fcc28f30ee5fbdf4ff248da"
+    },
+    {
+      "path": "web/cloudflare/src/commercial-account-gateway.mjs",
+      "sha256": "0f3c09112f3fa9ea683534d09ab246cefc1d030ca98e4dca37b31394533058f4"
+    },
+    {
+      "path": "web/cloudflare/src/commercial-finance-capability.mjs",
+      "sha256": "c757c23dc99bc2c8a798609cc42431a24451c28c386d3aa968a48ad9f89d024a"
+    },
+    {
+      "path": "web/cloudflare/src/commercial-route-policy.mjs",
+      "sha256": "f27b23bc3d000d98273d602e34a802df0d8b0795e11f7c58d6b12782a9114d7c"
+    },
+    {
+      "path": "web/cloudflare/src/cost-rules-view.mjs",
+      "sha256": "f4650a41deeedb31418342f660cc519a40dff39db3fd4c8fa66943766c1f50c7"
+    },
+    {
+      "path": "web/cloudflare/src/dated-cost-candidates.mjs",
+      "sha256": "823c02d22d836b6171914e916fce1d1ecb4abdc94f663714baff53f5fa52d3b2"
+    },
+    {
+      "path": "web/cloudflare/src/dated-cost-evidence.mjs",
+      "sha256": "77cabac2181183b06c2b8b14ac00e7a54d320f8a6945684e8b349a3bae8fbc6d"
+    },
+    {
+      "path": "web/cloudflare/src/dtf-artwork-backup.mjs",
+      "sha256": "7777baf0dc2f2b3b2000da3a4bc7151499189fa824a0e9e74d53df5c10d15832"
+    },
+    {
+      "path": "web/cloudflare/src/dtf-lifecycle-client.mjs",
+      "sha256": "6bfb8ae52c049413d8799cf4c34b71c6691f9b78b44137ea421be1a69d278ab3"
+    },
+    {
+      "path": "web/cloudflare/src/dtf-recipe-client.mjs",
+      "sha256": "53c414f313592303ad39494165396f6293adead15b0258079f7c7921792ed1b2"
+    },
+    {
+      "path": "web/cloudflare/src/dtf-view.mjs",
+      "sha256": "243fe2ef8a83d5dd2127cfb30603c30e7242d344f1ca68aac647cc23ecf1be86"
+    },
+    {
+      "path": "web/cloudflare/src/financial-accounting-projection.mjs",
+      "sha256": "70c8821efbb8a95ae6f4c72baf115649d7d7497daad191f3423733ab9bf83a27"
+    },
+    {
+      "path": "web/cloudflare/src/financial-automation-client.mjs",
+      "sha256": "17369078e686672545d81823d48bb03903b9a2a9eb8fed8030a3e8acd02dfb8f"
+    },
+    {
+      "path": "web/cloudflare/src/financial-automation-service.mjs",
+      "sha256": "884d6e658b33db67a3246773bb26d4b1f321013224058059691b4ea157248ba0"
+    },
+    {
+      "path": "web/cloudflare/src/financial-automation-sources.mjs",
+      "sha256": "2cce3149a1859cb8b35402366c9e0fe0f805a197433514b9a09cd81a573ac438"
+    },
+    {
+      "path": "web/cloudflare/src/financial-automation-view.mjs",
+      "sha256": "9f8b99b68ceaa3e8c733c2dd6ad5565bfc949d00422dcb4b078d6b5e97c432bf"
+    },
+    {
+      "path": "web/cloudflare/src/financial-cash-allocation-store.mjs",
+      "sha256": "723f93e0d6641978e46b283037ca8d0af622cb9933a372d53d978b660f82ef06"
+    },
+    {
+      "path": "web/cloudflare/src/financial-inventory-bridge.mjs",
+      "sha256": "3e3d561f0a367f689b1bf40aaf04eaa6715ddb16fffc6f685427a7c7c77fb2ee"
+    },
+    {
+      "path": "web/cloudflare/src/financial-inventory-client.mjs",
+      "sha256": "66febf7255ff2e514e9da786e1e6a9a95c4d9942f4a94ec150a8811b5b5709e8"
+    },
+    {
+      "path": "web/cloudflare/src/financial-obligation-app-source.mjs",
+      "sha256": "85bcbc3fa8a5e6f67dd2e7e961e7e4f4452bb3db81fd9155c93d7d5c16d34ddd"
+    },
+    {
+      "path": "web/cloudflare/src/historical-cost-orchestration.mjs",
+      "sha256": "d0dcc973334593f32af6a955dd14b2840ad93c8d4b1964a8e7a5a61cd1857657"
+    },
+    {
+      "path": "web/cloudflare/src/incurred-production-workspace.mjs",
+      "sha256": "fe2dd66eb4addced68b4d4f51dcf9b68d8cc04268bc7abaa7daf6fb9e26b7436"
+    },
+    {
+      "path": "web/cloudflare/src/order-operations.mjs",
+      "sha256": "25669f8886b862827833a8e9deab14c9a13bfd651c12ffb9bf5524e6427280c0"
+    },
+    {
+      "path": "web/cloudflare/src/product-registry.mjs",
+      "sha256": "c3ea80b066814ecdd473633ba5cda8c2a87af80251ae729b22fd7d68cc8cb2db"
+    },
+    {
+      "path": "web/cloudflare/src/production-dtf-store.mjs",
+      "sha256": "dfe7fe6e96a09eec2c8e13d32d8f5d7bfb2f3a608800eb148ddc34fc5f5477e6"
+    },
+    {
+      "path": "web/cloudflare/src/saved-catalog-view.mjs",
+      "sha256": "be1b3ffdb024abe7253e4d052bdf3d71b01df663b09a04c2e63718c839251d0d"
+    },
+    {
+      "path": "web/cloudflare/src/tenant-schema-manifest.mjs",
+      "sha256": "dad381880357869ada66c7f466965f7a20e8e6ed4bb58d17ebc43313b87082c5"
+    },
+    {
+      "path": "web/cloudflare/tests/admin-bootstrap-compiled.test.mjs",
+      "sha256": "153459ca5e3c04b304c69d9855d4942e1393371cdcc0643bde00be9af2b21177"
+    },
+    {
+      "path": "web/cloudflare/tests/admin-startup-compiled.test.mjs",
+      "sha256": "c7cfb0fa11bdc04a6c66dfb9cc5d9880db863a84266922c5c0b95ef316a3cef7"
+    },
+    {
+      "path": "web/cloudflare/tests/app-release-discovery-chrome.test.mjs",
+      "sha256": "b9a5e9a8b90f80d4f24ccf3c827a3b04f4a0b430cd8a0251979fc385861e7b84"
+    },
+    {
+      "path": "web/cloudflare/tests/app-release.test.mjs",
+      "sha256": "4e1b9ffdfb87b4ae6d01ec80e4ef6cd57ecc7655a3a5998cbe74f2711a797750"
+    },
+    {
+      "path": "web/cloudflare/tests/browser-assets-http-fixture.mjs",
+      "sha256": "c5b840e7804bde071a77bcb7a82ce55b3977cb6a6617abb48a4dbe49acff4a47"
+    },
+    {
+      "path": "web/cloudflare/tests/browser-assets.test.mjs",
+      "sha256": "3663a32a0a3a77451170c06ebd9bfeddc10ae7eccb357c3da342f3de19715977"
+    },
+    {
+      "path": "web/cloudflare/tests/business-checkpoint-compiled.test.mjs",
+      "sha256": "6dd4e93b14bc8d5d71a95ba61df1d494661f8c33b9cbf501428691a255b993de"
+    },
+    {
+      "path": "web/cloudflare/tests/business-checkpoint-routes.test.mjs",
+      "sha256": "734920b6341f86964750e486b3a1b8e36efd40a78f8a7076e7d58d46aba6e8e5"
+    },
+    {
+      "path": "web/cloudflare/tests/business-checkpoint.test.mjs",
+      "sha256": "395c4fce2cc1a226a1ffaa0545b66975c6316a97d4d7153e5dbe2183f0af12d6"
+    },
+    {
+      "path": "web/cloudflare/tests/business-collection-boundary-compiled.test.mjs",
+      "sha256": "dc449058d3411178a02f24e5c44bfe5e3db1b2570224b6fbaefc71f5656d2ded"
+    },
+    {
+      "path": "web/cloudflare/tests/business-collection-fixture.mjs",
+      "sha256": "d8933fac775827168997949aec320b1fcf76e0fbfe268021424ff2f3d59cab6d"
+    },
+    {
+      "path": "web/cloudflare/tests/business-collection-retention-budget.test.mjs",
+      "sha256": "0393e912cef19ad1471f885b37fdda462a975fb2396c444e33241fb8ff0fab9b"
+    },
+    {
+      "path": "web/cloudflare/tests/business-cost-diagnostics-evidence-v2.test.mjs",
+      "sha256": "041ad97be8de641f58020430f7fe00b77d830e548efb58e1fd145853002c56e6"
+    },
+    {
+      "path": "web/cloudflare/tests/business-cost-diagnostics-evidence.test.mjs",
+      "sha256": "46d200a25157d11e91fcd26c27165233d94329587d7d0575663e726b2a32e511"
+    },
+    {
+      "path": "web/cloudflare/tests/business-cost-diagnostics.test.mjs",
+      "sha256": "1e2ffed350c9b10f99087d1fcf7242061f9442f3475be6bd66e4966bc5640de2"
+    },
+    {
+      "path": "web/cloudflare/tests/business-cost-history-client-chrome.test.mjs",
+      "sha256": "9f3f0a9a674fc1354fc66685767d7eded8dec7ea97c57c81749c13969f48aea9"
+    },
+    {
+      "path": "web/cloudflare/tests/business-cost-history-client.test.mjs",
+      "sha256": "e7a49df3ba185ac0844d32a9d8a61605a87e9246d16437c17ec45aa0d6f82202"
+    },
+    {
+      "path": "web/cloudflare/tests/business-cost-history-report.test.mjs",
+      "sha256": "c5280d02eb7874338554e223980d14e5698436430955b6452bc17f284996500b"
+    },
+    {
+      "path": "web/cloudflare/tests/business-cost-history.test.mjs",
+      "sha256": "cf3315498cbcd517bb0747b1b71120f4f5fd7a297b507325df5a8aea7d983378"
+    },
+    {
+      "path": "web/cloudflare/tests/business-cost-recovery-routes.test.mjs",
+      "sha256": "7e6372720bb3f8a5c1a41336bed3aae32a78db2e13811c11568537497a9ce91b"
+    },
+    {
+      "path": "web/cloudflare/tests/business-escrow-releases-compiled.test.mjs",
+      "sha256": "f3c8758c4dbcaec232bd6bbf36999d128c5ba17003a8db3e30c0abb937330831"
+    },
+    {
+      "path": "web/cloudflare/tests/business-history-continuation.test.mjs",
+      "sha256": "99929de223ebae6de2ec59d3c6e0b7d28a188c8a3c547757fa2ae3429dc56387"
+    },
+    {
+      "path": "web/cloudflare/tests/business-history-sync.test.mjs",
+      "sha256": "c31c2d340af58f004d9691c5f873a7a808509bd62541f0f423969c3eaf5bf5be"
+    },
+    {
+      "path": "web/cloudflare/tests/business-month-projection-compiled.test.mjs",
+      "sha256": "329701242b7f64c8bf635d0e4e8f25406746837b056945f8ad3638e0bf911c0b"
+    },
+    {
+      "path": "web/cloudflare/tests/business-month-retention.test.mjs",
+      "sha256": "43886ab54712d48f6558c36c26fe91cbaafb2bfd815006db12a74e36c289e6c0"
+    },
+    {
+      "path": "web/cloudflare/tests/business-month-routes.test.mjs",
+      "sha256": "714af35520da170bca849532327a1008178a96eacfadc89012c2a310c88e183c"
+    },
+    {
+      "path": "web/cloudflare/tests/business-month-source-recovery.test.mjs",
+      "sha256": "8a5b852ac649f43c3177f99b056f3efaf96d658056f3df0e49b17145192e9778"
+    },
+    {
+      "path": "web/cloudflare/tests/business-month-storage.test.mjs",
+      "sha256": "a0e6d59039b8b61bc23b14734c3442bdc25aecd85f3955a8dd8c0133c8b312f1"
+    },
+    {
+      "path": "web/cloudflare/tests/business-month-view-routes.test.mjs",
+      "sha256": "cc8bb17ba4f4305cccc184409ca189dd22ce8f4cfc0a683067dd427498064193"
+    },
+    {
+      "path": "web/cloudflare/tests/business-month.test.mjs",
+      "sha256": "cdf3f9a60151ea2ebc3ab98946a48ae000a68c674275c29aceef3bff49278b2f"
+    },
+    {
+      "path": "web/cloudflare/tests/business-period-retention-fixture.mjs",
+      "sha256": "bb168a1655a8615df309225a7c14d841168b518d5448e1f79c1a943560a6130b"
+    },
+    {
+      "path": "web/cloudflare/tests/business-reconciliation-compiled.test.mjs",
+      "sha256": "224b970fa6f80759c665e59018275216ce43164ed18b31ac57336ef24662f176"
+    },
+    {
+      "path": "web/cloudflare/tests/business-review-compiled.test.mjs",
+      "sha256": "fa7de3d03a09eb0a3cc56497d11835855f30202568035da487d1855269e5f48e"
+    },
+    {
+      "path": "web/cloudflare/tests/business-sync-rollover-fixture.mjs",
+      "sha256": "c312e1ac18fce56e0188b6823188ed1db2ea8e6c9510f663341659241d0dcad6"
+    },
+    {
+      "path": "web/cloudflare/tests/business-sync.test.mjs",
+      "sha256": "2abc15ccb23fd70dfac66155e45eb8d4b4085ac8ccd2f37224ffad02090786d5"
+    },
+    {
+      "path": "web/cloudflare/tests/business-variant-attribution.test.mjs",
+      "sha256": "51f6fa59ac2cbad491c9f457dc38ec2d32bb1691d42e6d677e7767f8a7a58bf3"
+    },
+    {
+      "path": "web/cloudflare/tests/commercial-account-gateway-deadline.test.mjs",
+      "sha256": "a3cf2c33b19ffdb5c52ab19cc214b0c5435e4e19789a1a06b72e95f1af05046c"
+    },
+    {
+      "path": "web/cloudflare/tests/commercial-route-policy.test.mjs",
+      "sha256": "6fbfef98fe6ee7ca3cf01156997c71b16ab9ebc9df1d755e6c9c9b02c2456756"
+    },
+    {
+      "path": "web/cloudflare/tests/commercial-workspace-setup.test.mjs",
+      "sha256": "4f9f29271ef2f4ee7a75c7f6027181a72831e1afc7752be60ece3fdbc7229610"
+    },
+    {
+      "path": "web/cloudflare/tests/dated-cost-app-integration.test.mjs",
+      "sha256": "b80769e68eaeb54c4ea3df794ee67dc505f201c794d53572b6e29cf84e3dbf53"
+    },
+    {
+      "path": "web/cloudflare/tests/dated-cost-candidates.test.mjs",
+      "sha256": "608054fb7c046736a1718dff5837aee658d623d4b5bd3949dd2c4970115a030a"
+    },
+    {
+      "path": "web/cloudflare/tests/dated-cost-evidence.test.mjs",
+      "sha256": "8742dd2aeb9878bd2694d7e8f271576a395eb9fa696ba0a69f77d7d5f47827de"
+    },
+    {
+      "path": "web/cloudflare/tests/dtf-artwork-backup-chrome.test.mjs",
+      "sha256": "b0cbea6356eaf0c026b5de344c97825eae3985ea386c1b9888e77e50f8444625"
+    },
+    {
+      "path": "web/cloudflare/tests/dtf-artwork-backup.test.mjs",
+      "sha256": "7b379aaafea6a913f9e46029b636be049d52e2d0f2a290cffaeef0b977df985c"
+    },
+    {
+      "path": "web/cloudflare/tests/dtf-auto-layout-chrome.test.mjs",
+      "sha256": "458eacd4fac000d9802f993561cf3b89193cd80d97e72c5f12ff8810d7990a3b"
+    },
+    {
+      "path": "web/cloudflare/tests/dtf-cycle-chrome.test.mjs",
+      "sha256": "8c743fc474d96abb98d715a205440a462b53d9f24badc865bcd9aefec7831f46"
+    },
+    {
+      "path": "web/cloudflare/tests/dtf-cycle-fixture.mjs",
+      "sha256": "725057777b526dd763dfb18c56402f396a0dd2b2a43e893ff6667b44d20c1da4"
+    },
+    {
+      "path": "web/cloudflare/tests/dtf-cycle.test.mjs",
+      "sha256": "e63509f12fa0441553490f9e66cc8286b7fb4d34cb373c9538c2cc0fee830419"
+    },
+    {
+      "path": "web/cloudflare/tests/dtf-provider-consumers-compiled.test.mjs",
+      "sha256": "16b51fc583add56efbcf3de9f9de61f6266ceb2ced62145c029c5374f87b61a2"
+    },
+    {
+      "path": "web/cloudflare/tests/dtf-provider-consumers.test.mjs",
+      "sha256": "980dc88c9bc511eb3058183a9e0b53aeabf9df441ff7ab4b9ecedbd72ac8217f"
+    },
+    {
+      "path": "web/cloudflare/tests/dtf-recipe-chrome.test.mjs",
+      "sha256": "9e3e7f213a5a0109b64275e4687ff8ac549f354c10ac939649baabc6be141280"
+    },
+    {
+      "path": "web/cloudflare/tests/dtf-recipe-fixture-clock.test.mjs",
+      "sha256": "ed59d93226be2279e3e4a2f1d7692fc39b642933d042105439b81299a8c30e4e"
+    },
+    {
+      "path": "web/cloudflare/tests/dtf-recipe-fixture.mjs",
+      "sha256": "d98b6e11d3d6431d330714fd36aa3ac5382e0b06d0d3865cee534a024a2afd76"
+    },
+    {
+      "path": "web/cloudflare/tests/dtf-recipe.test.mjs",
+      "sha256": "eabb1b3ef664ce497b6e55e75269672415b001fd54f0d6378252a289f288aafb"
+    },
+    {
+      "path": "web/cloudflare/tests/dtf-ui.test.mjs",
+      "sha256": "28f75f9a2554e362652efd287748c5af416d1da251462a75d28b0748f8278eba"
+    },
+    {
+      "path": "web/cloudflare/tests/financial-accounting-projection.test.mjs",
+      "sha256": "e870aaf0e8291fa787abafbd30e35d09b4cd5b88b09b1c29fc939b60192cc4d7"
+    },
+    {
+      "path": "web/cloudflare/tests/financial-automation-client-chrome.test.mjs",
+      "sha256": "9d3ce077ea9fecbec1d639899557c1cd8cf936b3c7cbf6bb897aed44f6150510"
+    },
+    {
+      "path": "web/cloudflare/tests/financial-automation-client.test.mjs",
+      "sha256": "48d7d9a94f4656316230f9bfe92ea17ef96c617c9d40b1afa4ff272df905ca8b"
+    },
+    {
+      "path": "web/cloudflare/tests/financial-automation-routes.test.mjs",
+      "sha256": "f5a13e8bcfb1ee5a2309dfd93e1d4a33e5d34e05b557a4ebb62107332c2579ff"
+    },
+    {
+      "path": "web/cloudflare/tests/financial-automation-service.test.mjs",
+      "sha256": "f4ba9cf5ac1c263db20f51c5845967fe0416bc37f20e2aae7acbc6c89fe237c0"
+    },
+    {
+      "path": "web/cloudflare/tests/financial-automation-sources.test.mjs",
+      "sha256": "d663f81e10b9b60eb83a0569337a8691f24319ca8c422dbe38a4f07657574113"
+    },
+    {
+      "path": "web/cloudflare/tests/financial-automation-ui-fixture.mjs",
+      "sha256": "897f9609a497781b76bc7f683f583a53baa30e8b09a30ff724af067690d61586"
+    },
+    {
+      "path": "web/cloudflare/tests/financial-automation-worker-chrome.test.mjs",
+      "sha256": "79c36169de9d6d61e559219e970b75c9d8ebbabb7651750c9b54cfbadc1362c3"
+    },
+    {
+      "path": "web/cloudflare/tests/financial-inventory-bridge.test.mjs",
+      "sha256": "d9b3e3cda91efc3f244fe124294dd3b80c71eee59cfbb97656b87f8103e7df3f"
+    },
+    {
+      "path": "web/cloudflare/tests/financial-inventory-client.test.mjs",
+      "sha256": "3ddacee0ee9bc471c4c33add47ab5ecb42547d4be77d9c7896807d43aa1db796"
+    },
+    {
+      "path": "web/cloudflare/tests/financial-obligation-retry.test.mjs",
+      "sha256": "7060b4b0fe38d20d53d4d1e1897e46a80647d770218e5e8d64abe1ec94044e56"
+    },
+    {
+      "path": "web/cloudflare/tests/financial-original-items-page.test.mjs",
+      "sha256": "a1b33e3bb09763fc503096b2a48c3ef796d5ea9b81a0786a00308c5019f50a11"
+    },
+    {
+      "path": "web/cloudflare/tests/financial-source-continuation.test.mjs",
+      "sha256": "dccfc0d1213783313a18fc600b3c18f2ef5759ffc7f8e80d77284e1a76736ba5"
+    },
+    {
+      "path": "web/cloudflare/tests/historical-child-cost-compiled.test.mjs",
+      "sha256": "81eb6523e5d43194791f47a7ee4ae59bfd682d89e967fabf1b2a32ef642221a6"
+    },
+    {
+      "path": "web/cloudflare/tests/historical-cost-recovery-compiled.test.mjs",
+      "sha256": "7e1d89d4691fdbce3e0f4458029c8752059c7cfc12feb22ce85ee6857f75d526"
+    },
+    {
+      "path": "web/cloudflare/tests/incurred-production-chrome.test.mjs",
+      "sha256": "c8b0866d847ce7fe576f2da1567b14f19d9fa39075a743ad0ce38b9f2388e6fe"
+    },
+    {
+      "path": "web/cloudflare/tests/mls-agent-learning-compiled.test.mjs",
+      "sha256": "83b0b59a7784870f1e4fe1c0678a8c1ed7826e4d5899240d94240438123bf235"
+    },
+    {
+      "path": "web/cloudflare/tests/mls-production-rework.test.mjs",
+      "sha256": "11ccd66f62b680a294bdf848897ddedc5f74b84a123d5b5de45847ae5e9ce265"
+    },
+    {
+      "path": "web/cloudflare/tests/mls-v36-listing-factory-integration.test.mjs",
+      "sha256": "016d5a9b2fe75c39cf072e31f03ecb9522856af1cfb2ce5f7ed1715824a897a3"
+    },
+    {
+      "path": "web/cloudflare/tests/mls-v36-release-gate.test.mjs",
+      "sha256": "66a675f6195ed542bd0c11a02131d5120ff0c445e8c67ada06352d0641ea46fd"
+    },
+    {
+      "path": "web/cloudflare/tests/operator-cost-corrections-routes.test.mjs",
+      "sha256": "e9eb5a25fdf74fdd74b6b620c270db70902f7acff9f4429153b581c1bbef0595"
+    },
+    {
+      "path": "web/cloudflare/tests/order-operations-recipe-performance.test.mjs",
+      "sha256": "f1647a9fa1025421cd6a789d6a9d7a5b60d0b2013ca6d2a9c09498688b25cdc9"
+    },
+    {
+      "path": "web/cloudflare/tests/owner-dtf-batches-chrome.test.mjs",
+      "sha256": "b3f2a51ec09d3ee3dd1ff14ce5dbf325753e1f2768050ca65914ea580583f7e5"
+    },
+    {
+      "path": "web/cloudflare/tests/owner-dtf-batches-fixture.mjs",
+      "sha256": "a2766b4ed74824572478664b780a20dab5ab69ae80b1f73cec6d5ee0d0db74ad"
+    },
+    {
+      "path": "web/cloudflare/tests/owner-dtf-batches.test.mjs",
+      "sha256": "72819ffbd42f9f4d22e8147b1424fb31ce8fc23679fdfc53b489bdc41e8898d5"
+    },
+    {
+      "path": "web/cloudflare/tests/owner-report-browser-fixture.mjs",
+      "sha256": "c389df13dd2410c5acd02cf8a3b9b6969c3fe4e806b5b3d1f3bae5ec7bfc05ed"
+    },
+    {
+      "path": "web/cloudflare/tests/product-index-shape-chain.test.mjs",
+      "sha256": "2bb862452cfaabf5b6318713e84eb00188030d9a2355d636d46f6c3f6e686c60"
+    },
+    {
+      "path": "web/cloudflare/tests/product-registry-diagnostics.test.mjs",
+      "sha256": "79513b0707a5372cc721efee4f00dad95f606189808865a3eaf914b34c63f1af"
+    },
+    {
+      "path": "web/cloudflare/tests/production-cost-periods.test.mjs",
+      "sha256": "089a7c403c91bdb11c6c00c27c3472298b35d5638cd4d39f3f2e63f80ebc6f1f"
+    },
+    {
+      "path": "web/cloudflare/tests/production-dtf-routes.test.mjs",
+      "sha256": "0a1170ae95dd99e3e46587fd882c74becf39efc995c66121bc558108bbc9b31c"
+    },
+    {
+      "path": "web/cloudflare/tests/return-manufacturing-links-chrome.test.mjs",
+      "sha256": "fb35d673a96fea3f2a6733af6a5c71a1dd6b9e12c549c5e0d442a72b7e871525"
+    },
+    {
+      "path": "web/cloudflare/tests/return-manufacturing-links-client.test.mjs",
+      "sha256": "d271dadf1df922d4f9d03bb646a92f2aad92857f066b2b82aa1e83f1b3dd7861"
+    },
+    {
+      "path": "web/cloudflare/tests/reviewed-business-month-source-adapter.mjs",
+      "sha256": "cfc29552f7e453441564b57f458c8335d168cbfa2735c0f8e0492739ce183cfc"
+    },
+    {
+      "path": "web/cloudflare/tests/reviewed-business-month-source-adapter.test.mjs",
+      "sha256": "ab4f30ce83b8a894a06eae5b82af5e095156e04c71a14bbb56d53c891621df9d"
+    },
+    {
+      "path": "web/cloudflare/tests/reviewed-cost-source-invariants.mjs",
+      "sha256": "99ed601c07df7bd5b15771eff895dba5733bfd590c3983fa206d2846e15a7a25"
+    },
+    {
+      "path": "web/cloudflare/tests/shirt-cost-editing-chrome.test.mjs",
+      "sha256": "cbdf2776783bd2bebf90b70199eabf5bf6890db7ee1c82e16dac4180051055b5"
+    },
+    {
+      "path": "web/cloudflare/tests/tenant-sql-isolation.test.mjs",
+      "sha256": "0cb8c9bc1ee080e4ad7dc5f8b0c0d415bf3ec65aa06db87be458b40ce4072f9d"
+    },
+    {
+      "path": "web/cloudflare/tests/workspace-browser-asset-chrome.test.mjs",
+      "sha256": "c544f7a202481f41003efff25a4ec0156b239c83887987c9b10c09a2f9427b0a"
+    },
+    {
+      "path": "web/finance/src/auth-router.mjs",
+      "sha256": "53ea62b7130e60e35ae3b1c3d73b24957f6904c16c098e36f6a763f881fc7e82"
+    },
+    {
+      "path": "web/finance/src/business-period-missing-run.mjs",
+      "sha256": "0cbf6fc5882c9b1f059b19c8696eea7838608792f683f301a9452f27ee8517a3"
+    },
+    {
+      "path": "web/finance/src/business-period-retention-frame.mjs",
+      "sha256": "b7c9811c9bb50e4b8b4085ac2023cfb6f80dfee241f78eec4b9ba2fe2048052e"
+    },
+    {
+      "path": "web/finance/src/business-period-retention-worker.mjs",
+      "sha256": "627cf52760286f41bda69412bf6529c41f2503a9f0b16a0d83e90ba489d9718a"
+    },
+    {
+      "path": "web/finance/src/business-period-retention.mjs",
+      "sha256": "c7dc8acf90e8774bc0a5d55c57d6cc5350ad9c3c26cdcdd3d0a1be3128c057ec"
+    },
+    {
+      "path": "web/finance/src/business-period.mjs",
+      "sha256": "fe17160d94c626201dc08e2a5549bbe760a4e69372431faeb61315e38c2ba946"
+    },
+    {
+      "path": "web/finance/src/connection-worker.mjs",
+      "sha256": "b49d2c3203ef7dfba03739d97922c470c11eca6e49401b67b4f95ce924dcbd0b"
+    },
+    {
+      "path": "web/finance/src/financial-bank-connector.mjs",
+      "sha256": "15664aad8538c657e268119f4e0870127d8b2962a8da6bcf5edca3401fa02b3b"
+    },
+    {
+      "path": "web/finance/src/financial-cash-allocation.mjs",
+      "sha256": "fb6b7e95c7f64253ce92b40a517735c8bd56db1fec43051df6e2a84c8b71b66c"
+    },
+    {
+      "path": "web/finance/src/financial-private-protocol.mjs",
+      "sha256": "b8ddbdfec2e92f392f2501763ad7c6104387e86d48712925bfec3831410aa562"
+    },
+    {
+      "path": "web/finance/src/financial-source-frame.mjs",
+      "sha256": "adc5c977309a0d4b46f759cf1363b5e40651f702bcc0c1586443a00f06d5af8b"
+    },
+    {
+      "path": "web/finance/src/financial-source-worker.mjs",
+      "sha256": "c4027621e5d501bcb9a03946c6a8627abc22eba7c76daca9354e8e5bc767ab4a"
+    },
+    {
+      "path": "web/finance/src/product-index-frame.mjs",
+      "sha256": "97ec64fbabc4cf306bde09b1e8618ce34e997666b4bd222ea65a3b6578c15b14"
+    },
+    {
+      "path": "web/finance/src/product-index.mjs",
+      "sha256": "65a45305cb18c7699ef9125a3d60ebca76d6ebae3564cc9ea95a0e858e91b8d6"
+    },
+    {
+      "path": "web/finance/src/production-worker.mjs",
+      "sha256": "3687d67b4ba6f0229c5683b8930ba811ea34bf658ed68828c48123b300f17e4f"
+    },
+    {
+      "path": "web/finance/tests/business-period-missing-run.test.mjs",
+      "sha256": "c6900b86f9118709c65ceaa67fd80603e80b28180dd7b81d0da599e7fcdcf42b"
+    },
+    {
+      "path": "web/finance/tests/business-period-retention-routes.test.mjs",
+      "sha256": "74a04eb2c55b529bb44d4190b6eff7cbaf52836a63367f89fb8932c9eaeee07e"
+    },
+    {
+      "path": "web/finance/tests/business-period-retention.test.mjs",
+      "sha256": "9ac691dd8acbd3ef544831d775bde74b8791b05a5cd9bfe74075b1815673d783"
+    },
+    {
+      "path": "web/finance/tests/financial-bank-connector.test.mjs",
+      "sha256": "3123a1a1a9591b1e18eca4b55293de8d14ca0dd36faac9bb83384aac94e89c76"
+    },
+    {
+      "path": "web/finance/tests/financial-cash-allocation-alias-capacity.test.mjs",
+      "sha256": "8fbb5c4e74c3c4dcba3951a0f3f03eb2ef3f0ec12a79f6326378bcfdf1a05785"
+    },
+    {
+      "path": "web/finance/tests/product-index.test.mjs",
+      "sha256": "fcbe3a93dcb1433b419f9cd138132dc6d5e45507948b8d33813bb6e80debfa8a"
+    }
+  ]
+}

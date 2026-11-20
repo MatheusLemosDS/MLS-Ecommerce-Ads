@@ -9,6 +9,8 @@ import {build} from 'esbuild';
 import {MLS_BROWSER_ASSET_MANIFEST as manifest} from '../src/browser-assets-manifest.mjs';
 import {browserAssetScript,browserWorkspaceFailureScript,serveMlsBrowserAsset} from '../src/browser-assets.mjs';
 import {CLIENT} from '../src/admin-client.mjs';
+import {DTF_ENGINE_CLIENT} from '../src/dtf-layout.mjs';
+import {DTF_CLIENT} from '../src/dtf-view.mjs';
 import {BUSINESS_MONTH_CLIENT} from '../src/business-month-client.mjs';
 import {PRODUCTION_COST_PERIODS_CLIENT} from '../src/production-cost-periods-view.mjs';
 import {PRODUCTION_CONFIRMATION_PROPOSAL_CLIENT} from '../src/production-confirmation-proposal-view.mjs';
@@ -18,10 +20,18 @@ import {PRODUCTION_WEEKLY_CLIENT} from '../src/production-weekly-view.mjs';
 import {PRODUCTION_COVERAGE_CLIENT} from '../src/production-coverage-view.mjs';
 import {PRODUCTION_WORKSPACE_CLIENT} from '../src/production-workspace-view.mjs';
 import {createLocalBrowserAssets,verifyBrowserAssets} from '../../../tools/browser_assets.mjs';
+import {assertCompiledBrowserScriptInventory} from './browser-assets-http-fixture.mjs';
+import {compiledOwnerReportPage} from './owner-report-browser-fixture.mjs';
 
 const root=fileURLToPath(new URL('../../../',import.meta.url));
 const bank=manifest.assets.find(row=>row.id==='bank'),month=manifest.assets.find(row=>row.id==='month');
 const request=(row=bank,method='GET')=>new Request('https://public.fixture'+row.path,{method,headers:{cookie:'synthetic-cookie-must-not-cross-assets',authorization:'synthetic-not-forwarded'}});
+
+test('complete compiled inventory validation rejects missing, duplicated, unsigned, reordered and unparsable script dependencies',async()=>{
+ const {html}=await compiledOwnerReportPage(false,{ownerPreview:true}),dtf=manifest.assets.find(row=>row.id==='dtf'),tag=browserAssetScript('dtf'),workspaceTag=browserAssetScript('workspace'),guard='<script>'+browserWorkspaceFailureScript()+'</script>';assert.equal(assertCompiledBrowserScriptInventory(html).length,18);assert.equal(html.split(guard).length,2);
+ for(const changed of [html.replace(tag,''),html.replace(tag,tag+tag),html.replace(tag,tag.replace(dtf.integrity,'sha256-'+'a'.repeat(43)+'=')),html.replace(tag,tag.replace(dtf.path,'/assets/mls/'+'0'.repeat(64)+'.js')),html.replace(guard,'').replace(tag,tag+guard),html.replace(tag,'__DTF_SCRIPT_POSITION__').replace(workspaceTag,tag).replace('__DTF_SCRIPT_POSITION__',workspaceTag),html.replace('</body>','<script>function (</script></body>')])assert.throws(()=>assertCompiledBrowserScriptInventory(changed));
+ assert.throws(()=>assertCompiledBrowserScriptInventory(html,{listingFactory:false}),'a count update must not permit an editor when its owner flag is off');
+});
 
 test('the monthly browser asset is byte-identical to the unchanged legacy client after the existing HTML safety escapes',()=>{
  const bytes=readFileSync(path.join(root,'dist','browser-assets',...month.path.slice(1).split('/')));
@@ -32,14 +42,21 @@ test('the monthly browser asset is byte-identical to the unchanged legacy client
  assert.throws(()=>browserAssetScript('private'),/BROWSER_ASSET_MANIFEST_INVALID/);
 });
 
-test('the workspace controller joins the closed six-asset public inventory without changing published legacy clients',()=>{
- assert.deepEqual(manifest.assets.map(row=>row.id),['bank','month','orders','production','weekly','workspace']);
+test('the workspace and DTF controllers join the closed seven-asset public inventory without changing published legacy clients',()=>{
+ assert.deepEqual(manifest.assets.map(row=>row.id),['bank','dtf','month','orders','production','weekly','workspace']);
  const published=JSON.parse(readFileSync(path.join(root,'workers','app','browser-assets-published.json'),'utf8'));
  for(const previous of published.assets){
   assert.ok([...manifest.assets,...manifest.retained].some(row=>JSON.stringify(row)===JSON.stringify(previous)),'the exact immediately published predecessor remains addressable for '+previous.id);
   const old=readFileSync(path.join(root,'web','cloudflare','browser-assets-published',previous.sha256+'.js'));assert.equal(old.length,previous.bytes);assert.equal(createHash('sha256').update(old).digest('hex'),previous.sha256);
  }
  const weekly=manifest.assets.find(row=>row.id==='weekly');assert.ok(weekly.bytes>0&&weekly.bytes<=262144);assert.equal(browserAssetScript('weekly'),'<script src="'+weekly.path+'" integrity="'+weekly.integrity+'" crossorigin="anonymous"></script>');
+});
+
+test('the DTF asset preserves the exact published engine/workspace bytes while browser factories stay frozen in the workspace',()=>{
+ const row=manifest.assets.find(value=>value.id==='dtf');assert.ok(row);assert.equal(row.sha256,'1f0ca4ce395126c895b9e79afff57f1ca0ed74c3df31c6b7b0a1ac6dd0673026');assert.equal(row.bytes,53814);
+ const bytes=readFileSync(path.join(root,'dist','browser-assets',...row.path.slice(1).split('/'))),emitted=(DTF_ENGINE_CLIENT+'\n/* MLS_DTF_ENGINE_END */\n'+DTF_CLIENT).replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g,value=>'\\u'+value.charCodeAt(0).toString(16).padStart(4,'0'));assert.deepEqual(bytes,Buffer.from(emitted));
+ assert.match(bytes.toString(),/globalThis\.brazaDtfWorkspace=/);for(const name of ['mlsDtfRecipeController','mlsDtfLifecycleController','mlsDtfArtworkBackupCodec','mlsDtfArtworkBackupController'])assert.ok(CLIENT.includes('globalThis.'+name+'='),'all published DTF factories are embedded before workspace startup');
+ const warning=browserWorkspaceFailureScript();assert.ok(warning.includes(JSON.stringify(row.path)));assert.doesNotMatch(warning,/fetch\(|\.start\(|localStorage|sessionStorage/);
 });
 
 test('the complete production asset matches its seven current controllers and retains the frozen published prototype',()=>{
@@ -103,7 +120,7 @@ for(const minify of [false,true])test('compiled Worker serves the exact asset in
 });
 
 
-test('the reviewed current six-asset inventory preserves exact controller bytes and parser-blocking order',()=>{
+test('the reviewed current seven-asset inventory preserves exact controller bytes and parser-blocking order',()=>{
  // The financial draft guard changes the month controller by one explicit condition.
  // Month was reviewed again after TEN-05 cleanup (sourceb91ff45049ab42b3a34182c970e066b336a2aa8cf84a66c79e2da9d4bed8083e).
  // Its previous61f017... hash predates private-cache/DOM teardown; this is a functional security change, not distribution drift.

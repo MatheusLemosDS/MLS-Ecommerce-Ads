@@ -9,6 +9,13 @@ export const MLS_BROWSER_ASSET_MANIFEST=Object.freeze({
       "bytes": 38035
     },
     {
+      "id": "dtf",
+      "path": "/assets/mls/1f0ca4ce395126c895b9e79afff57f1ca0ed74c3df31c6b7b0a1ac6dd0673026.js",
+      "sha256": "1f0ca4ce395126c895b9e79afff57f1ca0ed74c3df31c6b7b0a1ac6dd0673026",
+      "integrity": "sha256-HwykzjlRJsiVueea//V/HKDtdMPfMca3sKGsbdBnMCY=",
+      "bytes": 53814
+    },
+    {
       "id": "month",
       "path": "/assets/mls/5203d255416bacb97cd44ddef29a2fc76b1432f0a1ea731fabacc4bb071fcd07.js",
       "sha256": "5203d255416bacb97cd44ddef29a2fc76b1432f0a1ea731fabacc4bb071fcd07",
@@ -38,26 +45,19 @@ export const MLS_BROWSER_ASSET_MANIFEST=Object.freeze({
     },
     {
       "id": "workspace",
-      "path": "/assets/mls/e3b12127a14b70185a25c83dae547facc946a4fe87afe0369a8f47665f6398ca.js",
-      "sha256": "e3b12127a14b70185a25c83dae547facc946a4fe87afe0369a8f47665f6398ca",
-      "integrity": "sha256-47EhJ6FLcBhaJcg9rlR/rMlGpP6Hr+A2mo9HZl9jmMo=",
-      "bytes": 462298
+      "path": "/assets/mls/26c2068b8cd9aaa6ba5d096e68c94cb073ae2aca5f3b34aae0df04f8d7c3ad78.js",
+      "sha256": "26c2068b8cd9aaa6ba5d096e68c94cb073ae2aca5f3b34aae0df04f8d7c3ad78",
+      "integrity": "sha256-JsIGi4zZqqa6XQluaMlMsHOuKspfOzSq4N8E+NfDrXg=",
+      "bytes": 518212
     }
   ],
   "retained": [
     {
-      "id": "month",
-      "path": "/assets/mls/347a294216d16151105c5b5074174af01c01a9bc398e713aaf2c9184a48b1db2.js",
-      "sha256": "347a294216d16151105c5b5074174af01c01a9bc398e713aaf2c9184a48b1db2",
-      "integrity": "sha256-NHopQhbRYVEQXFtQdBdK8BwBqbw5jnE6ryyRhKSLHbI=",
-      "bytes": 704759
-    },
-    {
       "id": "workspace",
-      "path": "/assets/mls/d5961f95cc6649d963f42e28a50e2e12563ce0d0d66833bb28ce5e16d172922c.js",
-      "sha256": "d5961f95cc6649d963f42e28a50e2e12563ce0d0d66833bb28ce5e16d172922c",
-      "integrity": "sha256-1ZYflcxmSdlj9C4opQ4uElY84NDWaDO7KM5eFtFykiw=",
-      "bytes": 341729
+      "path": "/assets/mls/e3b12127a14b70185a25c83dae547facc946a4fe87afe0369a8f47665f6398ca.js",
+      "sha256": "e3b12127a14b70185a25c83dae547facc946a4fe87afe0369a8f47665f6398ca",
+      "integrity": "sha256-47EhJ6FLcBhaJcg9rlR/rMlGpP6Hr+A2mo9HZl9jmMo=",
+      "bytes": 462298
     }
   ]
 });

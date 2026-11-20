@@ -5,8 +5,10 @@ import {projectVariantCatalog,projectVariantCatalogRequest,financeCatalogDiagnos
 import {projectStorePeriodRequest,projectStorePeriodFrame} from './store-period-frame.mjs';
 import {projectBusinessPeriodRequest,projectBusinessPeriodFrame} from './business-period-frame.mjs';
 import {projectBusinessPeriodVariantsFrame} from './business-variant-attribution.mjs';
+import {projectBusinessPeriodRetentionManifest,projectBusinessPeriodRetentionMissing} from './business-period-retention-frame.mjs';
+import {BUSINESS_PERIOD_MISSING_RUN_MAXIMUM,projectBusinessPeriodMissingRun} from './business-period-missing-run.mjs';
 import {projectProductionOrdersRequest,projectProductionOrdersFrame,productionOrdersRequestMatches} from './production-orders-frame.mjs';
-import {projectProductIndexRequest,projectProductIndexFrame,productIndexRequestMatches,financeProductIndexDiagnostic} from './product-index-frame.mjs';
+import {projectProductIndexRequest,projectProductIndexFrame,productIndexRequestMatches,financeProductIndexDiagnostic,projectProductIndexDiagnostic} from './product-index-frame.mjs';
 import {projectEscrowReleaseRequest,projectEscrowReleaseFrame,projectEscrowReleaseEvidenceFrame,projectEscrowReleaseCoverageRequest,projectEscrowReleaseCoverageFrame,escrowReleaseRequestMatches,escrowReleaseCoverageRequestMatches} from './escrow-release-frame.mjs';
 import {projectReconciliationRequest,projectReconciliationFrame,projectReconciliationEvidenceFrame,projectReconciliationMoneyFrame,reconciliationRequestMatches} from './reconciliation-frame.mjs';
 import {projectOriginalItemsFrame,projectReconciliationOriginalItemsFrame} from './original-items-frame.mjs';
@@ -178,7 +180,7 @@ export async function forwardFinancePaymentSample(request,env,{validateInternalA
  const incomeScanContract=url.pathname===INCOME_DETAIL_PATH?request.headers.get('x-braza-income-contract'):null,pendingIncomeScan=incomeScanContract==='pending-scan-v1';
  const escrowReleases=url.pathname===ESCROW_RELEASES_PATH,incomeOverview=url.pathname===INCOME_OVERVIEW_PATH,incomeDetail=url.pathname===INCOME_DETAIL_PATH,reconciliation=url.pathname===RECONCILIATION_PATH,historical=url.pathname===HISTORICAL_EVIDENCE_PATH,index=url.pathname===PRODUCT_INDEX_PATH,production=url.pathname===PRODUCTION_ORDERS_PATH,catalog=url.pathname===VARIANT_CATALOG_PATH,business=url.pathname===BUSINESS_PERIOD_PATH,storePeriod=business||url.pathname===STORE_PERIOD_PATH,maximum=incomeDetail?(pendingIncomeScan?1048576:262144):index?32768:production||business?1048576:storePeriod?524288:catalog||reconciliation&&request.headers.get('x-braza-original-items-contract')==='original-items-v1'?262144:65536,maximumInput=escrowReleases?512:production||historical?8192:storePeriod||catalog||index?256:128;
  const productionFailure=(status=502)=>routerFailure('FINANCE_PRODUCTION_UNAVAILABLE',status);
- const indexFailure=(status=502)=>routerFailure('FINANCE_PRODUCT_INDEX_UNAVAILABLE',status);
+ const indexFailure=(status=502,diagnostic=null)=>new Response(JSON.stringify({error:'FINANCE_PRODUCT_INDEX_UNAVAILABLE',diagnostic:projectProductIndexDiagnostic(diagnostic)??financeProductIndexDiagnostic(null)}),{status,headers:{...PRIVATE_HEADERS,'content-type':'application/json; charset=utf-8'}});
  const unavailable=()=>escrowReleases?routerFailure('FINANCE_ESCROW_RELEASES_UNAVAILABLE',502):incomeOverview?routerFailure('FINANCE_INCOME_OVERVIEW_UNAVAILABLE',502):incomeDetail?routerFailure('FINANCE_INCOME_DETAIL_UNAVAILABLE',502):reconciliation?routerFailure('FINANCE_RECONCILIATION_UNAVAILABLE',502):historical?historicalFailure():index?indexFailure():production?productionFailure():storePeriod?storePeriodFailure():catalog?catalogFailure():sampleFailure();
  if(request.method!=='POST')return routerFailure('METHOD_NOT_ALLOWED',405);
  if(url.search||request.url.length>4096)return routerFailure('INVALID_REQUEST',400);
@@ -198,6 +200,8 @@ export async function forwardFinancePaymentSample(request,env,{validateInternalA
  if(dailyContract!==null&&dailyContract!=='daily-profit-v1')return routerFailure('INVALID_REQUEST',400);
  const businessVariantsContract=request.headers.get('x-braza-business-variants-contract');
  if(businessVariantsContract!==null&&(!business||businessVariantsContract!=='single-pair-v1'))return routerFailure('INVALID_REQUEST',400);
+ const retentionHeader=request.headers.get('x-braza-business-retention');let businessRetention=null;
+ if(retentionHeader!==null){try{if(!business||new TextEncoder().encode(retentionHeader).byteLength>2048)return routerFailure('INVALID_REQUEST',400);businessRetention=projectBusinessPeriodRetentionManifest(JSON.parse(retentionHeader));if(businessRetention?.kind!=='COHORT')return routerFailure('INVALID_REQUEST',400);}catch{return routerFailure('INVALID_REQUEST',400);}}
  const secret=env?.FINANCE_ROUTER_SECRET;
  if(typeof secret!=='string'||! /^[\x21-\x7e]{32,256}$/.test(secret)||typeof env?.SHOPEE_FINANCE_SERVICE?.fetch!=='function')return routerFailure('FINANCE_CONFIGURATION_PENDING',503);
  if(!/^application\/json(?:\s*;\s*charset\s*=\s*(?:utf-8|"utf-8"))?\s*$/i.test(request.headers.get('content-type')||''))return routerFailure('INVALID_REQUEST',400);
@@ -222,22 +226,26 @@ export async function forwardFinancePaymentSample(request,env,{validateInternalA
   if(releaseContract!==null)headers['X-Braza-Release-Contract']=releaseContract;
   if(dailyContract!==null)headers['X-Braza-Daily-Contract']=dailyContract;
   if(businessVariantsContract!==null)headers['X-Braza-Business-Variants-Contract']=businessVariantsContract;
+  if(businessRetention!==null)headers['X-Braza-Business-Retention']=JSON.stringify(businessRetention);
   if(incomeDetail&&incomeScanContract!==null)headers['X-Braza-Income-Contract']=incomeScanContract;
   const upstream=await env.SHOPEE_FINANCE_SERVICE.fetch(new Request(FINANCE_ORIGIN+url.pathname,{method:'POST',headers,body:JSON.stringify(input),redirect:'manual',signal:controller.signal}));
   // A service binding may finish after our deadline despite its aborted signal.
   // Its late response must be canceled before acquiring a stalled body reader.
   if(controller.signal.aborted){try{upstream?.body?.cancel().catch(()=>{});}catch{}return unavailable();}
   if(!(upstream instanceof Response)||upstream.redirected||upstream.status>=300&&upstream.status<400){try{upstream?.body?.cancel().catch(()=>{});}catch{}return unavailable();}
+  const readMaximum=business&&upstream.status===404&&(input.operation!=='start'||businessRetention!==null)?BUSINESS_PERIOD_MISSING_RUN_MAXIMUM:responseMaximum;
   const media=upstream.headers.get('content-type')||'',size=upstream.headers.get('content-length');
-  if(!/^application\/json(?:\s*;\s*charset\s*=\s*(?:utf-8|"utf-8"))?\s*$/i.test(media)||(size!==null&&(!/^\d+$/.test(size)||Number(size)>responseMaximum))){try{upstream.body?.cancel().catch(()=>{});}catch{}return unavailable();}
-  const value=await readSampleBody(upstream.body,responseMaximum,controller,current=>{reader=current;});
+  if(!/^application\/json(?:\s*;\s*charset\s*=\s*(?:utf-8|"utf-8"))?\s*$/i.test(media)||(size!==null&&(!/^\d+$/.test(size)||Number(size)>readMaximum))){try{upstream.body?.cancel().catch(()=>{});}catch{}return unavailable();}
+  const value=await readSampleBody(upstream.body,readMaximum,controller,current=>{reader=current;});
   if(controller.signal.aborted)return unavailable();
   if(upstream.status!==200){
+   if(business&&businessRetention!==null&&upstream.status===404){const missing=projectBusinessPeriodRetentionMissing(value,businessRetention);if(missing)return new Response(JSON.stringify(missing),{status:404,headers:{...PRIVATE_HEADERS,'content-type':'application/json; charset=utf-8'}});}
+   if(business&&upstream.status===404){const missing=projectBusinessPeriodMissingRun(value,input);if(missing)return new Response(JSON.stringify(missing),{status:404,headers:{...PRIVATE_HEADERS,'content-type':'application/json; charset=utf-8'}});}
    if(incomeDetail)return incomeDetailFailure([400,401,403,409,429,502,503,504].includes(upstream.status)?upstream.status:502,value);
    if(escrowReleases)return routerFailure('FINANCE_ESCROW_RELEASES_UNAVAILABLE',[400,401,403,409,429,502,503,504].includes(upstream.status)?upstream.status:502);
    if(reconciliation)return routerFailure('FINANCE_RECONCILIATION_UNAVAILABLE',[400,401,403,409,429,502,503,504].includes(upstream.status)?upstream.status:502);
    if(historical)return historicalFailure([400,401,403,409,429,502,503,504].includes(upstream.status)?upstream.status:502,value);
-   if(index)return indexFailure([400,401,403,409,429,502,503,504].includes(upstream.status)?upstream.status:502);
+   if(index)return indexFailure([400,401,403,409,429,502,503,504].includes(upstream.status)?upstream.status:502,Object.getOwnPropertyDescriptor(value||{},'diagnostic')?.value);
    if(production)return productionFailure([400,401,403,409,429,502,503,504].includes(upstream.status)?upstream.status:502);
    if(storePeriod)return storePeriodFailure([400,401,403,409,429,502,503,504].includes(upstream.status)?upstream.status:502);
    if(catalog)return catalogFailure([400,401,403,409,429,502,503,504].includes(upstream.status)?upstream.status:502,value);
@@ -263,7 +271,7 @@ export async function forwardFinancePaymentSample(request,env,{validateInternalA
    if(incomeDetail)return frame?new Response(JSON.stringify(frame),{headers:{...PRIVATE_HEADERS,'content-type':'application/json; charset=utf-8'}}):unavailable();
   if(reconciliation)return frame&&reconciliationRequestMatches(input,frame)?new Response(JSON.stringify(originalItemsContract==='original-items-v1'&&reconciliationOriginal?reconciliationOriginal:refundContract==='refunds-v1'&&reconciliationMoney?reconciliationMoney:reconciliationContract==='finance-reconciliation-v2'&&reconciliationEvidence?reconciliationEvidence:frame),{headers:{...PRIVATE_HEADERS,'content-type':'application/json; charset=utf-8'}}):unavailable();
   if(historical)return frame&&historicalVariantEvidenceRequestMatches(input,frame)?new Response(JSON.stringify(frame),{headers:{...PRIVATE_HEADERS,'content-type':'application/json; charset=utf-8'}}):historicalFailure();
-  if(index)return frame&&productIndexRequestMatches(input,frame)?new Response(JSON.stringify(frame),{headers:{...PRIVATE_HEADERS,'content-type':'application/json; charset=utf-8'}}):indexFailure();
+  if(index)return frame&&productIndexRequestMatches(input,frame)?new Response(JSON.stringify(frame),{headers:{...PRIVATE_HEADERS,'content-type':'application/json; charset=utf-8'}}):indexFailure(502,Object.getOwnPropertyDescriptor(value||{},'diagnostic')?.value);
   if(production)return frame&&productionOrdersRequestMatches(input,frame)?new Response(JSON.stringify(frame),{headers:{...PRIVATE_HEADERS,'content-type':'application/json; charset=utf-8'}}):productionFailure();
   if(storePeriod&&frame&&!storePeriodRequestMatches(input,frame))return storePeriodFailure();
   if(catalog&&frame&&!catalogRequestMatches(input,frame))return catalogFailure();

@@ -1,4 +1,5 @@
 import test from 'node:test';
+import {createBusinessPeriodRetentionFixture} from './business-period-retention-fixture.mjs';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
 import {D1} from './sqlite-d1.mjs';
@@ -157,7 +158,7 @@ test('the shared entry point automatically checkpoints a completed period and ch
  const e=env();e.ADMIN_DB.db.exec('CREATE TABLE variant_bindings_state(id INTEGER PRIMARY KEY,revision INTEGER,payload TEXT,updated_at TEXT);CREATE TABLE production_costs_state(id INTEGER PRIMARY KEY,revision INTEGER,payload TEXT,updated_at TEXT)');
  e.ADMIN_DB.db.prepare('INSERT INTO variant_bindings_state VALUES(1,1,?,?)').run('[]',new Date(stamp*1000).toISOString());e.ADMIN_DB.db.prepare('INSERT INTO production_costs_state VALUES(1,1,?,?)').run(JSON.stringify(COST_DEFAULTS),new Date(stamp*1000).toISOString());
  const empty=running=>({schema:'finance_business_period_v1',run_id:'11111111-1111-4111-8111-111111111111',revision:running?1:2,status:running?'RUNNING':'COMPLETE',start_date:'2026-10-01',end_date:'2026-10-01',cutoff_at:stamp-1,checked_at:stamp,currency:'BRL',monetary_unit:'UNCONFIRMED',pages_read:1,duplicate_orders:0,coverage:{orders:0,paid:0,completed:0,ongoing:0,cancelled:0,cancel_pending:0,unpaid:0,other:0,unknown:0,payment_covered:0,payment_missing:0,returns:0,returns_unknown:0},known_sales_base_raw:'0',sales_base_raw:'0',known_expected_repass_raw:'0',expected_repass_raw:'0',known_ads_adjustment_raw:'0',ads_adjustment_raw:'0',invoice_tax:{schema:'store_invoice_tax_v1',rate_bps:200,basis:'PAYMENT_GOODS_VALUE_PER_ORDER_ESTIMATE',rounding:'HALF_UP_PER_ORDER',covered_orders:0,unavailable_orders:0,known_base_raw:'0',known_tax_raw:'0'},items:[],diagnostic:null,basis:'CREATE_TIME_PAID_ORDER_ESTIMATE_NOT_SETTLED'});
- const services={getFinanceBusinessPeriod:async(_,selection)=>empty(selection.operation==='start')},options={now:()=>stamp*1000,actor:'checkpoint-operator'};
+ const services={retainFinanceBusinessPeriodPublication:createBusinessPeriodRetentionFixture({now:()=>stamp*1000}),getFinanceBusinessPeriod:async(_,selection)=>empty(selection.operation==='start')},options={now:()=>stamp*1000,actor:'checkpoint-operator'};
  const invoke=(operation,extra={})=>businessMonthWithCheckpoint(e,{operation,month,...extra},services,options);
  assert.equal((await invoke('start')).status,'RUNNING');assert.equal((await history(e)).checkpoints.length,0);
  assert.equal((await invoke('step')).status,'COMPLETE');assert.equal((await history(e)).checkpoints.length,1);

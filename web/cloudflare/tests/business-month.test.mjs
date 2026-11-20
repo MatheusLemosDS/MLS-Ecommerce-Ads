@@ -1,4 +1,5 @@
 import test from 'node:test';
+import {createBusinessPeriodRetentionFixture} from './business-period-retention-fixture.mjs';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
 import {D1} from './sqlite-d1.mjs';
@@ -32,7 +33,7 @@ function env(){
 }
 function source(transform=value=>value){
  const calls={finance:[],ads:[]},frames=new Map();let count=0;
- return {calls,getFinanceBusinessPeriod:async(_,selection)=>{calls.finance.push(selection);if(selection.operation==='start'){const f=transform(frame({start_date:selection.start_date,end_date:selection.end_date},++count));frames.set(f.run_id,f);return structuredClone(f);}const f=frames.get(selection.run_id);return structuredClone(f);},getAdsCalendar:async(_,selection)=>{calls.ads.push(selection);return calendar(selection);}};
+ return {calls,retainFinanceBusinessPeriodPublication:createBusinessPeriodRetentionFixture({now}),getFinanceBusinessPeriod:async(_,selection)=>{calls.finance.push(selection);if(selection.operation==='start'){const f=transform(frame({start_date:selection.start_date,end_date:selection.end_date},++count));frames.set(f.run_id,f);return structuredClone(f);}const f=frames.get(selection.run_id);return structuredClone(f);},getAdsCalendar:async(_,selection)=>{calls.ads.push(selection);return calendar(selection);}};
 }
 const run=(e,s,operation='start',changes={},options={})=>businessMonth(e,request(operation,changes),s,{now,...options});
 async function complete(e,s,changes={},options={}){let value=await run(e,s,'start',changes,options);for(let index=0;index<20&&value.status==='RUNNING';index++)value=await run(e,s,'step',changes,options);return value;}

@@ -34,8 +34,20 @@ export function projectProductIndexFrame(value,expectedProfile=null){
 export function productIndexRequestMatches(input,frame){return !!input&&!!frame&&input.offset===frame.offset&&input.page_size===frame.page_size&&input.item_status===frame.item_status;}
 
 export function financeProductIndexDiagnostic(error){
- const code=Object.getOwnPropertyDescriptor(error||{},'code')?.value,suffixes=['REQUEST_INVALID','CONFIGURATION','CLOCK_CONFIGURATION','SIGNING_KEY_CONFIGURATION','AUTHORIZATION_EXPIRED','AUTH_REQUIRED','PERMISSION_REQUIRED','RATE_LIMIT','API_ERROR','RESPONSE_INVALID','IDENTITY_MISMATCH','TRANSPORT_CONFIGURATION','TRANSPORT_UNAVAILABLE','REQUEST_STALE','TIMEOUT','UPSTREAM_FAILED','UPSTREAM_HTTP','UPSTREAM_BODY_TOO_LARGE','UPSTREAM_INVALID_JSON','UPSTREAM_CONTENT_TYPE'];
+ const code=Object.getOwnPropertyDescriptor(error||{},'code')?.value,suffixes=['REQUEST_INVALID','CONFIGURATION','CLOCK_CONFIGURATION','SIGNING_KEY_CONFIGURATION','AUTHORIZATION_EXPIRED','AUTH_REQUIRED','PERMISSION_REQUIRED','RATE_LIMIT','API_ERROR','RESPONSE_INVALID','RESPONSE_ENVELOPE','RESPONSE_OBJECT','RESPONSE_EMPTY_ITEM_MISSING','RESPONSE_EMPTY_ITEM_NULL','RESPONSE_ITEM_TYPE','RESPONSE_PAGE_SIZE','RESPONSE_TOTAL','RESPONSE_PAGINATION','RESPONSE_ROW_OBJECT','RESPONSE_ROW_ID','RESPONSE_ROW_DUPLICATE','RESPONSE_ROW_STATUS','RESPONSE_ROW_TIME','IDENTITY_MISMATCH','TRANSPORT_CONFIGURATION','TRANSPORT_UNAVAILABLE','REQUEST_STALE','TIMEOUT','UPSTREAM_FAILED','UPSTREAM_HTTP','UPSTREAM_BODY_TOO_LARGE','UPSTREAM_INVALID_JSON','UPSTREAM_CONTENT_TYPE'];
  const safeCode=suffixes.some(suffix=>code==='FINANCE_PRODUCT_INDEX_'+suffix)?code:['FINANCE_AUTHORIZATION_REQUIRED','FINANCE_TOKEN_DECRYPT_FAILED','FINANCE_ENCRYPTION_KEY_MISMATCH'].includes(code)?'FINANCE_PRODUCT_INDEX_AUTH_REQUIRED':['FINANCE_REFRESH_IN_PROGRESS','FINANCE_AUTHORIZATION_IN_PROGRESS','FINANCE_REFRESH_CONFLICT','FINANCE_REVISION_CONFLICT'].includes(code)?'FINANCE_PRODUCT_INDEX_BUSY':'FINANCE_PRODUCT_INDEX_UNAVAILABLE';
  const upstream=Object.getOwnPropertyDescriptor(error||{},'upstream_status')?.value;
  return {code:safeCode,http:Number.isInteger(upstream)&&upstream>=100&&upstream<=599?upstream:null};
+}
+
+// Closed diagnostic projection for the existing private transport only.
+export function projectProductIndexDiagnostic(value,{app=false}={}){
+ try{
+  if(!value||typeof value!=='object'||![Object.prototype,null].includes(Object.getPrototypeOf(value))||Reflect.ownKeys(value).length!==2)return null;
+  const code=Object.getOwnPropertyDescriptor(value,'code')?.value,http=Object.getOwnPropertyDescriptor(value,'http')?.value;
+  if(typeof code!=='string'||!(http===null||Number.isInteger(http)&&http>=100&&http<=599))return null;
+  const safe=financeProductIndexDiagnostic({code,upstream_status:http});
+  if(code==='FINANCE_PRODUCT_INDEX_BUSY'||app&&['FINANCE_PRODUCT_INDEX_APP_CONFIGURATION','FINANCE_PRODUCT_INDEX_APP_RESPONSE_INVALID','FINANCE_PRODUCT_INDEX_APP_HTTP_ERROR','FINANCE_PRODUCT_INDEX_APP_TIMEOUT','FINANCE_PRODUCT_INDEX_APP_UPSTREAM_FAILED'].includes(code))return {code,http};
+  return safe.code===code?safe:null;
+ }catch{return null;}
 }

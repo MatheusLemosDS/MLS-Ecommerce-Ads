@@ -1,4 +1,5 @@
 import test from 'node:test';
+import {createBusinessPeriodRetentionFixture} from './business-period-retention-fixture.mjs';
 import assert from 'node:assert/strict';
 import {D1} from './sqlite-d1.mjs';
 import {COST_DEFAULTS} from '../src/production-costs.mjs';
@@ -26,7 +27,7 @@ function calendar(selection,at=stamp,missing=null){
 }
 function source({running=false,time=now,missing=null}={}){
  const calls={finance:[],ads:[]},frames=new Map();let sequence=0;
- return {calls,frames,getFinanceBusinessPeriod:async(_,selection,options)=>{assert.equal(options.timeoutMs,45000);calls.finance.push(selection);if(selection.operation==='start'){const value=finance(selection,++sequence,{running,at:Math.floor(time()/1000)});frames.set(value.run_id,value);return structuredClone(value);}return structuredClone(frames.get(selection.run_id));},getAdsCalendar:async(_,selection,options)=>{assert.equal(options.timeoutMs,10000);calls.ads.push(selection);return calendar(selection,Math.floor(time()/1000),missing);}};
+ return {calls,frames,retainFinanceBusinessPeriodPublication:createBusinessPeriodRetentionFixture({now:time}),getFinanceBusinessPeriod:async(_,selection,options)=>{assert.equal(options.timeoutMs,45000);calls.finance.push(selection);if(selection.operation==='start'){const value=finance(selection,++sequence,{running,at:Math.floor(time()/1000)});frames.set(value.run_id,value);return structuredClone(value);}return structuredClone(frames.get(selection.run_id));},getAdsCalendar:async(_,selection,options)=>{assert.equal(options.timeoutMs,10000);calls.ads.push(selection);return calendar(selection,Math.floor(time()/1000),missing);}};
 }
 const run=(env,services,options={})=>runBusinessSync(env,services,{now,...options});
 const rows=(env,table)=>env.ADMIN_DB.db.prepare('SELECT * FROM '+table).all();

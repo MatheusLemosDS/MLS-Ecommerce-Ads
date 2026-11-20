@@ -96,3 +96,86 @@ test('historical monthly expense competence uses the actual Sao Paulo DST bounda
  const historical=financialAccountingPeriod({kind:'MONTH',anchor:'2015-10'}),expense={...explicitZero,mode:'CONFIRMED',items:[{id:'synthetic-historical-expense',status:'OPEN',amount_cents:1350,competence_month:'2015-10',created_at:'2015-10-01T12:00:00.000Z',updated_at:'2015-10-01T12:00:00.000Z',category:'OTHER',due_date:'2015-10-31'}]},result=await services(async()=>({status:200,body:frame([])}),expense).readFinancialAutomationSources({scope,period:historical,policy,now,mode:'sync'}),event=result.events.find(row=>row.event_type==='EXPENSE_RECOGNIZED');
  assert.ok(event);assert.equal(event.competence_at,'2015-11-01T01:59:59.999Z');assert.ok(event.competence_at<historical.end_at);assert.equal(event.postings.find(row=>row.account==='OPERATING_EXPENSE').amount_cents,1350);
 });
+
+function refreshingServices(privateRead,readMonth){
+ const dependencies={...services(privateRead),readFinancialSavedMonth:readMonth};delete dependencies.readFinancialAutomationSources;
+ return createFinancialAutomationServices({},dependencies);
+}
+test('saved source pagination finishes its exact cohort when the publication refreshes between every turn',async()=>{
+ const replacement='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',cursor='c'.repeat(64),seen=[];let publication=1;
+ const adapter=refreshingServices(async input=>{seen.push(input);return {status:200,body:input.run_id===run_id?frame([fact(seen.length)],{more:input.cursor===null,next:input.cursor===null?cursor:null,cursor:input.cursor}):{...frame([fact(9)]),run:{...frame([]).run,run_id:replacement,revision:publication}}};},async()=>({audit_scope:{sources:[{run_id:publication===1?run_id:replacement,source_revision:publication}]}}));
+ let result=await adapter.readFinancialAutomationSources({scope,period,policy,now,mode:'sync'});publication++;
+ for(let turn=0;turn<12&&!result.checkpoint.completed;turn++){publication++;result=await adapter.readFinancialAutomationSources({scope,period,policy,now,mode:'sync',checkpoint:result.checkpoint});}
+ assert.equal(result.checkpoint.completed,true);assert.equal(result.checkpoint.order_done,true);assert.equal(seen.length,2);assert.deepEqual(seen.map(row=>[row.run_id,row.expected_revision,row.cursor]),[[run_id,1,null],[run_id,1,cursor]]);
+ assert.equal(result.checkpoint.order_checkpoint.schema,'financial_saved_source_cursor_v3');assert.equal(result.checkpoint.order_checkpoint.runs[0].run_id,run_id);
+ // Completion releases only the cursor, never claims a completed-date cohort
+ // from creation-date windows. A later pass then observes the new publication.
+ assert.equal(result.coverage.find(row=>row.family==='ORDERS').state,'PARTIAL');assert.ok(result.pending.includes('ORDERS_COMPETENCE_COHORT_COVERAGE_REQUIRED'));
+ const next=await adapter.readFinancialAutomationSources({scope,period,policy,now,mode:'sync',checkpoint:result.checkpoint});assert.equal(seen.length,3);assert.equal(seen[2].run_id,replacement);assert.equal(next.checkpoint.order_checkpoint.runs[0].source_revision,publication);
+});
+test('a revision conflict invalidates the pinned cohort without mixing facts or claiming completeness',async()=>{
+ const replacement='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',cursor='c'.repeat(64),seen=[];let published=false;
+ const adapter=refreshingServices(async input=>{seen.push(input);if(input.run_id===run_id&&input.cursor!==null)return {status:409,body:{error:'FINANCIAL_SOURCE_CURSOR_STALE'}};return {status:200,body:input.run_id===run_id?frame([fact()],{more:true,next:cursor}):{...frame([fact(2)]),run:{...frame([]).run,run_id:replacement,revision:2}}};},async()=>({audit_scope:{sources:[{run_id:published?replacement:run_id,source_revision:published?2:1}]}}));
+ let result=await adapter.readFinancialAutomationSources({scope,period,policy,now,mode:'sync'});published=true;
+ for(let turn=0;turn<10&&seen.length<2;turn++)result=await adapter.readFinancialAutomationSources({scope,period,policy,now,mode:'sync',checkpoint:result.checkpoint});
+ assert.equal(result.events.length,0);assert.equal(result.checkpoint.order_checkpoint.invalidated,true);assert.equal(result.checkpoint.order_done,false);assert.equal(result.coverage.find(row=>row.family==='ORDERS').state,'PARTIAL');assert.ok(result.pending.includes('FINANCIAL_SOURCE_CURSOR_STALE'));
+ for(let turn=0;turn<10&&seen.length<3;turn++)result=await adapter.readFinancialAutomationSources({scope,period,policy,now,mode:'sync',checkpoint:result.checkpoint});
+ assert.equal(seen.length,3);assert.equal(seen[2].run_id,replacement);assert.equal(seen[2].cursor,null);assert.equal(seen[2].expected_revision,2);
+});
+test('cohort checkpoints remain scoped to the exact policy and upgrade only a matching legacy cursor',async()=>{
+ const cursor='c'.repeat(64),seen=[],adapter=services(async input=>{seen.push(input);return {status:200,body:frame([fact()],{more:true,next:cursor,cursor:input.cursor})};});
+ let first=await adapter.readFinancialAutomationSources({scope,period,policy,now,mode:'sync'}),legacy=structuredClone(first.checkpoint);legacy.lane=0;legacy.order_checkpoint.schema='financial_saved_source_cursor_v2';delete legacy.order_checkpoint.context_signature;delete legacy.order_checkpoint.runs;
+ const migrated=await adapter.readFinancialAutomationSources({scope,period,policy,now,mode:'sync',checkpoint:legacy});assert.equal(seen[1].cursor,cursor);assert.equal(migrated.checkpoint.order_checkpoint.schema,'financial_saved_source_cursor_v3');
+ const changed=await adapter.readFinancialAutomationSources({scope,period,policy:{...policy,revision:2},now,mode:'sync',checkpoint:migrated.checkpoint});assert.equal(seen[2].cursor,null);assert.equal(changed.checkpoint.order_checkpoint.index,0);assert.notEqual(changed.checkpoint.order_checkpoint.context_signature,first.checkpoint.order_checkpoint.context_signature);
+});
+test('production publication metadata renews one exact cohort lease in the evidence POST',async()=>{
+ const cursor='c'.repeat(64),seen=[];let revision=7;
+ const adapter=refreshingServices(async input=>{seen.push(input);return {status:200,body:frame([fact(seen.length)],{more:input.cursor===null,next:input.cursor===null?cursor:null,cursor:input.cursor})};},async()=>({audit_scope:{sources:[{run_id,source_revision:1,start_date:'2026-10-01',end_date:'2026-10-31',slot_index:0,publication_revision:revision}]}}));
+ let result=await adapter.readFinancialAutomationSources({scope,period,policy,now,mode:'sync'});revision++;
+ for(let turn=0;turn<10&&seen.length<2;turn++)result=await adapter.readFinancialAutomationSources({scope,period,policy,now,mode:'sync',checkpoint:result.checkpoint});
+ assert.equal(seen.length,2);assert.equal(seen[0].schema,'financial_source_request_v4');assert.deepEqual(seen[0].retention,seen[1].retention);assert.equal(seen[0].retention.kind,'COHORT');assert.equal(seen[0].retention.publication_revision,7);assert.equal(seen[0].retention.month,'2026-10');assert.match(seen[0].retention.lease_id,/^[a-f0-9-]{36}$/);assert.deepEqual(seen[0].retention.slots,[{slot_index:0,run_id,revision:1,start_date:'2026-10-01',end_date:'2026-10-31'}]);assert.equal(seen[1].cursor,cursor);
+});
+test('verified missing source abandons its unavailable cohort and adopts the next real publication',async()=>{
+ const replacement='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',cursor='c'.repeat(64),seen=[];let published=false;
+ const adapter=refreshingServices(async input=>{seen.push(input);if(input.run_id===run_id&&input.cursor!==null)return {status:404,body:{schema:'financial_source_error_v1',error:'FINANCIAL_SOURCE_RUN_NOT_FOUND'}};return {status:200,body:input.run_id===run_id?frame([fact()],{more:true,next:cursor}):{...frame([fact(2)]),run:{...frame([]).run,run_id:replacement,revision:2}}};},async()=>({audit_scope:{sources:[{run_id:published?replacement:run_id,source_revision:published?2:1}]}}));
+ let result=await adapter.readFinancialAutomationSources({scope,period,policy,now,mode:'sync'});
+ for(let turn=0;turn<10&&seen.length<2;turn++)result=await adapter.readFinancialAutomationSources({scope,period,policy,now,mode:'sync',checkpoint:result.checkpoint});
+ assert.equal(result.checkpoint.order_checkpoint.invalidated,true);assert.equal(result.checkpoint.order_done,false);assert.equal(result.events.length,0);assert.equal(result.coverage.find(row=>row.family==='ORDERS').state,'PARTIAL');assert.ok(result.pending.includes('FINANCIAL_SOURCE_RUN_NOT_FOUND'));
+ published=true;for(let turn=0;turn<10&&seen.length<3;turn++)result=await adapter.readFinancialAutomationSources({scope,period,policy,now,mode:'sync',checkpoint:result.checkpoint});
+ assert.equal(seen.length,3);assert.equal(seen[2].run_id,replacement);assert.equal(seen[2].cursor,null);assert.equal(seen[2].expected_revision,2);assert.equal(result.events.length,1);
+});
+test('a generic404 cannot authorize a source cohort replacement',async()=>{
+ const adapter=services(async()=>({status:404,body:{schema:'financial_source_error_v1',error:'FINANCIAL_SOURCE_NOT_FOUND'}})),result=await adapter.readFinancialAutomationSources({scope,period,policy,now,mode:'sync'});
+ assert.notEqual(result.checkpoint.order_checkpoint.invalidated,true);assert.equal(result.coverage.find(row=>row.family==='ORDERS').state,'PARTIAL');assert.equal(result.events.length,0);
+});
+test('an unavailable order dependency cannot prevent independent source lanes from refreshing',async()=>{
+ const counts={orders:0,ads:0,cash:0,inventory:0,returns:0},base=services(async()=>{counts.orders++;return {status:503,body:{schema:'financial_source_error_v1',error:'FINANCIAL_SOURCE_STORAGE_UNAVAILABLE'}};}),dependencies={...base};delete dependencies.readFinancialAutomationSources;
+ for(const [name,key] of [['readFinancialSavedAds','ads'],['readFinancialSavedCash','cash'],['readFinancialSavedInventory','inventory'],['readFinancialSavedReturns','returns']])dependencies[name]=async(...args)=>{counts[key]++;return base[name](...args);};
+ const adapter=createFinancialAutomationServices({},dependencies);let result=null;
+ for(let turn=0;turn<20;turn++)result=await adapter.readFinancialAutomationSources({scope,period,policy,now,mode:'sync',checkpoint:result?.checkpoint??null});
+ assert.ok(counts.ads>=2,JSON.stringify(counts));assert.ok(counts.inventory>=2,JSON.stringify(counts));assert.ok(counts.returns>=2,JSON.stringify(counts));assert.ok(counts.orders>=2);assert.equal(result.coverage.find(row=>row.family==='ORDERS').state,'PARTIAL');assert.ok(result.pending.includes('FINANCIAL_SOURCE_STORAGE_UNAVAILABLE'));assert.deepEqual(result.events,[]);
+});
+test('a deferred transport failure resumes the exact saved page after independent lanes run',async()=>{
+ const replacement='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',cursor='c'.repeat(64),seen=[];let publicationChanged=false;
+ const adapter=refreshingServices(async input=>{seen.push(input);if(seen.length===2){publicationChanged=true;return {status:503,body:{error:'FINANCIAL_SOURCE_STORAGE_UNAVAILABLE'}};}return {status:200,body:frame([fact(seen.length)],{more:seen.length===1,next:seen.length===1?cursor:null,cursor:input.cursor})};},async()=>({audit_scope:{sources:[{run_id:publicationChanged?replacement:run_id,source_revision:1}]}}));
+ let result=null;for(let turn=0;turn<20&&seen.length<3;turn++)result=await adapter.readFinancialAutomationSources({scope,period,policy,now,mode:'sync',checkpoint:result?.checkpoint??null});
+ assert.equal(seen.length,3);assert.equal(seen[2].run_id,run_id);assert.equal(seen[2].cursor,cursor);assert.equal(seen[2].expected_revision,1);assert.equal(result.checkpoint.order_done,true);assert.ok(!result.pending.includes('FINANCIAL_SOURCE_STORAGE_UNAVAILABLE'));
+});
+test('complete creation-window pages cannot claim the uncovered remainder of an accounting period',async()=>{
+ const runIds=[run_id,'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb','cccccccc-cccc-4ccc-8ccc-cccccccccccc'],estimate={...policy,recognition:'PAID_ORDER_CREATE_ESTIMATE'};
+ async function collect(windows,observed=stamp,cutoff=stamp-10){
+  const refs=windows.map(([start_date,end_date],index)=>({run_id:runIds[index],source_revision:1,start_date,end_date})),seen=[];
+  const adapter=refreshingServices(async input=>{seen.push(input);const index=refs.findIndex(row=>row.run_id===input.run_id),ref=refs[index];return {status:200,body:{...frame([]),run:{...frame([]).run,run_id:ref.run_id,start_date:ref.start_date,end_date:ref.end_date,checked_at:Array.isArray(observed)?observed[index]:observed,cutoff_at:Array.isArray(cutoff)?cutoff[index]:cutoff}}};},async()=>({audit_scope:{sources:refs}}));
+  let result=await adapter.readFinancialAutomationSources({scope,period,policy:estimate,now,mode:'sync'});
+  for(let turn=0;turn<20&&!result.checkpoint.completed;turn++)result=await adapter.readFinancialAutomationSources({scope,period,policy:estimate,now,mode:'sync',checkpoint:result.checkpoint});
+  assert.equal(result.checkpoint.completed,true);assert.equal(seen.length,windows.length);return result;
+ }
+ for(const windows of [[['2026-10-01','2026-10-15']],[['2026-10-01','2026-10-15'],['2026-10-17','2026-10-31']],[['2026-10-02','2026-10-15'],['2026-10-16','2026-10-31']],[['2026-10-01','2026-10-15'],['2026-10-16','2026-10-30']]]){
+  const result=await collect(windows);assert.equal(result.coverage.find(row=>row.family==='ORDERS').state,'PARTIAL');assert.ok(result.pending.includes('ORDER_CREATION_WINDOW_COVERAGE_REQUIRED'));
+ }
+ const complete=await collect([['2026-10-01','2026-10-15'],['2026-10-16','2026-10-30'],['2026-10-31','2026-10-31']]);assert.equal(complete.coverage.find(row=>row.family==='ORDERS').state,'COMPLETE');assert.ok(!complete.pending.includes('ORDER_CREATION_WINDOW_COVERAGE_REQUIRED'));
+ const windows=[['2026-10-01','2026-10-15'],['2026-10-16','2026-10-30'],['2026-10-31','2026-10-31']],cutoffs=['2026-10-16T03:00:00Z','2026-10-31T03:00:00Z','2026-11-01T03:00:00Z'].map(value=>Date.parse(value)/1000);
+ const independent=await collect(windows,cutoffs.map(value=>value+60),cutoffs);assert.equal(independent.coverage.find(row=>row.family==='ORDERS').state,'COMPLETE','each earlier window need only observe its own end, not the entire month end');
+ const lateFinish=await collect(windows,cutoffs.map(()=>stamp),[...cutoffs.slice(0,2),Date.parse('2026-10-31T12:00:00Z')/1000]);assert.equal(lateFinish.coverage.find(row=>row.family==='ORDERS').state,'PARTIAL','a late completion timestamp cannot fill orders excluded by the run cutoff');assert.ok(lateFinish.pending.includes('ORDER_CREATION_WINDOW_CUTOFF_REQUIRED'));
+ const beforeEnd=await collect([['2026-10-01','2026-10-31']],Date.parse('2026-10-31T12:00:00Z')/1000,Date.parse('2026-10-31T11:00:00Z')/1000);assert.equal(beforeEnd.coverage.find(row=>row.family==='ORDERS').state,'PARTIAL');assert.ok(beforeEnd.pending.includes('ORDER_CREATION_WINDOW_CUTOFF_REQUIRED'));
+});

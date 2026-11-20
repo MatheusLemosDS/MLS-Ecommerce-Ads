@@ -5,6 +5,7 @@ import vm from 'node:vm';
 import {build} from 'esbuild';
 import {fileURLToPath} from 'node:url';
 import {collectionFixture} from './business-collection-fixture.mjs';
+import {createBusinessPeriodRetentionFixture} from './business-period-retention-fixture.mjs';
 import {projectBusinessMonth,businessMonthClientFrame} from '../src/business-month.mjs';
 import {LEGACY_MONTH_PROJECTORS,LEGACY_FRAME_GUARD,LEGACY_COLLECTION_DIAGNOSTIC} from './legacy-business-month-projectors-d487da7.mjs';
 
@@ -13,6 +14,9 @@ async function realMonthlyResponses(t){
  const f=await collectionFixture();t.after(()=>{f.env.ADMIN_DB.db.close();f.financeEnv.FINANCE_DB.db.close();});
  const empty=await f.services.getFinanceBusinessPeriod(f.env,{operation:'start',start_date:'2026-10-01',end_date:'2026-10-15'});
  f.clock.time=Date.UTC(2026,9,25,12);let fresh=false;
+ // This projection fixture replaces the real collector with synthetic frames;
+ // its matching private ACK must model that same source and fixture clock.
+ f.services.retainFinanceBusinessPeriodPublication=createBusinessPeriodRetentionFixture({now:f.now});
  f.services.getFinanceBusinessPeriod=async(_,selection)=>{
   const count=fresh||selection.start_date!=='2026-10-01'?0:241,at=f.now()/1000,base=raw(6525*count),payout=raw(4751*count),tax=raw(131*count),status=fresh?'RUNNING':'COMPLETE';
   const frame={...structuredClone(empty),run_id:(fresh?'33333333-3333-4333-8333-':selection.start_date==='2026-10-01'?'11111111-1111-4111-8111-':'22222222-2222-4222-8222-')+'111111111111',revision:count?14:1,status,start_date:selection.start_date,end_date:selection.end_date,cutoff_at:at,checked_at:at,source_checked_at:{oldest_at:at,latest_at:at},pages_read:fresh?0:count?13:1,coverage:{orders:count,paid:count,completed:count,ongoing:0,cancelled:0,cancel_pending:0,unpaid:0,other:0,unknown:0,payment_covered:count,payment_missing:0,returns:0,returns_unknown:0},known_sales_base_raw:base,sales_base_raw:base,known_expected_repass_raw:payout,expected_repass_raw:payout,known_ads_adjustment_raw:'0',ads_adjustment_raw:'0',invoice_tax:{...empty.invoice_tax,covered_orders:count,known_base_raw:base,known_tax_raw:tax},items:count?[{item_id:'1000',model_id:'0',quantity:count}]:[]};

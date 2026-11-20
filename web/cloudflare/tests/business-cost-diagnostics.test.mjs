@@ -1,3 +1,4 @@
+import {createBusinessPeriodRetentionFixture} from './business-period-retention-fixture.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
@@ -24,7 +25,7 @@ async function fixture(t,{items=[{item_id:'201',model_id:'0',quantity:1}],bindin
  ADMIN_DB.db.prepare('INSERT INTO variant_bindings_state VALUES(1,3,?,?)').run(JSON.stringify(bindings),new Date(clock).toISOString());
  ADMIN_DB.db.prepare('INSERT INTO production_costs_state VALUES(1,7,?,?)').run(JSON.stringify({...COST_DEFAULTS,inclusive_plus_cents:2140,components:[]}),new Date(clock).toISOString());
  const env={ADMIN_DB};let calls=0;
- const services={getFinanceBusinessPeriod:async(_,selection)=>{const value=financeFrame(selection,++calls,perSlot?perSlot[calls-1]:items);if(review&&calls===1){value.coverage.orders+=2;value.coverage.cancel_pending=1;value.coverage.other=1;assert.ok(projectBusinessPeriodFrame(value));}return value;}};
+ const services={retainFinanceBusinessPeriodPublication:createBusinessPeriodRetentionFixture({now}),getFinanceBusinessPeriod:async(_,selection)=>{const value=financeFrame(selection,++calls,perSlot?perSlot[calls-1]:items);if(review&&calls===1){value.coverage.orders+=2;value.coverage.cancel_pending=1;value.coverage.other=1;assert.ok(projectBusinessPeriodFrame(value));}return value;}};
  let frame=await businessMonth(env,{operation:'start',month:'2026-10'},services,{now});while(frame.status==='RUNNING')frame=await businessMonth(env,{operation:'step',month:'2026-10'},services,{now});
  return {env,frame,calls:()=>calls,read:()=>readBusinessCostDiagnostics(env,{month:'2026-10'},{now})};
 }

@@ -1,4 +1,5 @@
 import test from 'node:test';
+import {createBusinessPeriodRetentionFixture} from './business-period-retention-fixture.mjs';
 import assert from 'node:assert/strict';
 import {adminFetch} from '../src/admin.mjs';
 import {D1} from './sqlite-d1.mjs';
@@ -21,7 +22,7 @@ const snapshot=auth=>({expenses:auth.env.ADMIN_DB.db.prepare('SELECT * FROM busi
 const emptyFrame=selection=>({schema:'finance_business_period_v1',run_id:'11111111-1111-4111-8111-'+String(selection.start_date.slice(8)).padStart(12,'0'),revision:2,status:'COMPLETE',...selection,cutoff_at:stamp()-1,checked_at:stamp(),currency:'BRL',monetary_unit:'UNCONFIRMED',pages_read:1,duplicate_orders:0,coverage:{orders:0,paid:0,completed:0,ongoing:0,cancelled:0,cancel_pending:0,unpaid:0,other:0,unknown:0,payment_covered:0,payment_missing:0,returns:0,returns_unknown:0},known_sales_base_raw:'0',sales_base_raw:'0',known_expected_repass_raw:'0',expected_repass_raw:'0',known_ads_adjustment_raw:'0',ads_adjustment_raw:'0',invoice_tax:{schema:'store_invoice_tax_v1',rate_bps:200,basis:'PAYMENT_GOODS_VALUE_PER_ORDER_ESTIMATE',rounding:'HALF_UP_PER_ORDER',covered_orders:0,unavailable_orders:0,known_base_raw:'0',known_tax_raw:'0'},items:[],diagnostic:null,basis:'CREATE_TIME_PAID_ORDER_ESTIMATE_NOT_SETTLED'});
 function services(){
  const calls={finance:0,ads:0};
- return {calls,getFinanceBusinessPeriod:async(env,selection)=>{calls.finance++;assert.equal(selection.operation,'start');const {start_date,end_date}=selection;return emptyFrame({start_date,end_date});},getAdsCalendar:async(env,selection)=>{
+ return {calls,retainFinanceBusinessPeriodPublication:createBusinessPeriodRetentionFixture(),getFinanceBusinessPeriod:async(env,selection)=>{calls.finance++;assert.equal(selection.operation,'start');const {start_date,end_date}=selection;return emptyFrame({start_date,end_date});},getAdsCalendar:async(env,selection)=>{
   calls.ads++;const count=Number(selection.end_date.slice(8)),children=[];
   for(let start=1;start<=count;start+=15){const begin=month+'-'+String(start).padStart(2,'0'),end=month+'-'+String(Math.min(start+14,count)).padStart(2,'0'),daily=Array.from({length:Math.min(15,count-start+1)},(_,i)=>({date:month+'-'+String(start+i).padStart(2,'0'),expense:0,broad_gmv:0,direct_gmv:0,broad_order:0,direct_order:0}));children.push(buildAdsMeasurement({status:'ok',connected:true,shop:{id:1178167501},period:{start_date:begin,end_date:end},balance:50,daily},{start_date:begin,end_date:end},stamp()));}
   return buildAdsCalendar(children,selection,stamp());

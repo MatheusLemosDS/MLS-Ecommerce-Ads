@@ -1,3 +1,4 @@
+import {createBusinessPeriodRetentionFixture} from './business-period-retention-fixture.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
@@ -57,7 +58,7 @@ function collector(ctx,{failFinance=false,pauseBeforeCommit=false,api}={}){
   ctx.db.prepare=sql=>{const statement=prepare(sql);if(sql.startsWith('UPDATE business_sync_state SET status='))commits.add(statement);return statement;};
   ctx.db.batch=async statements=>{if(!paused&&statements.some(statement=>commits.has(statement))){paused=true;const state=await api.readBusinessSyncState(ctx.env);await api.saveBusinessSyncPolicy(ctx.env,{revision:state.revision,enabled:false},'synthetic-learning-owner',{now:ctx.now});}return batch(statements);};
  }
- return {calls,services:{getFinanceBusinessPeriod:async(_,selection)=>{if(failFinance)throw Error('PRIVATE_SOURCE_FAILURE');assert.equal(selection.operation,'start');const frame=historySourceFrame(calls.finance++);assert.equal(frame.start_date,selection.start_date);assert.equal(frame.end_date,selection.end_date);return frame;},getAdsCalendar:async()=>{calls.ads++;return completeWorkspaceFrame().ads;}}};
+ return {calls,services:{retainFinanceBusinessPeriodPublication:createBusinessPeriodRetentionFixture({now:ctx.now}),getFinanceBusinessPeriod:async(_,selection)=>{if(failFinance)throw Error('PRIVATE_SOURCE_FAILURE');assert.equal(selection.operation,'start');const frame=historySourceFrame(calls.finance++);assert.equal(frame.start_date,selection.start_date);assert.equal(frame.end_date,selection.end_date);return frame;},getAdsCalendar:async()=>{calls.ads++;return completeWorkspaceFrame().ads;}}};
 }
 
 for(const minify of [false,true])test(`generated App keeps agent memory private, descriptive and read-only (minify=${minify})`,async t=>{

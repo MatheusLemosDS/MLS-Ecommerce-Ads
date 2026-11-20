@@ -1,3 +1,5 @@
+Atualização financeira de 20/11/2026: implementação na PR #131 (https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/131), branch fix/finance-completion-20261120, base 4cfdf465b2fda58dd27ae693126b7fe1625f69d6. Consultar os checks do HEAD da PR para validação completa e seu estado atual para integração Git. SEM PUBLICAÇÃO e SEM ACEITE FINANCEIRO REAL neste registro. Live 17.3 preservada às 21:53:45 UTC; paridade de catálogo/custos/DTF incorporada ao candidato. Uso, fontes e etapas separadas em docs/MLS_FINANCE_COMPLETION_2026_11_20.md e docs/financial-automation/validation/finance-completion-20261120.json. Custos desconhecidos, revisão humana e dependências externas permanecem explícitos.
+
 # Complemento financeiro — implementação e limites
 
 A implementação publicada adiciona ao MLS Finance resultado por competência, recebíveis/carteira, saques, banco, despesas, devoluções, conciliação e fechamentos versionados, preservando a V4.1 e a estimativa de vendas existente. Fontes não comprovadas permanecem parciais.

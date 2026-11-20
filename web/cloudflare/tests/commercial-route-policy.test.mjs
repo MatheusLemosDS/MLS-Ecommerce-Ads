@@ -21,6 +21,11 @@ test('every literal operational route in the active router has an explicit polic
  assert.ok(COMMERCIAL_OPERATIONAL_ROUTES.includes('/api/admin/production/batches/action'),'dynamic DTF suffixes are enumerated explicitly');
 });
 
+test('saved DTF batch reads have only the exact existing read capability while lifecycle writes keep their write grant',async()=>{
+ for(const path of ['/api/admin/production/batches','/api/admin/production/batch']){const policy=await commercialRoutePolicy(new Request('https://fixture.local'+path));assert.deepEqual(policy.capabilities,['dtf.read']);assert.equal(policy.mutating,false);}
+ const mutation=await commercialRoutePolicy(new Request('https://fixture.local/api/admin/production/batches/action',{method:'POST',headers:{'content-type':'application/json'},body:'{}'}));assert.deepEqual(mutation.capabilities,['dtf.write']);assert.equal(mutation.mutating,true);
+});
+
 test('all emitted requirements exist in account-policy rather than invented administrator grants',async()=>{
  const known=new Set(Object.values(ACCOUNT_ROLES).flatMap(value=>value.allowedCapabilities));
  for(const path of COMMERCIAL_OPERATIONAL_ROUTES){let mapped=0;for(const method of ['GET','POST']){

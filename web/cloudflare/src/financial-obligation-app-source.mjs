@@ -2,7 +2,8 @@ import {isCommercialContext,assertCommercialCapability} from './commercial-conte
 import {tenantDatabaseHasContext} from './tenant-storage.mjs';
 import {readExpenseLedger,projectExpenseLedger} from './expense-ledger.mjs';
 import {getFinanceFinancialAutomation} from './app-financial-automation.mjs';
-import {FinancialLedgerError} from './financial-event-ledger.mjs';
+import {FinancialLedgerError,financialDigest} from './financial-event-ledger.mjs';
+import {writeFinancialAutomationState} from './financial-automation-store.mjs';
 import {projectFinancialObligationSnapshot,financialObligationSnapshotHash,projectFinancialObligationRequest,projectFinancialObligationResponse,financialObligationResponseMatches} from '../../finance/src/financial-obligation-frame.mjs';
 
 const fail=(code,status=400)=>{throw new FinancialLedgerError('FINANCIAL_OBLIGATION_APP_'+code,status);};
@@ -48,6 +49,29 @@ export async function captureFinancialExpenseObligationSnapshot(env,input,option
   return {...snapshot,source_hash:await financialObligationSnapshotHash(snapshot)};
 }
 
+// Persist the original observation before crossing the App/Finance boundary.
+// A retry may recapture an unchanged ledger at another instant, but must send
+// the exact original command and retain its original freshness deadline. The
+// existing immutable automation journal supplies the scoped CAS and replay;
+// these records are transport observations, never accounting events.
+async function registrationCommand(env,input,snapshot,now){
+  const actor=env.COMMERCIAL_CONTEXT?.userId??'legacy-owner';
+  const identity=await financialDigest(['expense-obligation-request-v1',input.scope,actor,input.request_id]);
+  const command=projectFinancialObligationRequest({schema:'financial_obligation_source_request_v1',operation:'register',request_id:input.request_id,expected_revision:input.expected_revision,snapshot});
+  if(!command)fail('SOURCE_INVALID',503);
+  const request_id=identity.slice(0,8)+'-'+identity.slice(8,12)+'-'+identity.slice(12,16)+'-'+identity.slice(16,20)+'-'+identity.slice(20,32);
+  const write=()=>writeFinancialAutomationState(env,{scope:{...input.scope,account_id:'operating-book'},kind:'OBLIGATION_REQUEST_'+identity,expected_revision:0,request_id,payload:command},{now,actor,assertAuthorized:()=>{select(env,input,true);return true;},requestIdentity:{operation:'register-expense-obligations',input,source_hash:snapshot.source_hash}});
+  let stored;try{stored=await write();}catch(error){
+    // A simultaneous identical request can win the first insert. Re-enter the
+    // store's normal immutable replay path; changed material still conflicts.
+    if(error?.code!=='FINANCIAL_AUTOMATION_REVISION_CONFLICT')throw error;
+    stored=await write();
+  }
+  const original=projectFinancialObligationRequest(stored.payload);
+  if(!original||original.operation!=='register'||original.request_id!==input.request_id||original.expected_revision!==input.expected_revision||original.snapshot.month!==input.month||original.snapshot.source_hash!==snapshot.source_hash||original.snapshot.ledger_revision!==snapshot.ledger_revision||original.snapshot.scope.organization_id!==input.scope.organization_id||original.snapshot.scope.store_id!==input.scope.store_id||original.snapshot.scope.currency!==input.scope.currency)fail('SOURCE_INVALID',503);
+  select(env,input,true);return original;
+}
+
 // A receipt captures an as-of observation, not a distributed transaction.
 // Re-reading the material source after registration detects an intervening App
 // edit and prevents treating the old receipt as a fresh allocation authority.
@@ -55,8 +79,7 @@ export async function refreshFinancialExpenseObligations(env,input,options={}){
   const selected=select(env,input,true),configured=configuration(options,true);
   const sourceOptions={now:configured.now,...(configured.readLedger?{readLedger:configured.readLedger}:{})};
   const snapshot=await captureFinancialExpenseObligationSnapshot(env,{scope:selected.scope,month:selected.month},sourceOptions);
-  const command=projectFinancialObligationRequest({schema:'financial_obligation_source_request_v1',operation:'register',request_id:selected.request_id,expected_revision:selected.expected_revision,snapshot});
-  if(!command)fail('SOURCE_INVALID',503);
+  const command=await registrationCommand(env,selected,snapshot,configured.now);
   const register=options.register??(value=>getFinanceFinancialAutomation(env,'obligations',value));
   let result;try{result=await register(command);}catch{fail('REGISTRATION_UNAVAILABLE',503);}
   select(env,input,true);

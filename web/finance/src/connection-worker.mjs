@@ -4,6 +4,8 @@ import {projectFinancePaymentPreview} from './payment-preview-frame.mjs';
 import {projectVariantCatalog,projectVariantCatalogRequest,financeCatalogDiagnostic,projectVariantCatalogFailure} from './variant-catalog-frame.mjs';
 import {projectStorePeriodRequest,projectStorePeriodFrame} from './store-period-frame.mjs';
 import {projectBusinessPeriodRequest,projectBusinessPeriodFrame} from './business-period-frame.mjs';
+import {projectBusinessPeriodRetentionManifest,projectBusinessPeriodRetentionMissing} from './business-period-retention-frame.mjs';
+import {projectBusinessPeriodMissingRun} from './business-period-missing-run.mjs';
 import {projectBusinessPeriodVariantsFrame} from './business-variant-attribution.mjs';
 import {projectProductionOrdersRequest,projectProductionOrdersFrame,productionOrdersRequestMatches} from './production-orders-frame.mjs';
 import {projectProductIndexRequest,projectProductIndexFrame,productIndexRequestMatches,financeProductIndexDiagnostic} from './product-index-frame.mjs';
@@ -281,7 +283,7 @@ function safeStatus(value,profile) {
   };
 }
 
-export function createFinanceWorker({adapter, paymentSample, paymentPreview, variantCatalog, storePeriod, businessPeriod, dailyOrders, productionOrders, productIndex, historicalVariantEvidence, reconciliation, escrowReleases, escrowReleaseCoverage, incomeOverview, incomeDetail, pendingIncomeScan, fetchImpl, now = () => Date.now()} = {}) {
+export function createFinanceWorker({adapter, paymentSample, paymentPreview, variantCatalog, storePeriod, businessPeriod, businessRetention:retainBusinessSources, dailyOrders, productionOrders, productIndex, historicalVariantEvidence, reconciliation, escrowReleases, escrowReleaseCoverage, incomeOverview, incomeDetail, pendingIncomeScan, fetchImpl, now = () => Date.now()} = {}) {
   return {
     async fetch(request, env) {
       let url;
@@ -389,6 +391,8 @@ export function createFinanceWorker({adapter, paymentSample, paymentPreview, var
         if(catalogMediaContract!==null&&catalogMediaContract!=='catalog-media-v1')return failure('INVALID_REQUEST',400);
         const production = url.pathname === PRODUCTION_ORDERS_PATH;
         const business = url.pathname === BUSINESS_PERIOD_PATH;
+        const retentionHeader=request.headers.get('x-braza-business-retention');let businessRetention=null;
+        if(retentionHeader!==null){try{if(!business||new TextEncoder().encode(retentionHeader).byteLength>2048)return failure('INVALID_REQUEST',400);businessRetention=projectBusinessPeriodRetentionManifest(JSON.parse(retentionHeader));if(businessRetention?.kind!=='COHORT')return failure('INVALID_REQUEST',400);}catch{return failure('INVALID_REQUEST',400);}}
         const period = business || url.pathname === STORE_PERIOD_PATH;
         const dailyContract = business ? request.headers.get('x-braza-daily-contract') : null;
         if (dailyContract !== null && dailyContract !== 'daily-profit-v1') return failure('INVALID_REQUEST',400);
@@ -399,6 +403,7 @@ export function createFinanceWorker({adapter, paymentSample, paymentPreview, var
         if (!input) return failure('INVALID_REQUEST', 400);
         if(catalogMediaContract!==null&&!input.include_cost_catalog)return failure('INVALID_REQUEST',400);
         try {
+          if(businessRetention!==null){if(typeof retainBusinessSources!=='function')return failure('CONFIGURATION_PENDING',503);await retainBusinessSources(env,businessRetention,{now});}
           const result = await capability(env, {fetchImpl, now, ...(production || catalog || period ? input : {}),...(business&&dailyContract==='daily-profit-v1'?{includeDaily:true}:{}),...(business&&businessVariantsContract==='single-pair-v1'?{includeVariants:true}:{}),...(catalogMediaContract==='catalog-media-v1'?{includeMedia:true}:{})});
           if(catalog){const unavailable=projectVariantCatalogFailure(result);if(unavailable)return response(unavailable,502,{json:true});}
           const catalogMedia=catalog?projectCatalogMediaFrame(result,projectVariantCatalog):null;
@@ -412,7 +417,11 @@ export function createFinanceWorker({adapter, paymentSample, paymentPreview, var
           if(variants&&dailyContract===null&&Object.hasOwn(frame,'daily_breakdown'))return response({error:'FINANCE_STORE_UNAVAILABLE',diagnostic:{code:'FINANCE_STORE_UNAVAILABLE',http:null}},502,{json:true});
           const output=variants??(catalogMediaContract==='catalog-media-v1'&&catalogMedia?catalogMedia:business&&dailyContract===null&&Object.hasOwn(frame,'daily_breakdown')?Object.fromEntries(Object.entries(frame).filter(([key])=>key!=='daily_breakdown')):frame);
           return response(output, 200, {json: true});
-        } catch (error) { return production ? response({error:'FINANCE_PRODUCTION_UNAVAILABLE'},502,{json:true}) : period ? response({error:'FINANCE_STORE_UNAVAILABLE',diagnostic:{code:'FINANCE_STORE_UNAVAILABLE',http:null}},502,{json:true}) : catalog ? response({schema:'variant_catalog_v1',status:'UNAVAILABLE',diagnostic:financeCatalogDiagnostic(error)},error instanceof FinanceConnectionError&&[400,401,403,409,429,502,503,504].includes(error.status)?error.status:502,{json:true}) : paymentFailure(error); }
+        } catch (error) {
+          if(business&&businessRetention!==null&&error instanceof FinanceConnectionError&&error.code==='FINANCE_BUSINESS_RETENTION_RUN_NOT_FOUND'&&error.status===404){const missing=projectBusinessPeriodRetentionMissing({schema:'finance_business_period_retention_missing_v1',code:error.code,month:businessRetention.month,lease_id:businessRetention.lease_id},businessRetention);if(missing)return response(missing,404,{json:true});}
+          if(business&&error instanceof FinanceConnectionError&&error.code==='FINANCE_BUSINESS_RUN_NOT_FOUND'&&error.status===404){const missing=projectBusinessPeriodMissingRun({schema:'finance_business_period_missing_run_v1',code:error.code,run_id:input.run_id},input);if(missing)return response(missing,404,{json:true});}
+          return production ? response({error:'FINANCE_PRODUCTION_UNAVAILABLE'},502,{json:true}) : period ? response({error:'FINANCE_STORE_UNAVAILABLE',diagnostic:{code:'FINANCE_STORE_UNAVAILABLE',http:null}},502,{json:true}) : catalog ? response({schema:'variant_catalog_v1',status:'UNAVAILABLE',diagnostic:financeCatalogDiagnostic(error)},error instanceof FinanceConnectionError&&[400,401,403,409,429,502,503,504].includes(error.status)?error.status:502,{json:true}) : paymentFailure(error);
+        }
       }
       if (![PREFIX + '/connect', PREFIX + '/callback', PREFIX + '/status'].includes(url.pathname)) return failure('NOT_FOUND', 404);
       if (request.method !== 'GET') return failure('METHOD_NOT_ALLOWED', 405, callback);

@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {build} from 'esbuild';
 import {fileURLToPath} from 'node:url';
 import {collectionFixture} from './business-collection-fixture.mjs';
+import {FINANCE_BUSINESS_RETENTION_PATH} from '../../finance/src/business-period-retention-frame.mjs';
 
 async function compiledWorker(name,minify){
  const result=await build({entryPoints:[fileURLToPath(new URL('../../../dist/'+name+'-worker.mjs',import.meta.url))],bundle:true,write:false,format:'esm',platform:'browser',target:'es2022',minify});
@@ -10,7 +11,7 @@ async function compiledWorker(name,minify){
 }
 
 for(const minify of [false,true])test(`the three deployed Workers preserve a rate-limited page and resume only its failed payment (minify=${minify})`,async()=>{
- const [app,auth,finance]=await Promise.all(['app','auth','finance'].map(name=>compiledWorker(name,minify)));
+ let app,auth,finance;
  const f=await collectionFixture({allPaid:true,windowCounts:[40,0]}),savedFetch=globalThis.fetch,SavedDate=globalThis.Date,routerSecret='PRIVATE_COMPILED_ROUTER_'+'r'.repeat(40),appSecret='PRIVATE_COMPILED_APP_'+'a'.repeat(40),origin='https://app.compiled.collection.test',calls={auth:0,finance:0,ads:0};
  f.clock.time+=60000;
  const env={...f.env,APP_INTERNAL_SECRET:appSecret,ADMIN_USERNAME:'compiled-collection-owner',ADMIN_PASSWORD:'compiled-collection-password-123456',ADMIN_SESSION_SECRET:'PRIVATE_COMPILED_SESSION_'+'s'.repeat(40)};
@@ -28,10 +29,14 @@ for(const minify of [false,true])test(`the three deployed Workers preserve a rat
    calls.ads++;assert.equal(request.method,'GET');const iso=value=>value.split('-').reverse().join('-'),period={start_date:iso(url.searchParams.get('start_date')),end_date:iso(url.searchParams.get('end_date'))},count=(SavedDate.parse(period.end_date+'T00:00:00Z')-SavedDate.parse(period.start_date+'T00:00:00Z'))/86400000+1;
    return Response.json({status:'ok',connected:true,shop:{id:1178167501},period,balance:0,daily:Array.from({length:count},(_,index)=>({date:new SavedDate(SavedDate.parse(period.start_date+'T00:00:00Z')+index*86400000).toISOString().slice(0,10),expense:0,broad_gmv:0,broad_order:0,broad_roas:0,direct_gmv:0,direct_order:0,direct_roas:0}))});
   }
+  if(url.pathname===FINANCE_BUSINESS_RETENTION_PATH){assert.equal(request.method,'POST');calls.auth++;return auth.fetch(request,authEnv);}
   assert.equal(url.pathname,'/internal/shopee/finance/business-period');calls.auth++;
   return auth.fetch(request,authEnv);
  };
  try{
+  // Retention captures its clock when the Worker is constructed, so all three
+  // compiled Workers must be instantiated under the same fixture clock.
+  [app,auth,finance]=await Promise.all(['app','auth','finance'].map(name=>compiledWorker(name,minify)));
   const login=await app.fetch(new Request(origin+'/login',{method:'POST',headers:{origin,'content-type':'application/x-www-form-urlencoded'},body:new URLSearchParams({username:env.ADMIN_USERNAME,password:env.ADMIN_PASSWORD})}),env);
   assert.equal(login.status,303);const cookie=login.headers.get('set-cookie').split(';')[0],state=await(await app.fetch(new Request(origin+'/api/admin/state',{headers:{cookie}}),env)).json();
   const owner=async(path,body)=>{

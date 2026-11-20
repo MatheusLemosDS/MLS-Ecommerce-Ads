@@ -39,9 +39,10 @@ function selected(items,side,records,relation){
   });
 }
 /** Server-resolved records and reservations are mandatory; browser rows are not evidence. */
-export function projectFinancialAllocation(input,{records,used_cents=new Map()}={}){
+export function projectFinancialAllocation(input,{records,used_cents=new Map(),pool_used_cents=new Map()}={}){
   if(!own(input)||!Array.isArray(records)||records.length>1000)fail('REQUEST_INVALID');
   if(!(used_cents instanceof Map)&&!own(used_cents))fail('RESERVATION_INVALID');
+  if(!(pool_used_cents instanceof Map)&&!own(pool_used_cents))fail('RESERVATION_INVALID');
   const scope=financialAllocationScope(input.scope),relation=relations[input.relation];if(!relation)fail('RELATION_INVALID');
   const trusted=new Map();for(const value of records){const r=record(value,scope);if(trusted.has(r.record_id))fail('RECORD_ID_AMBIGUOUS',409);trusted.set(r.record_id,r);}
   const left=selected(input.left,'left',trusted,relation),right=selected(input.right,'right',trusted,relation);
@@ -51,7 +52,7 @@ export function projectFinancialAllocation(input,{records,used_cents=new Map()}=
     const r=trusted.get(item.record_id);if(!r||r.kind!=='FEE'||r.status!=='CONFIRMED'||r.amount_cents<=0)fail('ADJUSTMENT_EVIDENCE_REQUIRED',409);
     return {record_id:r.record_id,record_revision:r.revision,account_id:r.account_id,side:item.side,kind:'FEE',amount_cents:item.amount_cents,evidence_id:r.evidence_id};
   });
-  const seen=new Set(),usage=new Map();
+  const seen=new Set(),usage=new Map(),pools=new Map();
   for(const item of [...left,...right,...adjustments]){
     if(seen.has(item.record_id))fail('RECORD_REUSED_IN_GROUP',409);seen.add(item.record_id);
     const used=used_cents instanceof Map?used_cents.get(item.record_id)??0:own(used_cents)&&Object.hasOwn(used_cents,item.record_id)?used_cents[item.record_id]:0;
@@ -59,7 +60,12 @@ export function projectFinancialAllocation(input,{records,used_cents=new Map()}=
     const r=trusted.get(item.record_id),capacity=absolute(r.amount_cents);
     if(BigInt(used)+BigInt(item.amount_cents)>BigInt(capacity))fail('ALLOCATION_EXCEEDS_AVAILABLE',409);
     usage.set(item.record_id,{record_id:item.record_id,record_revision:r.revision,legacy_record_id:r.legacy_record_id,capacity_cents:capacity,new_cents:item.amount_cents});
+    if(r.legacy_record_id!==null){const pool=pools.get(r.legacy_record_id)??{capacity,new_cents:0n};if(pool.capacity!==capacity)fail('RECORD_CAPACITY_AMBIGUOUS',409);pool.new_cents+=BigInt(item.amount_cents);pools.set(r.legacy_record_id,pool);}
   }
+  // Aliases explicitly resolved to one source consume one capacity. A store
+  // supplies the already aggregated reservation once, including other books
+  // only when their common cash tenant is proven by its trusted configuration.
+  for(const [key,pool]of pools){const supplied=pool_used_cents instanceof Map?pool_used_cents.has(key):Object.hasOwn(pool_used_cents,key);let used=0n;if(supplied){const value=pool_used_cents instanceof Map?pool_used_cents.get(key):pool_used_cents[key];if(!money(value)||value<0)fail('RESERVATION_INVALID');used=BigInt(value);}else for(const value of trusted.values())if(value.legacy_record_id===key){const amount=used_cents instanceof Map?used_cents.get(value.record_id)??0:Object.hasOwn(used_cents,value.record_id)?used_cents[value.record_id]:0;if(!money(amount)||amount<0)fail('RESERVATION_INVALID');used+=BigInt(amount);}if(used+pool.new_cents>BigInt(pool.capacity))fail('ALLOCATION_EXCEEDS_AVAILABLE',409);}
   const sum=items=>safe(items.reduce((n,r)=>n+BigInt(r.amount_cents),0n));
   const leftTotal=safe(BigInt(sum(left))+BigInt(sum(adjustments.filter(r=>r.side==='LEFT'))));
   const rightTotal=safe(BigInt(sum(right))+BigInt(sum(adjustments.filter(r=>r.side==='RIGHT'))));

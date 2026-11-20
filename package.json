@@ -15,9 +15,9 @@
     "build:finance": "node tools/build_workers.mjs finance",
     "test": "node --test --test-reporter=tap --test-concurrency=3 web/cloudflare/tests/*.test.mjs web/finance/tests/*.test.mjs tools/tests/*.test.mjs",
     "validate:deploy": "node tools/worker_deploy.mjs check",
-    "deploy:app": "node tools/worker_deploy.mjs deploy app",
-    "deploy:auth": "node tools/worker_deploy.mjs deploy auth",
-    "deploy:finance": "node tools/worker_deploy.mjs deploy finance",
+    "deploy:app": "node tools/verified_worker_deploy.mjs deploy app",
+    "deploy:auth": "node tools/verified_worker_deploy.mjs deploy auth",
+    "deploy:finance": "node tools/verified_worker_deploy.mjs deploy finance",
     "capture:app": "node tools/capture_worker_config.mjs app",
     "capture:auth": "node tools/capture_worker_config.mjs auth",
     "repair:finance-router": "node tools/sync_finance_router_secret.mjs",
@@ -27,9 +27,14 @@
   },
   "devDependencies": {
     "jsonc-parser": "3.3.1",
-    "wrangler": "4.151.1"
+    "wrangler": "4.153.0"
   },
   "dependencies": {
     "otpauth": "9.6.0"
+  },
+  "overrides": {
+    "miniflare": {
+      "undici": "7.30.2"
+    }
   }
 }

@@ -3,12 +3,15 @@ import assert from 'node:assert/strict';
 import {D1} from './sqlite-d1.mjs';
 import {createFinancialEvent,financialDigest} from '../src/financial-event-ledger.mjs';
 import {FINANCIAL_ACCOUNTING_COVERAGE_FAMILIES} from '../src/financial-accounting-projection.mjs';
-import {handleFinancialAutomation,financialAutomationScope,readFinancialAutomationWorkspace} from '../src/financial-automation-service.mjs';
+import {handleFinancialAutomation,financialAutomationScope,readFinancialAutomationWorkspace,financialAutomationClosePeriod} from '../src/financial-automation-service.mjs';
+import {financialCloseIdentity,readFinancialClose} from '../src/financial-close-store.mjs';
 import {financialAccountingPeriod} from '../src/financial-accounting-schedule.mjs';
 import {ingestFinancialAutomationSources} from '../src/financial-automation-bridge.mjs';
 import {readFinancialAutomationState,writeFinancialAutomationState} from '../src/financial-automation-store.mjs';
 import {runFinancialAutomationJobs} from '../src/financial-automation-jobs.mjs';
-import {readFinancialEvents} from '../src/financial-event-store.mjs';
+import {readFinancialEvents,appendFinancialEvent} from '../src/financial-event-store.mjs';
+import {createFinancialAutomationServices} from '../src/financial-automation-sources.mjs';
+import {readFinancialSourceOriginalItems} from '../../finance/src/financial-source-worker.mjs';
 import {readFinancialAutomationSavedAds} from '../src/financial-automation-ads-sources.mjs';
 import {buildAdsMeasurement} from '../src/ads-measurement.mjs';
 import {buildAdsCalendar} from '../src/ads-calendar.mjs';
@@ -31,6 +34,44 @@ function installSources(f,events){
 
 test('cold authorized workspace is read-only, scoped and never displays a final zero',async()=>{
  const f=fixture();try{const response=await request(f,'?month=2026-10');assert.equal(response.status,200);const value=await response.json();assert.equal(value.schema,'financial_automation_workspace_v1');assert.deepEqual(value.scope,f.scope);assert.equal(value.projection.result.amount_cents,null);assert.equal(value.projection_source.kind,'CURRENT_JOURNAL');assert.ok(value.pending.includes('WALLET_COVERAGE_INCOMPLETE'));assert.equal(value.configuration.revision,0);assert.equal(value.configuration.policy,null);assert.equal(value.configuration.proposed_policy.approval.state,'DRAFT');assert.equal(value.configuration.proposed_policy.recognition,'COMPLETED_ORDER');assert.equal(value.configuration.proposed_policy.tax.mode,'UNCONFIGURED');assert.equal((await f.env.ADMIN_DB.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name LIKE 'financial_%'").all()).results.length,0);}finally{f.close();}
+});
+
+async function preparedFridayClosing({partial=false}={}){
+ const f=fixture(),period=financialAccountingPeriod({kind:'CIVIL_WEEK',anchor:'2026-10-09',week_starts_on:'FRIDAY'}),events=[await observedEvent(f.scope,'synthetic-week-sale',10000)];installSources(f,events);
+ try{assert.equal((await request(f,'/policy',approve())).status,200);if(!partial)assert.equal((await ingestFinancialAutomationSources(f.env,{scope:f.scope,period},f.options)).complete,true);
+  const body={operation:'prepare',kind:'CIVIL_WEEK',anchor:'2026-10-09',basis:'ACCRUAL',close_id:null,expected_revision:0,request_id:'dddddddd-dddd-dddd-dddd-dddddddddddd',reason:'Synthetic Friday week sources checked',confirmed:true},response=await request(f,'/close',body);assert.equal(response.status,200);const ready=(await response.json()).close;assert.equal(ready.status,partial?'PROVISORIO':'PRONTO');return {f,period,events,body,ready};
+ }catch(error){f.close();throw error;}
+}
+async function approveMondayAfterFridayPeriod(f){const response=await request(f,'/policy',approve({expected_revision:1,request_id:'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',effective_from:'2026-10-19',financial_week:'CIVIL_MONDAY_SUNDAY'}));assert.equal(response.status,200);return response.json();}
+
+test('a Friday closing can be rectified after approving Monday weeks without changing its immutable identity',async()=>{
+ const {f,period,events,body,ready}=await preparedFridayClosing();try{
+  const finalize={...body,operation:'finalize',close_id:ready.close_id,expected_revision:ready.version,request_id:'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee'},first=await request(f,'/close',finalize);assert.equal(first.status,200);const closed=(await first.json()).close,frozen=JSON.stringify(closed);assert.equal(closed.status,'FECHADO');assert.equal(closed.snapshot.projection.result.amount_cents,10000);
+  await approveMondayAfterFridayPeriod(f);const replayFinal=await request(f,'/close',finalize);assert.equal(replayFinal.status,200,'original finalize remains replayable after the policy changes');const replayed=await replayFinal.json();assert.equal(replayed.replayed,true);assert.deepEqual(replayed.close,closed);
+  events.push(await observedEvent(f.scope,'synthetic-week-late-cost',5000,{event_type:'GOODS_CONSUMED',source:{provider:'OPERATOR',family:'HISTORICAL_STOCK_ALLOCATION',native_id:'synthetic-week-allocation',identity:'NATIVE_ID',identity_key:null},postings:[{account:'COGS',account_ref:'consumption',amount_cents:5000},{account:'INVENTORY',account_ref:'stock',amount_cents:-5000}]}));assert.equal((await ingestFinancialAutomationSources(f.env,{scope:f.scope,period},f.options)).complete,true);
+  const rectify={...body,operation:'rectify',anchor:'2026-10-15',close_id:closed.close_id,expected_revision:closed.version,request_id:'11111111-1111-1111-1111-111111111111',reason:'Synthetic historical cost evidence'},response=await request(f,'/close',rectify);assert.equal(response.status,200);const corrected=(await response.json()).close;assert.equal(corrected.status,'RETIFICADO');assert.equal(corrected.version,closed.version+1);assert.equal(corrected.close_id,closed.close_id);assert.deepEqual(corrected.period,closed.period);assert.equal(corrected.period.calendar_id,'CIVIL_FRIDAY_THURSDAY');assert.equal(corrected.snapshot.projection.result.amount_cents,5000);assert.equal(corrected.snapshot.projection.policy.financial_week,'CIVIL_FRIDAY_THURSDAY');assert.equal(JSON.stringify(closed),frozen);
+  const repeated=await request(f,'/close',rectify);assert.equal(repeated.status,200);const retried=await repeated.json();assert.equal(retried.replayed,true);assert.deepEqual(retried.close,corrected);const history=await readFinancialClose(f.env,{scope:f.scope,period:financialAutomationClosePeriod(period),basis:'ACCRUAL'},f.options);assert.deepEqual(history.versions.find(value=>value.version===closed.version),closed);assert.equal(history.current.version,corrected.version);
+ }finally{f.close();}
+});
+
+for(const partial of [false,true])test('a selected historical Friday week keeps readiness and CAS after Monday policy '+(partial?'provisional':'ready'),async()=>{
+ const {f,body,ready}=await preparedFridayClosing({partial});try{
+  await approveMondayAfterFridayPeriod(f);const input={...body,operation:'finalize',anchor:'2026-10-12',close_id:ready.close_id,expected_revision:ready.version,request_id:'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee'},response=await request(f,'/close',input);assert.equal(response.status,partial?409:200);if(partial){assert.equal((await response.json()).error,'FINANCIAL_CLOSE_NOT_READY');}else{const result=(await response.json()).close;assert.equal(result.status,'FECHADO');assert.equal(result.close_id,ready.close_id);assert.deepEqual(result.period,ready.period);assert.equal(result.snapshot.projection.result.amount_cents,10000);const conflict=await request(f,'/close',{...input,request_id:'ffffffff-ffff-ffff-ffff-ffffffffffff'});assert.equal(conflict.status,409);assert.equal((await conflict.json()).error,'FINANCIAL_CLOSE_VERSION_CONFLICT');}
+ }finally{f.close();}
+});
+
+test('historical closing selection rejects another scope, basis, range and revoked authorization before writes',async()=>{
+ const {f,period,body,ready}=await preparedFridayClosing();try{
+  await approveMondayAfterFridayPeriod(f);const input={...body,operation:'finalize',close_id:ready.close_id,expected_revision:ready.version,request_id:'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee'},foreignId=await financialCloseIdentity({...f.scope,organization_id:'foreign-company'},financialAutomationClosePeriod(period),'ACCRUAL'),before=(await f.env.ADMIN_DB.prepare('SELECT payload,payload_hash FROM financial_close_revisions ORDER BY version').all()).results;
+  for(const patch of [{close_id:foreignId},{basis:'BANK_CASH'},{kind:'MONTH'},{anchor:'2026-10-16'}]){const response=await request(f,'/close',{...input,...patch});assert.equal(response.status,403);assert.equal((await response.json()).error,'FINANCIAL_AUTOMATION_CLOSE_SCOPE_REJECTED');}
+  assert.equal((await request(f,'/close',input,{headers:{'content-type':'application/json',origin}})).status,403,'CSRF remains required');f.options.assertAuthorized=async()=>false;const revoked=await request(f,'/close',input);assert.equal(revoked.status,403);assert.equal((await revoked.json()).error,'FINANCIAL_AUTHORIZATION_REVOKED');assert.deepEqual((await f.env.ADMIN_DB.prepare('SELECT payload,payload_hash FROM financial_close_revisions ORDER BY version').all()).results,before);
+ }finally{f.close();}
+});
+
+test('resolving a historical closing identity does not bypass a retroactive calendar policy readiness failure',async()=>{
+ const {f,period,body,ready}=await preparedFridayClosing();try{
+  assert.equal((await request(f,'/policy',approve({expected_revision:1,request_id:'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',financial_week:'CIVIL_MONDAY_SUNDAY'}))).status,200);const response=await request(f,'/close',{...body,operation:'finalize',close_id:ready.close_id,expected_revision:ready.version,request_id:'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee'});assert.equal(response.status,409);assert.equal((await response.json()).error,'FINANCIAL_CLOSE_NOT_READY');const preserved=await readFinancialClose(f.env,{scope:f.scope,period:financialAutomationClosePeriod(period),basis:'ACCRUAL'},f.options);assert.deepEqual(preserved.current,ready);assert.equal(preserved.closed,null);
+ }finally{f.close();}
 });
 test('policy approval is CSRF protected, server-authored, versioned and retry-idempotent',async()=>{
  const f=fixture();try{
@@ -143,5 +184,22 @@ test('future source observations and cutoffs still reject atomically with an adv
    assert.deepEqual(await readFinancialAutomationState(f.env,stateInput,f.options),before);
    assert.deepEqual(await readFinancialEvents(f.env,{scope:f.scope,limit:100},f.options),ledgerBefore);
   }
+ }finally{f.close();}
+});
+
+test('inventory sales page route is read-only, bounded, revision-checked and derived from the authorized scope',async()=>{
+ const f=fixture();let calls=0;f.options.services.listFinancialOriginalItemsPage=async({scope,month,cursor})=>{calls++;assert.deepEqual(scope,f.scope);assert.equal(month,'2026-10');assert.equal(cursor,'next_page');return {schema:'financial_original_items_page_v1',scope,month,items:[],has_more:false,next_cursor:null};};try{
+  const suffix='/inventory/sales?month=2026-10&cursor=next_page&expected_revision=0',response=await request(f,suffix);assert.equal(response.status,200);const value=await response.json();assert.equal(value.schema,'financial_inventory_sales_page_v1');assert.deepEqual(value.scope,f.scope);assert.deepEqual(value.sales.rows,[]);assert.equal(value.sales.has_more,false);assert.equal(calls,1);assert.equal((await f.env.ADMIN_DB.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name LIKE 'financial_%'").all()).results.length,0,'browsing does not initialize financial storage');
+  assert.equal((await request(f,suffix.replace('expected_revision=0','expected_revision=1'))).status,409);assert.equal(calls,1);for(const invalid of [suffix+'&company=forged',suffix+'&month=2026-09',suffix.replace('next_page','bad%2Fcursor'),suffix.replace('next_page','x'.repeat(2049)),suffix.replace('expected_revision=0','expected_revision=-1')])assert.equal((await request(f,invalid)).status,400);assert.equal(calls,1);f.options.assertAuthorized=async()=>false;assert.equal((await request(f,suffix)).status,403);assert.equal(calls,1);
+ }finally{f.close();}
+});
+
+test('real cached V3 pages carry the 101st recognized sale item through the authenticated App inventory route',async()=>{
+ const f=fixture(),run_id='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',order_hash='a'.repeat(64),source_hash='b'.repeat(64),stamp=fixed/1000;let privateReads=0;try{
+  const event=await observedEvent(f.scope,'paged-sale',10000,{source:{provider:'SHOPEE',family:'ORDER_NET_PAYOUT',native_id:order_hash,identity:'NATIVE_ID',identity_key:null}});await appendFinancialEvent(f.env,{scope:f.scope,event,expected_revision:0,request_id:'11111111-1111-1111-1111-111111111111'},f.options);
+  const source={schema:'financial_order_evidence_snapshot_v1',run:{run_id,revision:1,status:'COMPLETE',start_date:'2026-10-01',end_date:'2026-10-31',cutoff_at:stamp-60,checked_at:stamp},missing_orders:0,invalid_orders:0,orders:[{order_hash,source_hash,bucket:'completed',checked_at:stamp,items:Array.from({length:101},(_,i)=>({item_id:String(1000+i),model_id:'0',quantity:2}))}]};
+  f.options.services=createFinancialAutomationServices(f.env,{readFinancialSavedMonth:async()=>({audit_scope:{sources:[{run_id,source_revision:1}]}}),readFinancialPrivate:async command=>{privateReads++;return {status:200,body:await readFinancialSourceOriginalItems({},command,{now,readEvidence:async()=>source})};}});
+  const initial=await request(f,'/inventory?month=2026-10');assert.equal(initial.status,200);const first=await initial.json();assert.equal(first.candidates.sales.rows.length,100);assert.equal(privateReads,1);assert.equal(first.candidates.sales.has_more,true);
+  const response=await request(f,'/inventory/sales?month=2026-10&cursor='+encodeURIComponent(first.candidates.sales.next_cursor)+'&expected_revision='+first.revision);assert.equal(response.status,200);const second=await response.json();assert.equal(privateReads,2);assert.equal(second.sales.rows.length,1);assert.equal(second.sales.rows[0].selection.item_id,'1100');assert.equal(second.sales.rows[0].selection.source_hash,source_hash);assert.equal(second.sales.rows[0].quantity,2);assert.equal(second.sales.has_more,false);assert.equal(second.revision,first.revision);assert.doesNotMatch(JSON.stringify(second),/order_sn|buyer|pieces_per_selling_unit/);
  }finally{f.close();}
 });

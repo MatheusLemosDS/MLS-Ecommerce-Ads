@@ -7,6 +7,10 @@ import {TENANT_APP_TABLES,TENANT_FINANCE_TABLES,TENANT_SCHEMA_OBJECTS} from '../
 import {FINANCIAL_EVENT_SCHEMA} from '../src/financial-event-store.mjs';
 import {FINANCIAL_CLOSE_SCHEMA} from '../src/financial-close-store.mjs';
 import {FINANCIAL_AUTOMATION_SCHEMA} from '../src/financial-automation-store.mjs';
+import {DATED_COST_EVIDENCE_SCHEMA} from '../src/dated-cost-evidence.mjs';
+import {BUSINESS_MONTH_SOURCE_RECOVERY_SCHEMA} from '../src/business-month-source-recovery.mjs';
+import {BUSINESS_MONTH_COHORT_SOURCE_RECOVERY_SCHEMA} from '../src/business-month-cohort-source-recovery.mjs';
+import {BUSINESS_PERIOD_RETENTION_SCHEMA} from '../../finance/src/business-period-retention.mjs';
 import {FINANCIAL_CASH_ALLOCATION_SCHEMA} from '../src/financial-cash-allocation-store.mjs';
 import {FINANCIAL_ORDER_COMPONENTS_SCHEMA} from '../../finance/src/financial-order-components.mjs';
 import {FINANCIAL_OBLIGATION_SCHEMA} from '../../finance/src/financial-obligation-worker.mjs';
@@ -33,7 +37,7 @@ const objectName=sql=>/^CREATE\s+(?:UNIQUE\s+)?(?:TABLE|INDEX|TRIGGER)\s+(?:IF\s
 async function schemaStatements(domain){
  const inventory=JSON.parse(await readFile(new URL('../../../docs/v4/TENANT_STORAGE_INVENTORY.json',import.meta.url),'utf8'));
  const paths=Object.keys(inventory.sources).filter(path=>path.startsWith(domain==='app'?'web/cloudflare/':'web/finance/'));
- const statements=domain==='app'?[...FINANCIAL_EVENT_SCHEMA,...FINANCIAL_CLOSE_SCHEMA,...FINANCIAL_AUTOMATION_SCHEMA]:[...FINANCIAL_CASH_ALLOCATION_SCHEMA,...FINANCIAL_ORDER_COMPONENTS_SCHEMA,...FINANCIAL_OBLIGATION_SCHEMA];
+ const statements=domain==='app'?[...FINANCIAL_EVENT_SCHEMA,...FINANCIAL_CLOSE_SCHEMA,...FINANCIAL_AUTOMATION_SCHEMA,...DATED_COST_EVIDENCE_SCHEMA,...BUSINESS_MONTH_SOURCE_RECOVERY_SCHEMA,...BUSINESS_MONTH_COHORT_SOURCE_RECOVERY_SCHEMA]:[...FINANCIAL_CASH_ALLOCATION_SCHEMA,...FINANCIAL_ORDER_COMPONENTS_SCHEMA,...FINANCIAL_OBLIGATION_SCHEMA,...BUSINESS_PERIOD_RETENTION_SCHEMA];
  for(const path of paths){
   const file=new URL('../../../'+path,import.meta.url),module=await import(file);
   for(const value of Object.values(module))if(Array.isArray(value))for(const sql of value)if(typeof sql==='string'&&/^CREATE\s+(?:TABLE|INDEX|UNIQUE INDEX|TRIGGER)\b/i.test(sql))statements.push(sql);

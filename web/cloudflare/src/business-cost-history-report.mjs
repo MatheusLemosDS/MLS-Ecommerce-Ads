@@ -1,23 +1,26 @@
 import {BusinessMonthError} from './business-month.mjs';
 import {readCompletedBusinessMonth} from './business-month-publication.mjs';
 import {readHistoricalCostSchedule} from './business-cost-history.mjs';
+import {readApprovedDatedCostIdentitySnapshot} from './dated-cost-evidence.mjs';
 
 export const BUSINESS_COST_HISTORY_CONTRACT='business-cost-history-v1';
+export const BUSINESS_COST_HISTORY_DATED_CONTRACT='business-cost-history-dated-v1';
 const basis='HISTORICAL_AUDITED_COSTS_PAID_CREATE_DATE';
 const brDay=value=>new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Sao_Paulo'}).format(new Date(value));
 const safe=value=>value>=0n&&value<=BigInt(Number.MAX_SAFE_INTEGER)?Number(value):null;
-const reasons=new Set(['REQUEST_INVALID','AUDIT_UNAVAILABLE','AUDIT_INVALID','SOURCE_INVALID','ARITHMETIC_UNSAFE']);
+const reasons=new Set(['REQUEST_INVALID','AUDIT_UNAVAILABLE','AUDIT_INVALID','SOURCE_INVALID','ARITHMETIC_UNSAFE','DATED_EVIDENCE_INVALID']);
 
 // A separate, explicitly negotiated reference. The legacy monthly/products,
 // daily and weekly DTOs retain their current-registered-cost policy. This read
 // neither initializes storage nor modifies a publication, financial closing,
 // manufacturing ledger or any current cost configuration.
-export async function readBusinessCostHistoryReport(env,input,{now=()=>Date.now()}={}){
+async function readReport(env,input,{now=()=>Date.now(),withDatedEvidence=false}={}){
  let at;try{at=now();}catch{at=null;}
  if(!Number.isSafeInteger(at)||at<1||at>9999999999999||!input||Object.keys(input).length!==1||typeof input.month!=='string'||!/^20\d{2}-(0[1-9]|1[0-2])$/.test(input.month)||input.month>brDay(at).slice(0,7))throw new BusinessMonthError('BUSINESS_COST_HISTORY_REQUEST_INVALID',400);
  const month=input.month,stamp=Math.floor(at/1000),db=env?.ADMIN_DB;
  const result={schema:'business_cost_history_v1',month,checked_at:stamp,currency:'BRL',basis,scope:'REGISTERED_COST_REFERENCE_NOT_MANUFACTURE_COGS_OR_SETTLEMENT',state:'UNAVAILABLE',source:null,audit_scope:null,coverage:{total_units:null,known_units:null,pending_units:null,pending_variants:null},production_cost_cents:null,known_production_cost_cents:null,days:[],day_evidence:[],mixed_variants:null,pending:[]};
  const unavailable=reason=>({...result,state:'UNAVAILABLE',pending:[reason]});
+ if(withDatedEvidence){result.schema='business_cost_history_dated_v1';result.identity_evidence=null;}
  if(typeof db?.prepare!=='function'||typeof db?.batch!=='function')return unavailable('STORAGE_UNAVAILABLE');
  let publication;
  try{publication=await readCompletedBusinessMonth(env,month,{now:()=>at});}catch{return unavailable('SOURCE_INVALID');}
@@ -35,8 +38,11 @@ export async function readBusinessCostHistoryReport(env,input,{now=()=>Date.now(
  let snapshot;
  try{snapshot=await db.batch(['production_costs_state','production_cost_rules_state','variant_bindings_state'].map(table=>db.prepare('SELECT revision,payload,updated_at FROM '+table+' WHERE id=1')));}catch{return unavailable('AUDIT_UNAVAILABLE');}
  if(!Array.isArray(snapshot)||snapshot.length!==3||snapshot.some(row=>!Array.isArray(row?.results)||row.results.length!==1))return unavailable('AUDIT_UNAVAILABLE');
- let history;
- try{history=await readHistoricalCostSchedule(db,{month,stamp,frames,items:[...quantities.values()],current:{costs:snapshot[0].results[0],rules:snapshot[1].results[0],bindings:snapshot[2].results[0]}});}catch{return unavailable('AUDIT_INVALID');}
+ let history,identity;
+ try{
+  if(withDatedEvidence){identity=await readApprovedDatedCostIdentitySnapshot(db,{month,end_date:result.source.end_date,items:[...quantities.values()],stamp,shop_id:env?.COMMERCIAL_CONTEXT?.profile?.shop_id??1178167501});result.identity_evidence={state:identity.state,start_date:month+'-01',end_date:identity.end_date,approved_pairs:identity.approved_pairs,conflicting_pairs:identity.conflicting_pairs,publications:identity.publications.map(row=>({publication_sha256:row.publication_sha256,review_revision:row.review_revision,reviewed_at:row.reviewed_at}))};}
+  history=await readHistoricalCostSchedule(db,{month,stamp,frames,items:[...quantities.values()],current:{costs:snapshot[0].results[0],rules:snapshot[1].results[0],bindings:snapshot[2].results[0]},...(withDatedEvidence?{datedIdentity:identity}:{})});
+ }catch{return unavailable(withDatedEvidence?'DATED_EVIDENCE_INVALID':'AUDIT_INVALID');}
  if(history?.state!=='AVAILABLE')return unavailable(reasons.has(history?.reason)?history.reason:'AUDIT_INVALID');
  let total=0n,known=0n,pending=0n,cost=0n;
  for(const row of history.days){total+=BigInt(row.total_units);known+=BigInt(row.known_units);pending+=BigInt(row.pending_units);cost+=BigInt(row.known_production_cost_cents);}
@@ -53,3 +59,8 @@ export async function readBusinessCostHistoryReport(env,input,{now=()=>Date.now(
  result.days=history.days;result.day_evidence=history.day_evidence;result.mixed_variants=history.mixed_variants;
  return result;
 }
+
+export async function readBusinessCostHistoryReport(env,input,options={}){return readReport(env,input,{now:options.now});}
+// Explicit second endpoint/contract: the legacy report and financial DTOs do
+// not opt in implicitly, and physical manufacturing/COGS remain independent.
+export async function readBusinessCostHistoryDatedReport(env,input,options={}){return readReport(env,input,{now:options.now,withDatedEvidence:true});}

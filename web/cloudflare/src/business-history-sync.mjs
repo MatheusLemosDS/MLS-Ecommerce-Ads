@@ -4,17 +4,23 @@ import {businessMonthWithCheckpoint} from './business-checkpoint.mjs';
 import {projectBusinessMonth} from './business-month.mjs';
 import {readCompletedBusinessMonth} from './business-month-publication.mjs';
 import {projectEscrowReleaseCoverageFrame} from '../../finance/src/escrow-release-frame.mjs';
+import {businessHistoryContinuationQuery,projectBusinessHistoryContinuation} from './business-history-continuation.mjs';
 
 // A bounded status refresh, not a new accounting source. Only the immediately
 // previous creation month is revisited, and only while it has open statuses or
 // its saved publication does not yet include the final calendar day/cutoff, or a
 // verified release audit has lost the exact Finance order sources. Current
-// month work always wins; a persistently busy current collector can defer this
-// best-effort maintenance. Older months still require an explicit refresh.
+// month retains its Finance lanes. An ordinary reserved HISTORY opportunity
+// alternates this monthly continuation with auxiliary work even while current
+// collection is busy. Older months still require an explicit refresh.
 // COMPLETE here describes the order collection only. Closing an incomplete
 // month can leave Ads pending until that exact calendar scope is refreshed.
+export const BUSINESS_HISTORY_SYNC_FAIRNESS_SCHEMA=[
+ `CREATE TABLE IF NOT EXISTS business_history_sync_fairness(id INTEGER PRIMARY KEY CHECK(id=1),next_work TEXT NOT NULL CHECK(next_work IN('MONTHLY','AUXILIARY')),last_background_revision INTEGER NOT NULL)`,
+];
 export const BUSINESS_HISTORY_SYNC_SCHEMA=[
  `CREATE TABLE IF NOT EXISTS business_history_sync_state(month TEXT PRIMARY KEY NOT NULL,status TEXT NOT NULL,next_run_at INTEGER NOT NULL,failure_count INTEGER NOT NULL,last_attempt_at INTEGER NOT NULL,last_success_at INTEGER,last_error TEXT)`,
+ ...BUSINESS_HISTORY_SYNC_FAIRNESS_SCHEMA,
 ];
 export class BusinessHistorySyncError extends Error{constructor(code,status=503){super(code);this.status=status;}}
 const fail=code=>{throw new BusinessHistorySyncError(code);};
@@ -54,18 +60,34 @@ async function hasHistoricalSourceGap(db,published,currentMonth,stamp){
  }catch{return false;}
 }
 
-export async function runBusinessHistorySync(env,services,{now=()=>Date.now(),currentStatus}={}){
+export async function runBusinessHistorySync(env,services,{now=()=>Date.now(),currentStatus,backgroundLease,monthlyContinuation=false}={}){
  const result=(status,month=null,finance_steps=0)=>({status,month,finance_steps});
  // The scheduled caller must have given this invocation to current Finance
  // first. Neither a failed current run nor a newly completed run adds work.
- if(currentStatus!=='NOT_DUE')return result('DEFERRED');
+ const reserved=backgroundLease!==undefined;
+ if(typeof monthlyContinuation!=='boolean'||monthlyContinuation&&!reserved||(reserved?(!backgroundLease||Object.keys(backgroundLease).sort().join(',')!==(monthlyContinuation?'auxiliary_index,revision,token':'revision,token')||monthlyContinuation&&!integer(backgroundLease.auxiliary_index,0,4)||!integer(backgroundLease.revision,1,2147483646)||typeof backgroundLease.token!=='string'||!(/^[a-f0-9-]{36}$/).test(backgroundLease.token)||typeof services?.getFinanceBusinessPeriod!=='function'):currentStatus!=='NOT_DUE'))return result('DEFERRED');
  const startedMs=clock(now),started=Math.floor(startedMs/1000),currentMonth=localMonth(startedMs),state=await readBusinessSyncState(env);
  if(!state.enabled)return result('PAUSED');
  if(state.lease_expires_at!==null&&state.lease_expires_at>started)return result('LEASED');
- if(state.month!==currentMonth||state.summary?.month!==currentMonth||state.summary.status!=='COMPLETE'||!['COMPLETE','PARTIAL'].includes(state.status)||state.last_error!==null||state.failure_count!==0||state.summary.pending.includes('SOURCE_UNAVAILABLE')||state.next_run_at<=started+50)return result('DEFERRED');
+ if(state.month!==currentMonth||state.summary?.month!==currentMonth||(!reserved&&state.summary.status!=='COMPLETE')||!(reserved?['RUNNING','COMPLETE','PARTIAL']:['COMPLETE','PARTIAL']).includes(state.status)||state.last_error!==null||state.failure_count!==0||state.summary.pending.includes('SOURCE_UNAVAILABLE')||!reserved&&state.next_run_at<=started+50)return result('DEFERRED');
  const last=new Date(currentMonth+'-01T00:00:00Z');last.setUTCDate(0);const finalDay=last.toISOString().slice(0,10),month=finalDay.slice(0,7);
  if(month<'2000-01')return result('IDLE',month);
  const db=await setup(env);
+ const backgroundCurrent=async()=>{
+  if(!reserved)return true;
+  const row=await db.prepare('SELECT revision,lease_token,lease_until,next_lane,auxiliary_index FROM background_collection_lane_state WHERE id=1').first(),stamp=Math.floor(clock(now)/1000);
+  return row?.revision===backgroundLease.revision&&row.lease_token===backgroundLease.token&&row.lease_until>stamp&&row.next_lane==='AUXILIARY'&&row.auxiliary_index===(monthlyContinuation?backgroundLease.auxiliary_index:0);
+ };
+ if(!await backgroundCurrent())return result('LEASED',month);
+ if(reserved){
+  const turn=await db.prepare('SELECT next_work,last_background_revision FROM business_history_sync_fairness WHERE id=1').first();
+  if(turn&&(!['MONTHLY','AUXILIARY'].includes(turn.next_work)||!integer(turn.last_background_revision,1,2147483646)))fail('BUSINESS_HISTORY_STATE_INVALID');
+  if(turn?.last_background_revision>=backgroundLease.revision)return result('LEASED',month);
+  if(turn?.next_work==='AUXILIARY'){
+   await db.prepare("UPDATE business_history_sync_fairness SET next_work='MONTHLY',last_background_revision=? WHERE id=1 AND next_work='AUXILIARY' AND last_background_revision<? AND EXISTS(SELECT 1 FROM background_collection_lane_state WHERE id=1 AND revision=? AND lease_token=? AND lease_until>?)").bind(backgroundLease.revision,backgroundLease.revision,backgroundLease.revision,backgroundLease.token,started).run();
+   return result('DEFERRED',month);
+  }
+ }
  let previous,exists;
  try{
   exists=await db.prepare('SELECT month,revision,created_at FROM business_month_runs WHERE month=?').bind(month).first();
@@ -74,6 +96,11 @@ export async function runBusinessHistorySync(env,services,{now=()=>Date.now(),cu
  }catch(error){if(error instanceof BusinessHistorySyncError)throw error;fail('BUSINESS_HISTORY_STORAGE_UNAVAILABLE');}
  if(previous&&previous.next_run_at>started)return result('NOT_DUE',month);
  const published=await readCompletedBusinessMonth(env,month,{now});
+ let activeContinuation=null;
+ if(monthlyContinuation||previous&&['RUNNING','ERROR'].includes(previous.status)&&published&&exists.revision>published.publication.source_revision){
+  const cue=businessHistoryContinuationQuery(currentMonth),row=await db.prepare('SELECT '+cue.sql+' AS context').bind(...cue.args).first();activeContinuation=projectBusinessHistoryContinuation(row?.context,{month:currentMonth,stamp:started,admission:monthlyContinuation,backgroundRevision:backgroundLease?.revision??null});
+ }
+ if(monthlyContinuation&&!activeContinuation)return result('DEFERRED',month);
  // A COMPLETE source can have been captured before the end of its final day.
  // Dates and zero open statuses alone cannot prove the closed calendar: late
  // orders after that cutoff may not exist in the saved cohort at all. Resolve
@@ -87,20 +114,28 @@ export async function runBusinessHistorySync(env,services,{now=()=>Date.now(),cu
   // Once legitimately started, a partial repair may finish even if a later
   // coverage attempt is unavailable. A newer complete publication stops that
   // continuation and invalidates the old sidecar instead of resetting again.
-  const continuing=previous?.status==='RUNNING'&&integer(exists.revision,1,2147483647)&&exists.revision>published.publication.source_revision&&integer(exists.created_at,published.publication.published_at,started);
+  const continuing=!!activeContinuation;
   if(!continuing&&!await hasHistoricalSourceGap(db,published,currentMonth,started))return result('IDLE',month);
  }
  const token=crypto.randomUUID();let acquired;
  // Match the primary collector's lease: the 45-second source deadline does
  // not bound the subsequent App/D1 commit. Release it as soon as that finishes.
- try{acquired=await db.prepare("UPDATE business_sync_state SET lease_token=?,lease_expires_at=? WHERE id=1 AND enabled=1 AND revision=? AND month=? AND status IN('COMPLETE','PARTIAL') AND last_error IS NULL AND failure_count=0 AND next_run_at>? AND (lease_token IS NULL OR lease_expires_at<=?)").bind(token,started+300,state.revision,currentMonth,started+50,started).run();}catch{fail('BUSINESS_HISTORY_STORAGE_UNAVAILABLE');}
+ try{
+  if(reserved){
+   const writes=await db.batch([
+    db.prepare("UPDATE business_sync_state SET lease_token=?,lease_expires_at=? WHERE id=1 AND enabled=1 AND revision=? AND month=? AND status IN('RUNNING','COMPLETE','PARTIAL') AND last_error IS NULL AND failure_count=0 AND (lease_token IS NULL OR lease_expires_at<=?) AND EXISTS(SELECT 1 FROM background_collection_lane_state WHERE id=1 AND revision=? AND lease_token=? AND lease_until>?) AND NOT EXISTS(SELECT 1 FROM business_history_sync_fairness WHERE id=1 AND last_background_revision>=?)").bind(token,started+300,state.revision,currentMonth,started,backgroundLease.revision,backgroundLease.token,started,backgroundLease.revision),
+    db.prepare("INSERT INTO business_history_sync_fairness(id,next_work,last_background_revision) SELECT 1,'AUXILIARY',? WHERE changes()=1 ON CONFLICT(id) DO UPDATE SET next_work=excluded.next_work,last_background_revision=excluded.last_background_revision").bind(backgroundLease.revision),
+   ]);acquired=writes[0];
+  }else acquired=await db.prepare("UPDATE business_sync_state SET lease_token=?,lease_expires_at=? WHERE id=1 AND enabled=1 AND revision=? AND month=? AND status IN('COMPLETE','PARTIAL') AND last_error IS NULL AND failure_count=0 AND next_run_at>? AND (lease_token IS NULL OR lease_expires_at<=?)").bind(token,started+300,state.revision,currentMonth,started+50,started).run();
+ }catch{fail('BUSINESS_HISTORY_STORAGE_UNAVAILABLE');}
  if(acquired?.meta?.changes!==1)return result('LEASED',month);
  let released=false,financeSteps=0,interrupted=null;
  const allowed=async(budget=0)=>{
-  const ms=clock(now),stamp=Math.floor(ms/1000),row=await db.prepare('SELECT enabled,lease_token,lease_expires_at,next_run_at FROM business_sync_state WHERE id=1').first();
+  const ms=clock(now),stamp=Math.floor(ms/1000),row=await db.prepare('SELECT enabled,revision,lease_token,lease_expires_at,next_run_at FROM business_sync_state WHERE id=1').first();
   if(!row||row.lease_token!==token){interrupted='LEASED';return false;}
   if(!row.enabled){interrupted='PAUSED';return false;}
-  if(localMonth(ms)!==currentMonth||ms<startedMs||ms+budget>=startedMs+50000||row.lease_expires_at<=stamp||row.next_run_at*1000<=ms+budget){interrupted='DEFERRED';return false;}
+  if(row.revision!==state.revision||!await backgroundCurrent()){interrupted='LEASED';return false;}
+  if(localMonth(ms)!==currentMonth||ms<startedMs||ms+budget>=startedMs+50000||row.lease_expires_at<=stamp||!reserved&&row.next_run_at*1000<=ms+budget){interrupted='DEFERRED';return false;}
   return true;
  };
  try{
@@ -109,11 +144,11 @@ export async function runBusinessHistorySync(env,services,{now=()=>Date.now(),cu
    frame=projectBusinessMonth(await businessMonthWithCheckpoint(env,{operation:'start',month},{getFinanceBusinessPeriod:async(binding,input,options={})=>{
     if(financeSteps!==0||typeof services?.getFinanceBusinessPeriod!=='function')throw Error();
     if(!await allowed(45000))throw Error();financeSteps++;
-    const value=await services.getFinanceBusinessPeriod(binding,input,{timeoutMs:45000,...(options.includeVariants===true?{includeVariants:true}:{})});
+    const value=await services.getFinanceBusinessPeriod(binding,input,{timeoutMs:45000,...(options.includeVariants===true?{includeVariants:true}:{}),...(options.retention?{retention:options.retention}:{})});
     // A late response must not advance the App cohort after a pause, month
     // rollover, timeout or replacement of our lease. No detached request race.
     if(!await allowed())throw Error();return value;
-   }},{now,actor:'business-history-sync'}));
+   },...(services?.retainFinanceBusinessPeriodPublication?{retainFinanceBusinessPeriodPublication:services.retainFinanceBusinessPeriodPublication}:{})},{now,actor:'business-history-sync'}));
    if(!frame||frame.month!==month||frame.start_date!==month+'-01'||frame.end_date!==finalDay){status='ERROR';errorCode='BUSINESS_HISTORY_RESULT_INVALID';}
    else if(frame.status==='LIMIT_REACHED'){status='LIMIT_REACHED';errorCode='BUSINESS_HISTORY_LIMIT_REACHED';}
    else if(frame.result.pending.includes('SOURCE_UNAVAILABLE')){status='ERROR';errorCode='BUSINESS_HISTORY_COLLECTION_UNAVAILABLE';}

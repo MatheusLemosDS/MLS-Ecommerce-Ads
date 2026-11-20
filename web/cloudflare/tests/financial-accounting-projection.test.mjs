@@ -7,7 +7,7 @@ import {financialTestEvent,financialTestScope,financialTestPolicy} from './finan
 
 const scope=financialTestScope(),period=financialAccountingPeriod({kind:'MONTH',anchor:'2026-10'}),checked_at='2026-11-13T17:00:00.000Z';
 const row=(account,amount_cents,account_ref=account==='BANK'?'bank-primary':account==='TRANSFER_IN_TRANSIT'?'transit-primary':'wallet-primary')=>({account,account_ref,amount_cents});
-const coverage=(range=period)=>FINANCIAL_ACCOUNTING_COVERAGE_FAMILIES.map(family=>({scope,family,state:'COMPLETE',start_at:range.start_at,end_at:range.end_at,timezone_confirmed:true,comparison:'MATCHED',account_refs:['bank-primary','wallet-primary','transit-primary'],pending:[]}));
+const coverage=(range=period)=>FINANCIAL_ACCOUNTING_COVERAGE_FAMILIES.map(family=>({scope,family,state:'COMPLETE',start_at:range.start_at,end_at:range.end_at,timezone_confirmed:true,comparison:'MATCHED',account_refs:family==='BANK'?['bank-primary']:family==='PAYOUTS'?['transit-primary']:['RECEIVABLES','WALLET','ADS','INVENTORY'].includes(family)?['wallet-primary']:[],pending:[]}));
 const balances=(closing={})=>['BANK','RECEIVABLE','WALLET_AVAILABLE','TRANSFER_IN_TRANSIT','ADS_PREPAID','INVENTORY'].flatMap(account=>[period.start_at,period.end_at].map((as_of,index)=>({scope,account,account_ref:row(account,0).account_ref,as_of,amount_cents:index?(closing[account]??0):0,confirmed:true,evidence_ref:'synthetic-balance-'+account+'-'+index})));
 const fact=(id,postings,patch={})=>financialTestEvent({source:{provider:'SHOPEE',family:'CANONICAL_SYNTHETIC',native_id:id,identity:'NATIVE_ID',identity_key:null},postings,...patch});
 const project=(events,patch={})=>projectFinancialAccounting({scope,period,policy:financialTestPolicy(),events,coverage:coverage(),balances:balances(),obligations:[],reserve:{scope,amount_cents:0,confirmed:true,evidence_ref:'synthetic-reserve'},checked_at,...patch});
@@ -67,6 +67,32 @@ test('bank opening plus movements must reconcile to the same account closing wit
  assert.equal(result.positions.bank.amount_cents,null);assert.equal(result.positions.bank.unexplained_difference_cents,-1);assert.ok(result.positions.bank.pending.includes('BANK_UNEXPLAINED_BALANCE_DIFFERENCE'));assert.equal(result.close_readiness.BANK_CASH.ready,false);
 });
 
+test('every declared bank account requires its own opening and closing before bank cash can close',()=>{
+ const sources=coverage().map(c=>c.family==='BANK'?{...c,account_refs:['bank-primary','bank-secondary']}:c);
+ const result=project([],{coverage:sources}),bank=result.positions.bank,missing=bank.accounts.find(account=>account.account_ref==='bank-secondary');
+ assert.equal(bank.state,'UNKNOWN');assert.equal(bank.amount_cents,null);assert.equal(bank.known_amount_cents,null);assert.equal(bank.opening_cents,null);assert.equal(bank.closing_cents,null);
+ assert.equal(missing.opening_cents,null);assert.equal(missing.closing_cents,null);assert.equal(missing.known_amount_cents,null);assert.deepEqual(missing.evidence_refs,[]);
+ assert.ok(bank.pending.includes('BANK_OPENING_BALANCE_REQUIRED'));assert.ok(bank.pending.includes('BANK_CLOSING_BALANCE_REQUIRED'));
+ assert.equal(result.close_readiness.BANK_CASH.ready,false);assert.ok(result.close_readiness.BANK_CASH.pending.includes('BANK_OPENING_BALANCE_REQUIRED'));assert.ok(result.close_readiness.BANK_CASH.pending.includes('BANK_CLOSING_BALANCE_REQUIRED'));
+ const secondary=[period.start_at,period.end_at].map((as_of,index)=>({scope,account:'BANK',account_ref:'bank-secondary',as_of,amount_cents:0,confirmed:true,evidence_ref:'synthetic-explicit-zero-secondary-'+index}));
+ for(const onlyOne of secondary){
+  const partial=project([],{coverage:sources,balances:[...balances(),onlyOne]});
+  assert.equal(partial.positions.bank.amount_cents,null);assert.equal(partial.close_readiness.BANK_CASH.ready,false);
+  assert.ok(partial.positions.bank.pending.includes(onlyOne.as_of===period.start_at?'BANK_CLOSING_BALANCE_REQUIRED':'BANK_OPENING_BALANCE_REQUIRED'));
+ }
+ const complete=project([],{coverage:sources,balances:[...balances(),...secondary]});
+ assert.equal(complete.positions.bank.state,'READY');assert.equal(complete.positions.bank.amount_cents,0);assert.equal(complete.positions.bank.accounts.length,2);assert.equal(complete.close_readiness.BANK_CASH.ready,true);
+});
+
+test('declared wallet and payout accounts cannot disappear when their evidence is entirely absent',()=>{
+ const cases=[['WALLET','WALLET_AVAILABLE',result=>result.positions.wallet.available],['WALLET','WALLET_HELD',result=>result.positions.wallet.held],['PAYOUTS','TRANSFER_IN_TRANSIT',result=>result.positions.transit],['RECEIVABLES','RECEIVABLE',result=>result.positions.receivables],['ADS','ADS_PREPAID',result=>result.positions.ads_prepaid],['INVENTORY','INVENTORY',result=>result.positions.inventory]];
+ for(const [family,account,position] of cases){
+  const sources=coverage().map(c=>c.family===family?{...c,account_refs:[...c.account_refs,'declared-secondary']}:c),value=position(project([],{coverage:sources})),missing=value.accounts.find(row=>row.account_ref==='declared-secondary');
+  assert.notEqual(value.state,'READY',account);assert.equal(value.amount_cents,null,account);assert.equal(missing.opening_cents,null,account);assert.equal(missing.closing_cents,null,account);
+  assert.ok(value.pending.includes(account+'_OPENING_BALANCE_REQUIRED'));assert.ok(value.pending.includes(account+'_CLOSING_BALANCE_REQUIRED'));
+ }
+});
+
 test('weekly and monthly results derive from their own competence dates across a month boundary',async()=>{
  const a=await fact('october-last',[row('RECEIVABLE',100),row('REVENUE',-100)],{event_at:'2026-10-31T15:00:00.000Z',competence_at:'2026-10-31T15:00:00.000Z',source_updated_at:'2026-10-31T15:00:00.000Z'}),b=await fact('november-first',[row('RECEIVABLE',200),row('REVENUE',-200)],{event_at:'2026-11-01T15:00:00.000Z',competence_at:'2026-11-01T15:00:00.000Z',source_updated_at:'2026-11-01T15:00:00.000Z'});
  const range=financialAccountingPeriod({kind:'CIVIL_WEEK',anchor:'2026-11-01'}),week=project([a,b],{period:range,coverage:coverage(range),balances:[]});assert.equal(week.result.amount_cents,300);assert.equal(project([a,b]).result.amount_cents,100);
@@ -93,6 +119,27 @@ test('unconfirmed returns do not restock and damaged already-consumed pieces are
  const lot={scope,lot_id:'synthetic-lot',component_ref:'adult-M',quantity:1,unit_cost_cents:1590,produced_at:'2026-10-01T12:00:00.000Z',confirmed:true,evidence_ref:'synthetic-manufacture'},sold={scope,allocation_id:'sold',lot_id:lot.lot_id,component_ref:lot.component_ref,kind:'SALE',quantity:1,competence_at:'2026-10-10T12:00:00.000Z',evidence_ref:'synthetic-evidence',original_allocation_id:null,incremental_cost_cents:null,quantity_verified:true,origin_verified:true,condition_confirmed:true},returned={...sold,allocation_id:'returned',kind:'RETURN_LOSS',original_allocation_id:'sold',competence_at:'2026-10-11T12:00:00.000Z'};
  const result=projectFinancialInventory({scope,lots:[lot],allocations:[sold,returned],as_of:checked_at,coverage_complete:true});assert.equal(result.remaining_quantity,0);assert.equal(result.recognitions[1].amount_cents,0);
  const pending=projectFinancialInventory({scope,lots:[lot],allocations:[sold,{...returned,kind:'RETURN_RESALE',condition_confirmed:false}],as_of:checked_at,coverage_complete:true});assert.equal(pending.remaining_quantity,0);assert.ok(pending.pending.includes('PHYSICAL_QUANTITY_OR_CONDITION_UNVERIFIED'));
+});
+
+test('same-instant physical returns follow their explicit sale origin regardless of allocation ID or input order',()=>{
+ const lot={scope,lot_id:'synthetic-same-instant-lot',component_ref:'adult-M',quantity:1,unit_cost_cents:1590,produced_at:'2026-10-01T12:00:00.000Z',confirmed:true,evidence_ref:'synthetic-manufacture'},sold={scope,allocation_id:'z-sale',lot_id:lot.lot_id,component_ref:lot.component_ref,kind:'SALE',quantity:1,competence_at:'2026-10-10T12:00:00.000Z',evidence_ref:'synthetic-sale-evidence',original_allocation_id:null,incremental_cost_cents:null,quantity_verified:true,origin_verified:true,condition_confirmed:true};
+ for(const kind of ['RETURN_RESALE','RETURN_LOSS']){
+  const returned={...sold,allocation_id:'a-return',kind,original_allocation_id:sold.allocation_id,evidence_ref:'synthetic-return-evidence'},input={scope,lots:[lot],as_of:checked_at,coverage_complete:true},result=projectFinancialInventory({...input,allocations:[returned,sold]});
+  assert.equal(result.state,'READY');assert.deepEqual(result.recognitions.map(row=>row.allocation_id),['z-sale','a-return']);
+  assert.equal(result.remaining_quantity,kind==='RETURN_RESALE'?1:0);assert.equal(result.inventory_value_cents,kind==='RETURN_RESALE'?1590:0);assert.equal(result.recognitions.reduce((sum,row)=>sum+row.amount_cents,0),kind==='RETURN_RESALE'?0:1590);
+  assert.deepEqual(projectFinancialInventory({...input,allocations:[sold,returned]}),result);
+ }
+});
+
+test('causal timestamp ties preserve invalid-origin, quantity, duplicate and physical-verification guards',()=>{
+ const lot={scope,lot_id:'synthetic-causal-guard-lot',component_ref:'adult-M',quantity:1,unit_cost_cents:1590,produced_at:'2026-10-01T12:00:00.000Z',confirmed:true,evidence_ref:'synthetic-manufacture'},sold={scope,allocation_id:'z-sale',lot_id:lot.lot_id,component_ref:lot.component_ref,kind:'SALE',quantity:1,competence_at:'2026-10-10T12:00:00.000Z',evidence_ref:'synthetic-sale-evidence',original_allocation_id:null,incremental_cost_cents:null,quantity_verified:true,origin_verified:true,condition_confirmed:true},returned={...sold,allocation_id:'a-return',kind:'RETURN_RESALE',original_allocation_id:sold.allocation_id},input={scope,lots:[lot],as_of:checked_at,coverage_complete:true};
+ assert.throws(()=>projectFinancialInventory({...input,allocations:[sold,{...returned,competence_at:'2026-10-10T11:59:59.999Z'}]}),/INVENTORY_RETURN_ORIGIN_INVALID/);
+ assert.throws(()=>projectFinancialInventory({...input,allocations:[sold,{...returned,original_allocation_id:'missing-sale'}]}),/INVENTORY_RETURN_ORIGIN_INVALID/);
+ assert.throws(()=>projectFinancialInventory({...input,allocations:[sold,{...returned,quantity:2}]}),/INVENTORY_RETURN_QUANTITY_EXCEEDED/);
+ assert.throws(()=>projectFinancialInventory({...input,allocations:[sold,sold,returned]}),/INVENTORY_ALLOCATION_INVALID/);
+ assert.throws(()=>projectFinancialInventory({...input,allocations:[{...sold,origin_verified:false},returned]}),/INVENTORY_RETURN_ORIGIN_INVALID/);
+ const unverified=projectFinancialInventory({...input,allocations:[sold,{...returned,condition_confirmed:false}]});
+ assert.equal(unverified.remaining_quantity,0);assert.equal(unverified.inventory_value_cents,null);assert.ok(unverified.pending.includes('PHYSICAL_QUANTITY_OR_CONDITION_UNVERIFIED'));assert.equal(unverified.recognitions.length,1);
 });
 
 test('daily Ads requires the whole nominal civil day and never splits a manufacture edge Friday',async()=>{

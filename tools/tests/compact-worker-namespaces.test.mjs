@@ -2,11 +2,14 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {spawnSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
+import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
 import {compactWorkerNamespaces,compactWorkerBrowserFactories} from '../compact_worker_namespaces.mjs';
 import {createCashStatementImportParser} from '../../web/finance/src/cash-statement-import.mjs';
 import {createExternalCashProtocol} from '../../web/finance/src/external-cash-frame.mjs';
 import {bankReconciliationBody,createBankReconciliationController} from '../../web/cloudflare/src/bank-reconciliation-view.mjs';
+import {DTF_ENGINE_CLIENT} from '../../web/cloudflare/src/dtf-layout.mjs';
+import {MLS_BROWSER_ASSET_MANIFEST} from '../../web/cloudflare/src/browser-assets-manifest.mjs';
 import {cashRead,cashPreview,cashImport,cashWorkspace,cashPreviewFrame,cashImportFrame} from '../../web/finance/tests/external-cash-fixture.mjs';
 
 const schema='worker_server_namespaces_v1';
@@ -116,8 +119,9 @@ for row in manual_node.value.elts:
     assert isinstance(row,ast.Dict) and [ast.literal_eval(key) for key in row.keys]==['name','source']
     assert isinstance(row.values[1],ast.Name)
     manual_vars.add(row.values[1].id)
+pure_dependencies={'business_tax','dtf_layout','dtf_engine_browser_source','dtf_engine_marker'}
 for node in tree.body:
-    if isinstance(node,ast.Assign) and len(node.targets)==1 and isinstance(node.targets[0],ast.Name) and node.targets[0].id in manual_vars|{'business_tax','dtf_layout'}:
+    if isinstance(node,ast.Assign) and len(node.targets)==1 and isinstance(node.targets[0],ast.Name) and node.targets[0].id in manual_vars|pure_dependencies:
         exec(ast.get_source_segment(source,node),scope)
     elif isinstance(node,ast.For) and isinstance(node.iter,ast.List) and ast.literal_eval(node.iter)==['business-month-summary.mjs','account-diagnosis.mjs','hermes-financial-context.mjs']:
         exec(ast.get_source_segment(source,node),scope)
@@ -125,8 +129,9 @@ exec(ast.get_source_segment(source,manual_node),scope)
 manual=scope['reviewed_manual_namespace_sources'];manual_names=[row['name'] for row in manual]
 sentinel='\nconst brazaAdmin = (() => {\nreturn {adminFetch,schedule,scheduledWork,workspaceAuthFetch};\n})();\n'
 source_raw='\n'.join(rows);source_compact=scope['compact_server_namespaces'](source_raw+sentinel)[:-len(sentinel)]
-# DTF still derives a browser string through concatenated Function#toString;
-# include its original namespace as an unchanged dependency of ProductionDtf.
+# The DTF host remains an unchanged dependency of ProductionDtf. Capture its
+# original browser source before the explicit external-asset stub, as the real
+# builder does; no artifact writes or arbitrary assignments are executed here.
 raw='\n'.join([source_raw,scope['dtf_layout'],*(row['source'] for row in manual)])
 compact=scope['compact_server_namespaces'](raw+sentinel,manual)
 assert compact.endswith(sentinel),'Admin seam must remain byte exact'
@@ -141,7 +146,7 @@ except ValueError:rejected['manual_name_duplicate']=True
 else:rejected['manual_name_duplicate']=False
 compact=compact[:-len(sentinel)]
 manual_saved=(len(raw.encode())-len(compact.encode()))-(len(source_raw.encode())-len(source_compact.encode()))
-print(json.dumps({'raw':raw,'compact':compact,'names':[*names,'brazaDtfLayout',*manual_names],'manual_names':manual_names,'manual_saved':manual_saved,'selected':[row['name'] for row in [*scope['server_namespace_sources'],*manual]],'rejected':rejected}))
+print(json.dumps({'raw':raw,'compact':compact,'engine_browser_source':scope['dtf_engine_browser_source'],'names':[*names,'brazaDtfLayout',*manual_names],'manual_names':manual_names,'manual_saved':manual_saved,'selected':[row['name'] for row in [*scope['server_namespace_sources'],*manual]],'rejected':rejected}))
 `;
 const result=spawnSync('python3',['-B','-c',probe,fileURLToPath(new URL('../../web/cloudflare/',import.meta.url))],{encoding:'utf8',maxBuffer:12*1024*1024,timeout:30000});
 assert.equal(result.error,undefined,result.error?.message);assert.equal(result.status,0,result.stderr);
@@ -176,13 +181,17 @@ test('real markup renderers retain exact HTML and dynamic client namespaces are 
  ])assert.equal(compact[name][key](...args),raw[name][key](...args),key+' markup');
  for(const excluded of ['brazaBusinessDayView','mlsMissionView','brazaDtfLayout','brazaDtfView','brazaAdmin','mlsAiSalesView','MlsAiSalesCore','mlsAiSalesWorkspaceStore'])assert.ok(!profiles.selected.includes(excluded),excluded+' must retain original host formatting');
  assert.equal(compact.brazaDtfLayout.DTF_ENGINE_CLIENT,raw.brazaDtfLayout.DTF_ENGINE_CLIENT,'concatenated Function#toString browser source stays byte exact');
+ assert.equal(raw.brazaDtfLayout.DTF_ENGINE_CLIENT,'','the host no longer duplicates the external engine client');
+ const browser=evaluate(profiles.engine_browser_source,['DTF_ENGINE_CLIENT']).DTF_ENGINE_CLIENT;assert.equal(browser,DTF_ENGINE_CLIENT,'the pure build probe captures the original browser generator before the host stub');
+ const asset=MLS_BROWSER_ASSET_MANIFEST.assets.find(row=>row.id==='dtf');assert.ok(asset);const bytes=readFileSync(new URL('../../dist/browser-assets/'+asset.path.slice(1),import.meta.url),'utf8'),emitted=browser.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g,value=>'\\u'+value.charCodeAt(0).toString(16).padStart(4,'0'));assert.equal(bytes.split('\n/* MLS_DTF_ENGINE_END */\n')[0],emitted,'external distribution preserves the complete original engine bytes');
  assert.deepEqual(profiles.rejected,{missing:true,duplicate:true,manual_missing:true,manual_duplicate:true,manual_name_duplicate:true});
  const saved=Buffer.byteLength(profiles.raw)-Buffer.byteLength(profiles.compact);
  assert.ok(saved>=25000,'host-only compaction must save at least25KB; actual '+saved);
 });
 
 test('the explicit manual host selection preserves APIs, schema strings and frozen values with additional headroom',()=>{
- assert.deepEqual(profiles.manual_names,[
+ const additions=['brazaDatedCostEvidence','brazaDatedCostCandidates','brazaBusinessHistoryContinuation'];
+ assert.deepEqual(profiles.manual_names.filter(name=>!additions.includes(name)),[
   'brazaBusinessSync','brazaBusinessHistorySync','brazaBusinessProducts','brazaCostRuleLearning','brazaSavedCatalogMedia',
   'brazaCatalogClassification','brazaHistoricalCostEvidence','brazaHistoricalCostOrchestration','brazaCostRulesStore','brazaProductionDtfStore',
   'brazaBusinessCheckpoint','brazaBusinessMonth','brazaHermesFinancialContext','brazaRecordedBusinessBalance','brazaBackgroundCollectionDiagnostics',
@@ -191,16 +200,23 @@ test('the explicit manual host selection preserves APIs, schema strings and froz
   'brazaStorePeriodFrame','brazaBusinessPeriodFrame','brazaProductIndexFrame','brazaFinanceBusinessVariants','brazaProductionOrdersFrame',
   'brazaAdsMeasurement','brazaAdsCalendar','brazaWorkspaceAuth',
  ]);
+ assert.deepEqual(profiles.manual_names.filter(name=>additions.includes(name)),additions);assert.equal(profiles.manual_names.indexOf(additions[0]),profiles.manual_names.indexOf('brazaHistoricalCostEvidence')+1);
+ const addedExports={brazaBusinessHistorySync:['BUSINESS_HISTORY_SYNC_FAIRNESS_SCHEMA'],brazaHistoricalCostEvidence:['deriveHistoricalCompositionConsensus'],brazaHistoricalCostOrchestration:['runDatedCostHistory'],brazaProductionDtfStore:['readProductionDtfBatches','readProductionDtfBatch'],brazaProductRegistry:['PRODUCT_REGISTRY_DIAGNOSTIC_SCHEMA'],brazaProductIndexFrame:['financeProductIndexDiagnostic','projectProductIndexDiagnostic']};
+ for(const[name,keys]of Object.entries(addedExports))for(const key of keys)assert.ok(Object.hasOwn(raw[name],key),'reviewed additive host export '+name+'.'+key);
+ const sourceRecovery=raw.brazaBusinessMonthSourceRecovery.BUSINESS_MONTH_SOURCE_RECOVERY_SCHEMA,cohortRecovery=raw.brazaBusinessMonthCohortSourceRecovery.BUSINESS_MONTH_COHORT_SOURCE_RECOVERY_SCHEMA,fairness=raw.brazaBusinessHistorySync.BUSINESS_HISTORY_SYNC_FAIRNESS_SCHEMA;for(const schema of [sourceRecovery,cohortRecovery,fairness])assert.equal(schema.length,1);
+ assert.deepEqual(raw.brazaBusinessMonth.BUSINESS_MONTH_SCHEMA.filter(sql=>[...sourceRecovery,...cohortRecovery].includes(sql)),[...sourceRecovery,...cohortRecovery]);assert.deepEqual(raw.brazaBusinessHistorySync.BUSINESS_HISTORY_SYNC_SCHEMA.filter(sql=>fairness.includes(sql)),fairness);
+ const legacyValue=(name,key,value)=>name==='brazaBusinessMonth'&&key==='BUSINESS_MONTH_SCHEMA'?value.filter(sql=>![...sourceRecovery,...cohortRecovery].includes(sql)):name==='brazaBusinessHistorySync'&&key==='BUSINESS_HISTORY_SYNC_SCHEMA'?value.filter(sql=>!fairness.includes(sql)):value;
  let functions=0,values=0,strings=0;
  const countStrings=value=>typeof value==='string'?1:Array.isArray(value)?value.reduce((sum,item)=>sum+countStrings(item),0):value&&typeof value==='object'?Object.values(value).reduce((sum,item)=>sum+countStrings(item),0):0;
  for(const name of profiles.manual_names){
   const before=raw[name],after=compact[name];assert.deepEqual(Object.keys(after),Object.keys(before),name+' exports');
   for(const key of Object.keys(before)){
    assert.equal(typeof after[key],typeof before[key],name+'.'+key+' type');
+   const legacy=!additions.includes(name)&&!addedExports[name]?.includes(key);
    if(typeof before[key]==='function'){
-    functions++;assert.equal(after[key].name,before[key].name,name+'.'+key+' name');assert.equal(after[key].length,before[key].length,name+'.'+key+' arity');
+    if(legacy)functions++;assert.equal(after[key].name,before[key].name,name+'.'+key+' name');assert.equal(after[key].length,before[key].length,name+'.'+key+' arity');
    }else{
-    values++;strings+=countStrings(before[key]);
+    if(legacy){values++;strings+=countStrings(legacyValue(name,key,before[key]));}
     assert.equal(JSON.stringify(after[key]),JSON.stringify(before[key]),name+'.'+key+' value');
     if(before[key]&&typeof before[key]==='object')assert.equal(Object.isFrozen(after[key]),Object.isFrozen(before[key]),name+'.'+key+' frozen');
    }

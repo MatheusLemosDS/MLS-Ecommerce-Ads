@@ -43,3 +43,74 @@ test('consent account changes during a read cannot authorize delivery from the e
   const connector=createAuthorizedFinancialBankConnector({adapter:{id:'synthetic-adapter',readStatement:async()=>{consent.account_id='synthetic-other-account';return statement();}},consent,authorize:async({capability})=>capability==='bank.read',now:()=>Date.parse('2026-11-13T12:00:00Z')});
   await assert.rejects(connector.readStatement({scope,start_at:start,end_at:end}),e=>e.code==='FINANCIAL_CASH_CONNECTOR_CONSENT_REVOKED');
 });
+
+test('consent expiring during the final authorization await blocks statement delivery',async()=>{
+  let time=Date.parse('2026-11-13T12:00:00Z'),reads=0;const phases=[];
+  const consent={...scope,active:true,expires_at:'2026-11-13T12:00:01Z',evidence_id:'consent-a'};
+  const connector=createAuthorizedFinancialBankConnector({adapter:{id:'synthetic-adapter',readStatement:async()=>{reads++;return statement();}},consent,now:()=>time,authorize:async({phase})=>{
+    phases.push(phase);if(phase==='before-response'){await Promise.resolve();time=Date.parse(consent.expires_at);}return true;
+  }});
+  await assert.rejects(connector.readStatement({scope,start_at:start,end_at:end}),e=>e.code==='FINANCIAL_CASH_CONNECTOR_CONSENT_REVOKED'&&e.status===403);
+  assert.equal(reads,1);assert.equal(phases.at(-1),'before-response');
+});
+
+test('consent revoked during the final authorization await blocks statement delivery',async()=>{
+  let reads=0;const phases=[],consent={...scope,active:true,expires_at:'2026-12-31T00:00:00Z',evidence_id:'consent-a'};
+  const connector=createAuthorizedFinancialBankConnector({adapter:{id:'synthetic-adapter',readStatement:async()=>{reads++;return statement();}},consent,now:()=>Date.parse('2026-11-13T12:00:00Z'),authorize:async({phase})=>{
+    phases.push(phase);if(phase==='before-response'){await Promise.resolve();consent.active=false;}return true;
+  }});
+  await assert.rejects(connector.readStatement({scope,start_at:start,end_at:end}),e=>e.code==='FINANCIAL_CASH_CONNECTOR_CONSENT_REVOKED'&&e.status===403);
+  assert.equal(reads,1);assert.equal(phases.at(-1),'before-response');
+});
+
+test('consent expiring during capability authorization prevents the provider read',async()=>{
+  let time=Date.parse('2026-11-13T12:00:00Z'),reads=0;const phases=[];
+  const consent={...scope,active:true,expires_at:'2026-11-13T12:00:01Z',evidence_id:'consent-a'};
+  const connector=createAuthorizedFinancialBankConnector({adapter:{id:'synthetic-adapter',readStatement:async()=>{reads++;return statement();}},consent,now:()=>time,authorize:async({phase})=>{
+    phases.push(phase);if(phase==='after-capability'){await Promise.resolve();time=Date.parse(consent.expires_at);}return true;
+  }});
+  const result=await connector.readStatement({scope,start_at:start,end_at:end});
+  assert.equal(result.state,'UNAVAILABLE');assert.equal(result.reason,'CONSENT_MISSING_EXPIRED_OR_SCOPE_MISMATCH');assert.equal(result.statement,null);
+  assert.equal(reads,0);assert.equal(phases.at(-1),'after-capability');
+});
+
+test('consent revoked during capability authorization prevents the provider read',async()=>{
+  let reads=0;const phases=[],consent={...scope,active:true,expires_at:'2026-12-31T00:00:00Z',evidence_id:'consent-a'};
+  const connector=createAuthorizedFinancialBankConnector({adapter:{id:'synthetic-adapter',readStatement:async()=>{reads++;return statement();}},consent,now:()=>Date.parse('2026-11-13T12:00:00Z'),authorize:async({phase})=>{
+    phases.push(phase);if(phase==='after-capability'){await Promise.resolve();consent.active=false;}return true;
+  }});
+  const result=await connector.readStatement({scope,start_at:start,end_at:end});
+  assert.equal(result.state,'UNAVAILABLE');assert.equal(result.reason,'CONSENT_MISSING_EXPIRED_OR_SCOPE_MISMATCH');assert.equal(result.statement,null);
+  assert.equal(reads,0);assert.equal(phases.at(-1),'after-capability');
+});
+
+test('consent revoked between capability fulfillment and caller resumption blocks the provider read',async()=>{
+  let reads=0,checks=0;const consent={...scope,active:true,expires_at:'2026-12-31T00:00:00Z',evidence_id:'consent-a'};
+  const connector=createAuthorizedFinancialBankConnector({adapter:{id:'synthetic-adapter',readStatement:async()=>{reads++;return statement();}},consent,authorize:async()=>true,now:()=>{
+    if(++checks===2)queueMicrotask(()=>{consent.active=false;});return Date.parse('2026-11-13T12:00:00Z');
+  }});
+  await assert.rejects(connector.readStatement({scope,start_at:start,end_at:end}),e=>e.code==='FINANCIAL_CASH_CONNECTOR_CONSENT_REVOKED'&&e.status===403);
+  assert.equal(consent.active,false);assert.equal(reads,0);
+});
+
+test('consent expiring between capability fulfillment and caller resumption blocks the provider read',async()=>{
+  let time=Date.parse('2026-11-13T12:00:00Z'),reads=0,checks=0;const consent={...scope,active:true,expires_at:'2026-11-13T12:00:01Z',evidence_id:'consent-a'};
+  const connector=createAuthorizedFinancialBankConnector({adapter:{id:'synthetic-adapter',readStatement:async()=>{reads++;return statement();}},consent,authorize:async()=>true,now:()=>{
+    if(++checks===2)queueMicrotask(()=>{time=Date.parse(consent.expires_at);});return time;
+  }});
+  await assert.rejects(connector.readStatement({scope,start_at:start,end_at:end}),e=>e.code==='FINANCIAL_CASH_CONNECTOR_CONSENT_REVOKED'&&e.status===403);
+  assert.equal(time,Date.parse(consent.expires_at));assert.equal(reads,0);
+});
+
+test('borrowing the statement method cannot replace missing registry consent with an available capability',async()=>{
+  let reads=0;const connector=createAuthorizedFinancialBankConnector({adapter:{id:'synthetic-adapter',readStatement:async()=>{reads++;return statement();}},consent:null,authorize:async()=>true,now:()=>Date.parse('2026-11-13T12:00:00Z')});
+  assert.equal(Object.isFrozen(connector),true);
+  await assert.rejects(connector.readStatement.call({capability:async()=>({state:'AVAILABLE'})},{scope,start_at:start,end_at:end}),e=>e.code==='FINANCIAL_CASH_CONNECTOR_CONSENT_REVOKED'&&e.status===403);
+  assert.equal(reads,0);
+});
+
+test('borrowing the statement method cannot replace expired registry consent with an available capability',async()=>{
+  let reads=0;const connector=createAuthorizedFinancialBankConnector({adapter:{id:'synthetic-adapter',readStatement:async()=>{reads++;return statement();}},consent:{...scope,active:true,expires_at:'2026-11-13T11:59:59Z',evidence_id:'consent-a'},authorize:async()=>true,now:()=>Date.parse('2026-11-13T12:00:00Z')});
+  await assert.rejects(connector.readStatement.call({capability:async()=>({state:'AVAILABLE'})},{scope,start_at:start,end_at:end}),e=>e.code==='FINANCIAL_CASH_CONNECTOR_CONSENT_REVOKED'&&e.status===403);
+  assert.equal(reads,0);
+});

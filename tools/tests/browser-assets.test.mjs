@@ -34,6 +34,13 @@ test('the weekly client keeps the closed asset ids and exact byte and size guara
  const changed=structuredClone(manifest);changed.assets.find(row=>row.id==='weekly').bytes=262145;assert.throws(()=>validateBrowserAssetManifest(changed),{code:'BROWSER_ASSET_MANIFEST_INVALID'});
 });
 
+test('the seventh exact DTF asset preserves every earlier asset, the publication ledger and closed size limits',t=>{
+ const root=fixture(t),old={schema:'mls_browser_assets_build_v1',entries:Object.keys(names).map(id=>source(id,'globalThis.fixture_'+id+'="published";'))},before=buildBrowserAssets(old,{root}),ledger=readFileSync(path.join(root,'workers','app','browser-assets-published.json'));
+ const dtf=client=>({id:'dtf',export_name:'DTF_CLIENT',source:'const DTF_CLIENT='+JSON.stringify(client)+';'}),client='globalThis.fixtureDtf="engine-and-workspace";',next=buildBrowserAssets({...old,entries:[...old.entries,dtf(client)]},{root});
+ assert.deepEqual(next.assets.map(row=>row.id),['bank','dtf','month','orders','production','weekly','workspace']);assert.deepEqual(next.assets.filter(row=>row.id!=='dtf'),before.assets);assert.deepEqual(readFileSync(path.join(root,'workers','app','browser-assets-published.json')),ledger);const row=next.assets.find(row=>row.id==='dtf');assert.deepEqual(readFileSync(filename(root,row)),Buffer.from(client));assert.equal(createHash('sha256').update(readFileSync(filename(root,row))).digest('hex'),row.sha256);
+ const unknown={...old,entries:[...old.entries,{...dtf(client),id:'dtf-private'}]};assert.throws(()=>buildBrowserAssets(unknown,{root}),{code:'BROWSER_ASSET_BUILD_INVALID'});assert.throws(()=>buildBrowserAssets({...old,entries:[...old.entries,dtf(client),dtf(client)]},{root}),{code:'BROWSER_ASSET_BUILD_INVALID'});assert.throws(()=>buildBrowserAssets({...old,entries:[...old.entries,dtf('/*'+'x'.repeat(262145)+'*/')]},{root}),{code:'BROWSER_ASSET_MANIFEST_INVALID'});
+});
+
 test('adding weekly preserves the three published clients and does not rewrite the publication ledger',async t=>{
  const root=fixture(t),legacy=request('globalThis.fixtureBank="published";\n',[source('month','globalThis.fixtureMonth="published";\n'),source('orders','globalThis.fixtureOrders="published";\n')]),before=buildBrowserAssets(legacy,{root});
  recordBrowserAssetPublication(root,{worker_version:'11111111-1111-4111-8111-111111111111',source_sha256:'a'.repeat(64),verified_at:'2026-11-11T15:00:00.000Z'});

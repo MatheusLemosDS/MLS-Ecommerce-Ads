@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import {createBusinessPeriodRetentionFixture} from './business-period-retention-fixture.mjs';
 import {D1} from './sqlite-d1.mjs';
 import {SCHEMA} from '../src/admin.mjs';
 import {COST_DEFAULTS} from '../src/production-costs.mjs';
@@ -28,7 +29,7 @@ async function fixture(t,api){
  db.db.prepare('INSERT INTO variant_bindings_state VALUES(1,1,?,?)').run('[]',new Date(clock.time).toISOString());db.db.prepare('INSERT INTO production_costs_state VALUES(1,1,?,?)').run(JSON.stringify(COST_DEFAULTS),new Date(clock.time).toISOString());
  await db.batch(SCHEMA.map(sql=>db.prepare(sql)));
  const calls={finance:[],ads:[]},frames=new Map(),control={status:'COMPLETE',financeHook:null,adsHook:null};let sequence=0;
- const services={getFinanceBusinessPeriod:async(_,selection)=>{
+ const services={retainFinanceBusinessPeriodPublication:createBusinessPeriodRetentionFixture({now}),getFinanceBusinessPeriod:async(_,selection)=>{
   calls.finance.push({...selection});let value;
   if(selection.operation==='start'){value=frame(selection,++sequence,Math.floor(now()/1000),control.status);frames.set(value.run_id,value);}else value=structuredClone(frames.get(selection.run_id));
   if(control.financeHook)return control.financeHook(value,selection);return value;

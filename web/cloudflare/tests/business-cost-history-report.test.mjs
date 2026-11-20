@@ -7,6 +7,8 @@ import {collectionFixture} from './business-collection-fixture.mjs';
 import {adminFetch} from '../src/admin.mjs';
 import {COST_DEFAULTS} from '../src/production-costs.mjs';
 import {BUSINESS_COST_HISTORY_CONTRACT,readBusinessCostHistoryReport} from '../src/business-cost-history-report.mjs';
+import {BUSINESS_COST_HISTORY_DATED_CONTRACT,readBusinessCostHistoryDatedReport} from '../src/business-cost-history-report.mjs';
+import {startDatedCostScan,stepDatedCostScan,readDatedCostEvidence,reviewDatedCostEvidence} from '../src/dated-cost-evidence.mjs';
 
 const origin='https://cost-history.test',month='2026-10';
 const stamp=day=>day+'T12:00:00.000Z';
@@ -95,4 +97,19 @@ for(const minify of [false,true])test(`generated App Worker keeps audited histor
  assert.equal(response.status,200);assert.equal(value.schema,'business_cost_history_v1');assert.equal(value.state,'UNAVAILABLE');assert.equal(value.production_cost_cents,null);assert.equal(value.known_production_cost_cents,null);assert.equal((await f.call(undefined,{session:''})).status,401);assert.equal((await f.call(undefined,{contract:null})).status,409);assert.equal((await f.call(undefined,{method:'POST'})).status,405);assert.equal(saved(f.env.ADMIN_DB),before);assert.equal(providerCalls,0);read.restore();
  const populated=await fixture(t),hot=await owner(t,(request,env)=>worker.fetch(request,env),populated.env),stored=saved(hot.env.ADMIN_DB),readHot=onlyReads(hot.env.ADMIN_DB),known=await hot.call(),report=await known.json();
  assert.equal(known.status,200);assert.equal(report.state,'PARTIAL');assert.deepEqual(report.pending,['PERIOD_INCOMPLETE']);assert.equal(report.production_cost_cents,null);assert.equal(report.known_production_cost_cents,3200);assert.equal(report.days.find(row=>row.date==='2026-10-10').production_cost_cents,2000);assert.equal(report.days.find(row=>row.date==='2026-10-20').production_cost_cents,1200);assert.deepEqual(report.audit_scope,{costs_revision:2,cost_rules_revision:1,bindings_revision:1});assert.equal(report.day_evidence.find(row=>row.date==='2026-10-10').costs_revision,1);assert.equal(saved(hot.env.ADMIN_DB),stored);assert.equal(providerCalls,0);readHot.restore();
+});
+
+test('separate dated report uses human-approved exact scoped names and prior audited prices, preserving v1 and legacy estimates',async t=>{
+ const f=await fixture(t),db=f.env.ADMIN_DB;db.db.prepare("UPDATE variant_bindings_state SET payload='[]'").run();db.db.prepare("UPDATE variant_bindings_audit SET payload='[]'").run();
+ const legacy=await f.invoke('read'),before=await readBusinessCostHistoryReport(f.env,{month},{now:f.now});assert.equal(before.coverage.pending_units,3);assert.equal(before.known_production_cost_cents,0);
+ let scan=await startDatedCostScan(f.env,{month,end_date:'2026-10-24',item_ids:['1000','1001','1060']},{now:f.now});
+ const getPage=request=>({schema:'historical_variant_evidence_v1',shop_id:1178167501,checked_at:Math.floor(f.now()/1000),...request,has_more:false,next_cursor:null,coverage:{orders_seen:3,target_orders:3,target_lines:3,target_units:3},evidence_complete:true,products:request.item_ids.map(item_id=>({item_id,variants:[{model_id:'0',line_count:1,quantity:1,item_names:['Camiseta adulta'],model_names:['M'],missing_item_name_lines:0,missing_model_name_lines:0,status_counts:[{status:'COMPLETED',line_count:1,quantity:1}],conflict:false}]})),omitted:{target_lines:0,target_units:0}});
+ for(let n=0;scan.status==='RUNNING'&&n<3;n++)scan=await stepDatedCostScan(f.env,{scan_id:scan.scan_id,revision:scan.revision},getPage,{now:f.now});
+ const proposed=await readBusinessCostHistoryDatedReport(f.env,{month},{now:f.now});assert.equal(proposed.coverage.pending_units,3);assert.equal(proposed.identity_evidence.approved_pairs,0);
+ const proposal=(await readDatedCostEvidence(f.env,{month,end_date:'2026-10-24'},{now:f.now})).publications[0],review={scan_id:proposal.scan_id,revision:0,publication_sha256:proposal.publication_sha256,decision:'APPROVE'};
+ await reviewDatedCostEvidence(f.env,review,'synthetic-owner',{now:f.now});const stored=saved(db),calls=structuredClone(f.calls),read=onlyReads(db),value=await readBusinessCostHistoryDatedReport(f.env,{month},{now:f.now});read.restore();
+ assert.equal(BUSINESS_COST_HISTORY_DATED_CONTRACT,'business-cost-history-dated-v1');assert.equal(value.schema,'business_cost_history_dated_v1');assert.equal(value.state,'COMPLETE');assert.equal(value.production_cost_cents,3200);assert.equal(value.identity_evidence.approved_pairs,3);assert.equal(value.identity_evidence.publications[0].review_revision,1);assert.equal(value.days.find(row=>row.date==='2026-10-10').production_cost_cents,2000);assert.equal(value.days.find(row=>row.date==='2026-10-20').production_cost_cents,1200);assert.equal(saved(db),stored);assert.deepEqual(f.calls,calls);
+ assert.deepEqual(await readBusinessCostHistoryReport(f.env,{month},{now:f.now}),before);assert.equal((await f.invoke('read')).production_cost_cents,legacy.production_cost_cents);
+ await reviewDatedCostEvidence(f.env,{...review,revision:1,decision:'WITHDRAW'},'synthetic-owner',{now:f.now});assert.equal((await readBusinessCostHistoryDatedReport(f.env,{month},{now:f.now})).coverage.pending_units,3);
+ assert.doesNotMatch(JSON.stringify(value),/item_id|model_id|item_names|model_names|order_sn|buyer|actor|payload/);
 });

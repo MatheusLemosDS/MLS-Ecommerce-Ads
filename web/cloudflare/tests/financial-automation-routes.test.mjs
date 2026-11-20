@@ -53,3 +53,14 @@ test('historical return discovery has a separate bounded local minute and no pro
   assert.equal(output.lane,'FINANCIAL_RETURNS');assert.equal(reads,1);assert.equal(output.production,'DEFERRED');assert.equal(output.collection,'DEFERRED');
  }finally{env.ADMIN_DB.db.close();}
 });
+
+test('the authenticated App router exposes read-only inventory sale pages with no provider collection',async()=>{
+ const auth=await login(),saved=globalThis.fetch;let pages=0,providerReads=0;try{
+  globalThis.fetch=()=>{providerReads++;throw Error('unexpected provider call');};const services={listFinancialOriginalItemsPage:async({scope,month,cursor})=>{pages++;assert.equal(scope.organization_id,'legacy-brazacommerce');assert.equal(month,'2026-10');assert.equal(cursor,'next_page');return {schema:'financial_original_items_page_v1',scope,month,items:[],has_more:false,next_cursor:null};}};
+  const path=origin+'/api/admin/finance/automation/inventory/sales?month=2026-10&cursor=next_page&expected_revision=0',response=await adminFetch(new Request(path,{headers:{cookie:auth.cookie}}),auth.env,services);assert.equal(response.status,200);assert.equal((await response.json()).schema,'financial_inventory_sales_page_v1');assert.equal(pages,1);assert.equal(providerReads,0);assert.equal((await adminFetch(new Request(path),auth.env,services)).status,401);assert.equal(pages,1);assert.deepEqual(auth.env.ADMIN_DB.db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name LIKE 'financial_%'").all(),[]);
+ }finally{globalThis.fetch=saved;auth.env.ADMIN_DB.db.close();}
+});
+
+test('inventory page browsing requires every existing inventory read capability and does not gain a POST policy',async()=>{
+ const path=origin+'/api/admin/finance/automation/inventory/sales?month=2026-10&cursor=next_page&expected_revision=0',expected=['finance.read','bank.read','costs.read','production.read','orders.read'];assert.deepEqual(await commercialRouteCapabilities(new Request(path)),expected);assert.equal(await commercialRouteCapabilities(new Request(path,{method:'POST',headers:{'content-type':'application/json'},body:'{}'})),null);
+});
