@@ -2,7 +2,7 @@
   "schema": "mls_finance_completion_merge_candidate_v1",
   "scope": "MERGE_ONLY",
   "base_commit": "4cfdf465b2fda58dd27ae693126b7fe1625f69d6",
-  "prepared_source_commit": "34f457c8883d0e62850ab4744635fff219af8be6",
+  "prepared_source_commit": "5c205373fe11148a2733d13e223d86014d9b0d9e",
   "owner_authorization": "OWNER_REQUESTED_FINANCE_COMPLETION_WITHOUT_SITE_PUBLICATION_2026_11_20",
   "production_approved": false,
   "live_authorization": false,
@@ -23,11 +23,11 @@
     },
     {
       "path": "docs/MLS_COMMERCE_OS_CHECKPOINT.json",
-      "sha256": "13f132c3c5b8dbf4588ad1ed6463b3da61ccfc69acea37cca15d5e3f686cd18e"
+      "sha256": "062801ae5767d1d66783a768db08082d4553ddbfbe0f0bfd590a433ba51d5bce"
     },
     {
       "path": "docs/MLS_FINANCE_COMPLETION_2026_11_20.md",
-      "sha256": "fdfeaf6d4eeac98003288c7f84d5590ae1f3a62cec22517ec673b40bda750478"
+      "sha256": "8f13fd893fc5309859812cd7d6e4c9f04d90e7ba5d3169a0bb370a19b12068c9"
     },
     {
       "path": "docs/ROADMAP_MLS_COMMERCE_OS.md",
@@ -35,7 +35,7 @@
     },
     {
       "path": "docs/financial-automation/MATRIZ_EXECUCAO.json",
-      "sha256": "a6c0d99c1aacd5476c57cfa5d6b669310648bf84063b773b042da2dadb8e0a19"
+      "sha256": "f15663b4235ab80f2de469e9f9baa6bc164a85023ca4317a9d196387e2d64c5d"
     },
     {
       "path": "docs/financial-automation/README.md",
@@ -43,7 +43,7 @@
     },
     {
       "path": "docs/financial-automation/validation/finance-completion-20261120.json",
-      "sha256": "f4da0d54ed8bd444429c42e7eef7649dad9d0a58ec8c70a5d03db84eb3db8b23"
+      "sha256": "2034e4a93dfdf7808b142571396d2d859c528b78d9814941ec27157a6d2d7097"
     },
     {
       "path": "package-lock.json",
@@ -51,7 +51,7 @@
     },
     {
       "path": "package.json",
-      "sha256": "cf4511bd595ba7e7c2d3e4363075bde5c9deddf34ff6003c8ed4840c3b8a8bb9"
+      "sha256": "414befb162361a800ce16d4e8e012683102b4d1bb7d2412858696d1a6ac36a17"
     },
     {
       "path": "previews/isolated-builds.json",
@@ -66,8 +66,12 @@
       "sha256": "0a7b9effd449192e05f6190b46f3cf7233c5b2f7391d3f775a922c7cd318bbe4"
     },
     {
+      "path": "tools/complete_worker_module.mjs",
+      "sha256": "4dd7a86bbb8a4120b16247a3478c3cf17c93f041dcae9fcb68e0f34151ab57eb"
+    },
+    {
       "path": "tools/release_preflight.mjs",
-      "sha256": "c7474c5dc3368d87d87222c8001d8aee249fa3ee3686ea9cc53ec577c2d95468"
+      "sha256": "c0c8d750a7599e7226462125127f545bfed0f860c6641e329b36a7e108339860"
     },
     {
       "path": "tools/tests/browser-assets.test.mjs",
@@ -76,6 +80,10 @@
     {
       "path": "tools/tests/compact-worker-namespaces.test.mjs",
       "sha256": "5ebb13c6831346ddd48f07327b661d0ac12f4fce24630fbb37ff3e3734d91adf"
+    },
+    {
+      "path": "tools/tests/complete-worker-module.test.mjs",
+      "sha256": "0dead42c307b4f62ef91142b2f6bb6412c0cfd8245cc20e6e6fff167d06aad6e"
     },
     {
       "path": "tools/tests/finance-preview-branch.test.mjs",
@@ -87,7 +95,15 @@
     },
     {
       "path": "tools/tests/release-finance-completion-preflight.test.mjs",
-      "sha256": "4320fcc2cec188a898713136835e6fb363eef3da67bf4620171b1de41c870816"
+      "sha256": "1639ee4d17282c4200c0fbce16ef4f417613d3d3f8dfe0622417e26fa7a3a993"
+    },
+    {
+      "path": "tools/tests/verified-worker-deploy.test.mjs",
+      "sha256": "df5b3f6bfee5eccccc3da4918ab10dce3355ad28ce607c4a5761c5efd93a4940"
+    },
+    {
+      "path": "tools/verified_worker_deploy.mjs",
+      "sha256": "b6060f5836e2768274d059f44ae2c5e04624d9761c82e622cba3fa8669602138"
     },
     {
       "path": "tools/worker_project.mjs",
