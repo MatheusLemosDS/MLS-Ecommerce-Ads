@@ -31,6 +31,15 @@ test('every frozen workflow, configuration, original Worker and deployment input
  assert.equal(FINANCE_COMPLETION_FROZEN_FILES['tools/release-pr130-merge-candidate.json'],'c287900d9c598c9603335c14b3dac97ff17a066480c60986aaa6623fbcbbd8c8');
 });
 
+test('the complete-module packaging review admits only four literal new tool paths and keeps deployment authority disabled',()=>{
+ for(const filename of ['tools/complete_worker_module.mjs','tools/verified_worker_deploy.mjs','tools/tests/complete-worker-module.test.mjs','tools/tests/verified-worker-deploy.test.mjs']){
+  assert.ok(FINANCE_COMPLETION_ALLOWED_FILES.includes(filename));const input=good(),file={path:filename,sha256:'6'.repeat(64)};input.candidate.files=[file];input.changedPaths=[FINANCE_COMPLETION_MERGE_MANIFEST_PATH,filename];input.currentFileHashes={[filename]:file.sha256};input.preparedFileHashes={[filename]:file.sha256};
+  const result=evaluateFinanceCompletionMergePreflight(input);assert.equal(result.ok,true);assert.equal(result.scope,'MERGE_ONLY');assert.equal(result.productionApproved,false);assert.equal(result.liveAuthorization,false);assert.equal(result.commercialWritesAllowed,false);
+  input.preparedFileHashes[filename]='7'.repeat(64);assert.ok(evaluateFinanceCompletionMergePreflight(input).failures.includes('RELEASE_FINANCE_COMPLETION_SOURCE_HASH_MISMATCH'));
+ }
+ for(const filename of ['tools/unreviewed_cloudflare_uploader.mjs','tools/verified_worker_deploy_next.mjs','tools/worker_deploy.mjs']){const input=good();input.candidate.files=[{path:filename,sha256:'6'.repeat(64)}];assert.deepEqual(evaluateFinanceCompletionMergePreflight(input).failures,['RELEASE_FINANCE_COMPLETION_MANIFEST_INVALID']);}
+});
+
 test('new merge verification requires the exact base, both ancestry links and a complete unique finite diff',()=>{
  for(const mutate of [i=>i.baseCommit='b'.repeat(40),i=>i.preparedSourceIsAncestor=false,i=>i.preparedSourceDescendsFromBase=false,i=>delete i.preparedSourceIsAncestor,i=>i.changedPaths=[],i=>i.changedPaths=null,i=>i.changedPaths.pop(),i=>i.changedPaths.push(i.changedPaths[0]),i=>i.changedPaths.push('web/cloudflare/src/arbitrary.mjs'),i=>i.changedPaths.push('workers/auth/wrangler.json'),i=>i.priorVerifierPreserved=false]){const input=good();mutate(input);assert.equal(evaluateFinanceCompletionMergePreflight(input).ok,false);}
 });
