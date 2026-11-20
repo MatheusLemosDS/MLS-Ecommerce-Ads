@@ -5219,7 +5219,7 @@
   },
   "incremento_financeiro_20261120": {
     "schema": "mls_finance_completion_increment_v1",
-    "recorded_at": "2026-11-20T22:18:42.317244+00:00",
+    "recorded_at": "2026-11-20T22:57:04.998033+00:00",
     "base_commit": "4cfdf465b2fda58dd27ae693126b7fe1625f69d6",
     "branch": "fix/finance-completion-20261120",
     "release_id": "2026-11-20.1",
@@ -5322,7 +5322,18 @@
         "skipped": 0,
         "cloudflare_isolated_builds_pass": 3
       },
-      "followup": "All65failures traced to specific integration fixtures/inventory expectations and fixed without removing financial assertions; full rerun required"
+      "followup": "All65failures traced to specific integration fixtures/inventory expectations and fixed without removing financial assertions; full rerun required",
+      "validated_runtime": {
+        "run": 44828314821,
+        "head": "465bd72c9887eb6fc051541121e1130b8008f3e2",
+        "node_pass": 4886,
+        "node_fail": 0,
+        "node_skipped": 0,
+        "python_pass": 67,
+        "required_checks_pass": 4,
+        "source_preflight": "MERGE_ONLY_PASS",
+        "publication_approved": false
+      }
     },
     "current_local_build": {
       "app": {
@@ -5342,6 +5353,19 @@
       "get_requests": 22,
       "writes": 0,
       "all_match_17_3": true
+    },
+    "packaging": {
+      "state": "IMPLEMENTED_VALIDATED_DRY_RUN",
+      "legacy_deployer_sha256": "3d68df3c8c64d3b3fcd5f4246fc3f760a2880c7ddb3868df0ccddc965ebdfb32",
+      "delegates_legacy_guards": true,
+      "complete_esm_source_cap_default_export_no_imports_free_commonjs_checked": true,
+      "actual_manifest_bytes_and_sha256_required": true,
+      "no_bundle_required": true,
+      "guard_tests_pass": 74,
+      "module_and_three_real_dry_run_tests_pass": 6,
+      "runtime_worker_bytes_unchanged_from_validated_465": true,
+      "real_deployments": 0,
+      "current_head_full_ci_source": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/131/checks"
     }
   }
 }
