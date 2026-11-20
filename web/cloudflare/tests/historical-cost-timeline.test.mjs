@@ -60,3 +60,27 @@ test('unknown values never become zero or negative costs',()=>{
  assert.equal(historicalDayCosts(items,()=>Number.MAX_SAFE_INTEGER),null);
  assert.deepEqual(historicalDayCosts([],()=>null),{total_units:0,known_units:0,pending_units:0,known_production_cost_cents:0,production_cost_cents:0});
 });
+
+test('an audit beyond its bounded or observed history cannot be promoted to proof',()=>{
+ const many=Array.from({length:129},(_,index)=>({revision:index+1,payload:'{}',created_at:stamp('2026-11-01')}));
+ assert.equal(checkedCostAudit(many,{revision:129,payload:'{}',updated_at:many.at(-1).created_at}),null);
+ assert.equal(checkedCostAudit(rows,state,{stamp:Date.parse('2026-11-17T23:59:59Z')/1000}),null);
+ assert.ok(checkedCostAudit(rows,state,{stamp:Date.parse('2026-11-19T00:00:00Z')/1000}));
+});
+
+test('timestamps need an explicit zone and real calendar date without normalization',()=>{
+ for(const created_at of ['2026-11-01T12:00:00','2026-02-30T12:00:00Z','2026-11-01T24:00:00Z']){
+  const invalid=[{revision:1,payload:'{}',created_at}];
+  assert.equal(checkedCostAudit(invalid,{revision:1,payload:'{}',updated_at:created_at}),null);
+ }
+ const century=[{revision:1,payload:'{}',created_at:'2100-01-01T12:00:00.000Z'}],audit=checkedCostAudit(century,{revision:1,payload:'{}',updated_at:century[0].created_at});
+ assert.equal(costAuditBeforeDay(audit,'2100-01-02').revision,1);
+});
+
+test('duplicate identities, unsafe products and invalid quantities cannot create a day total',()=>{
+ const item={item_id:'1',model_id:'0',quantity:1};
+ assert.equal(historicalDayCosts([item,item],()=>1000),null);
+ assert.equal(historicalDayCosts([{...item,quantity:Number.MAX_SAFE_INTEGER}],()=>1000),null);
+ assert.equal(historicalDayCosts([{...item,item_id:'../private'}],()=>1000),null);
+ assert.equal(historicalDayCosts([{...item,quantity:0}],()=>1000),null);
+});

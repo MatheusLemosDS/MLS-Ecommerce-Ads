@@ -72,6 +72,15 @@ test('optional financial and cost detail selectors only add requirements, never 
  assert.deepEqual(await read('/api/admin/product-registry'),['catalog.read']);assert.deepEqual(await read('/api/admin/product-registry?item_id=1000'),['catalog.read','costs.read']);
 });
 
+test('audited historical cost reference requires both existing finance and cost reads without enabling mutations',async()=>{
+ const path='/api/admin/finance/business-cost-history?month=2026-11';
+ const policy=await commercialRoutePolicy(request(path));assert.deepEqual(policy.capabilities,['finance.read','costs.read']);assert.equal(policy.mutating,false);
+ for(const p of [principal('OPERATIONS'),principal('VIEWER',['store.read','finance.read']),principal('VIEWER',['store.read','costs.read'])])assert.equal(await commercialRouteAllowed(p,request(path)),false);
+ assert.equal(await commercialRouteAllowed(principal('FINANCE'),request(path)),true);
+ for(const method of ['POST','PUT','DELETE'])assert.equal(await commercialRoutePolicy(request(path,{method,...(method==='POST'?{body:{month:'2026-11'}}:{})})),null);
+ for(const suffix of ['/refresh','/sync','/audit','/'])assert.equal(await read('/api/admin/finance/business-cost-history'+suffix),null);
+});
+
 test('composite reports and return queues cannot leak finance to OPERATIONS or a reports-only VIEWER',async()=>{
  const operations=principal('OPERATIONS'),reportsOnly=principal('VIEWER',['store.read','reports.read']);
  assert.deepEqual(await read('/api/admin/reports/weekly?week_end=2026-11-13'),['reports.read','finance.read','bank.read','costs.read']);

@@ -4,6 +4,7 @@ import {execFileSync} from 'node:child_process';
 import {randomUUID} from 'node:crypto';
 import {PROJECT_ROOT, TARGETS, stableJson, sha256, error, uuid} from './worker_project.mjs';
 import {buildWorkers} from './build_workers.mjs';
+import {assertProductionDeploymentContext} from './isolated_preview.mjs';
 import {verifyBrowserAssets} from './browser_assets.mjs';
 import {validateBrowserAssetsConfig} from './import_worker_config.mjs';
 
@@ -238,6 +239,7 @@ function writeGeneratedDeployment(verified) {
 }
 
 export function deployWorker(target, {root = PROJECT_ROOT, run = execFileSync, build = buildWorkers, dryRun = false} = {}) {
+  assertProductionDeploymentContext(target,root);
   const verified = validateDeployment(target, {root});
   if (target === 'auth') validateDeployment('finance', {root});
   build(target, {root});

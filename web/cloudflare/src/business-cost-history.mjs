@@ -1,62 +1,93 @@
 import {checkedCostAudit,costAuditBeforeDay,historicalDayCosts} from './historical-cost-timeline.mjs';
 import {productionCostReference,validateProductionCosts} from './production-costs.mjs';
 import {validateVariantBindings} from './variant-bindings.mjs';
-import {costRuleReferenceFromSnapshot,mergeCatalogCostReference} from './cost-rules.mjs';
+import {costRuleReferenceFromSnapshot} from './cost-rules.mjs';
 
-// Read-only, fail-closed pricing for a month whose rules were edited after the
-// first sale. The D1 audit is the sole source of effective dates. This produces
-// daily totals, not a fictitious monthly "average unit cost".
-export async function readHistoricalCostSchedule(db,{month,stamp,frames,items,current,ruleSnapshot,classification}){
- if(!Array.isArray(frames)||!Array.isArray(items)||!Array.isArray(ruleSnapshot)||!current||(month!==null&&typeof month!=='string'))return null;
+const brDay=new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Sao_Paulo'});
+const day=value=>typeof value==='string'&&/^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/.test(value)&&Number.isFinite(Date.parse(value+'T00:00:00Z'))&&new Date(value+'T00:00:00Z').toISOString().slice(0,10)===value;
+const array=(value,max)=>Array.isArray(value)&&value.length<=max&&Array.from({length:value.length},(_,index)=>Object.hasOwn(value,index)).every(Boolean);
+const key=row=>row.item_id+':'+row.model_id;
+const safe=value=>value>=0n&&value<=BigInt(Number.MAX_SAFE_INTEGER)?Number(value):null;
+const unavailable=reason=>({state:'UNAVAILABLE',reason});
+function quantities(items){
+ if(!array(items,3000))return null;
+ const result=new Map();
+ for(const item of items){
+  if(!item||typeof item.item_id!=='string'||!/^[1-9][0-9]{0,19}$/.test(item.item_id)||typeof item.model_id!=='string'||!/^(0|[1-9][0-9]{0,19})$/.test(item.model_id)||!Number.isSafeInteger(item.quantity)||item.quantity<1||result.has(key(item)))return null;
+  result.set(key(item),BigInt(item.quantity));
+ }
+ return result;
+}
+
+// Explicit, read-only sale-creation-day estimate, never physical production or
+// COGS. Only append-only audited prices and manual identity/assignments prove
+// a prior cost. Today's catalogue/classifications are deliberately not inputs.
+// A single audited revision is useful evidence after its recorded day; missing
+// history never selects the legacy current-cost estimate as a fallback.
+export async function readHistoricalCostSchedule(db,input){
+ const {month,stamp,frames,items,current}=input||{};
+ if(!array(frames,3)||!frames.length||!Number.isSafeInteger(stamp)||stamp<1||stamp>9999999999||!current||(month!==null&&(typeof month!=='string'||!/^\d{4}-(0[1-9]|1[0-2])$/.test(month))))return unavailable('REQUEST_INVALID');
+ const expected=quantities(items);if(!expected)return unavailable('SOURCE_INVALID');
  const auditTables=['production_costs_audit','production_cost_rules_audit','variant_bindings_audit'];
  let rows;
  try{rows=await db.batch(auditTables.map(table=>db.prepare('SELECT revision,payload,created_at FROM '+table+' ORDER BY revision ASC LIMIT 129')));}
- catch{return current.costs?.revision>1||current.rules?.revision>1||current.bindings?.revision>1?{state:'UNAVAILABLE'}:null;}
- if(rows.length!==3||rows.some(row=>!Array.isArray(row.results)))return {state:'UNAVAILABLE'};
- const costHistory=checkedCostAudit(rows[0].results,current.costs),ruleHistory=checkedCostAudit(rows[1].results,current.rules),bindingHistory=checkedCostAudit(rows[2].results,current.bindings);
- if(!costHistory||!ruleHistory||!bindingHistory)return {state:'UNAVAILABLE'};
- if(![costHistory,ruleHistory,bindingHistory].some(history=>history.length>1))return null;
- const sources=new Map();
+ catch{return unavailable('AUDIT_UNAVAILABLE');}
+ if(!array(rows,3)||rows.length!==3||rows.some(row=>!Array.isArray(row?.results)))return unavailable('AUDIT_INVALID');
+ const histories=[checkedCostAudit(rows[0].results,current.costs,{stamp}),checkedCostAudit(rows[1].results,current.rules,{stamp}),checkedCostAudit(rows[2].results,current.bindings,{stamp})];
+ if(histories.some(value=>!value))return unavailable('AUDIT_INVALID');
+ const sources=new Map(),actual=new Map();
+ const today=brDay.format(new Date(stamp*1000));
  for(const frame of frames){
-  if(!frame?.daily_breakdown?.days||frame.daily_breakdown.undated?.coverage?.orders>0)return {state:'UNAVAILABLE'};
-  for(const group of frame.daily_breakdown.days){if(sources.has(group.date))return {state:'UNAVAILABLE'};sources.set(group.date,group);}
+  const breakdown=frame?.daily_breakdown;
+  if(!array(breakdown?.days,31)||!Number.isSafeInteger(breakdown.undated?.coverage?.orders)||breakdown.undated.coverage.orders!==0)return unavailable('SOURCE_INVALID');
+  for(const group of breakdown.days){
+   const amounts=quantities(group?.items);
+   if(!day(group?.date)||group.date>today||month!==null&&group.date.slice(0,7)!==month||sources.has(group.date)||!amounts)return unavailable('SOURCE_INVALID');
+   sources.set(group.date,group);
+   for(const [id,count] of amounts)actual.set(id,(actual.get(id)||0n)+count);
+  }
  }
+ if(actual.size!==expected.size||[...expected].some(([id,count])=>actual.get(id)!==count))return unavailable('SOURCE_INVALID');
  const end=frames.at(-1)?.end_date;
- if(!end||month&&end.slice(0,7)!==month)return {state:'UNAVAILABLE'};
- const dates=month?Array.from({length:Number(end.slice(8))},(_,index)=>month+'-'+String(index+1).padStart(2,'0')):[...sources.keys()].sort();
- const days=[],unmapped=new Map(),knownByVariant=new Map();let totalKnown=0n,complete=true;
+ if(!day(end)||end>today||month!==null&&end.slice(0,7)!==month||[...sources.keys()].some(date=>date>end))return unavailable('SOURCE_INVALID');
+ const dates=month===null?[...sources.keys()].sort():Array.from({length:Number(end.slice(8))},(_,index)=>month+'-'+String(index+1).padStart(2,'0'));
+ if(dates.length!==sources.size)return unavailable('SOURCE_INVALID');
+ const days=[],day_evidence=[],unmapped=new Map(),knownByVariant=new Map();let totalKnown=0n,complete=true;
  for(const date of dates){
-  const group=sources.get(date);
-  if(!group||!Array.isArray(group.items))return {state:'UNAVAILABLE'};
-  const costAudit=costAuditBeforeDay(costHistory,date),ruleAudit=costAuditBeforeDay(ruleHistory,date),bindingAudit=costAuditBeforeDay(bindingHistory,date);
+  const group=sources.get(date);if(!group)return unavailable('SOURCE_INVALID');
+  const audits=histories.map(history=>costAuditBeforeDay(history,date)),[costAudit,ruleAudit,bindingAudit]=audits,pending=[];
+  if(audits.some(value=>!value)){
+   if(histories.some(history=>history.some(row=>row.day===date)))pending.push('AUDIT_DAY_AMBIGUOUS');
+   if(histories.some((history,index)=>!audits[index]&&!history.some(row=>row.day===date)))pending.push('AUDIT_PRIOR_MISSING');
+  }
   let unitMap=null;
   if(costAudit&&ruleAudit&&bindingAudit){
    try{
-    const b={revision:bindingAudit.revision,bindings:validateVariantBindings(JSON.parse(bindingAudit.payload))};
+    const b={revision:bindingAudit.revision,bindings:validateVariantBindings(JSON.parse(bindingAudit.payload)).filter(row=>row.operator_confirmed===true)};
     const c={revision:costAudit.revision,values:validateProductionCosts(JSON.parse(costAudit.payload))};
-    const ruleRows=[{results:[{revision:ruleAudit.revision,payload:ruleAudit.payload,updated_at:ruleAudit.updated_at}]},...ruleSnapshot.slice(1)];
-    const rules=mergeCatalogCostReference(costRuleReferenceFromSnapshot(ruleRows,{now:()=>stamp*1000}),classification);
+    // A rule's explicit audited assignments are self-contained. Automatic
+    // name/axis matching needs a dated catalogue that these audits do not hold.
+    const rules=costRuleReferenceFromSnapshot([{results:[{revision:ruleAudit.revision,payload:ruleAudit.payload,updated_at:ruleAudit.updated_at}]}],{now:()=>stamp*1000});
     unitMap=new Map();
     for(let start=0;start<group.items.length;start+=1000){
-     const part=group.items.slice(start,start+1000);
-     const ref=productionCostReference({status:'AVAILABLE',rows:part},b,c,rules);
-     for(const item of ref.variants){const key=item.item_id+':'+item.model_id;if(unitMap.has(key))throw Error('DUPLICATE');unitMap.set(key,item.unit_cost_cents);}
+     const ref=productionCostReference({status:'AVAILABLE',rows:group.items.slice(start,start+1000)},b,c,rules);
+     for(const item of ref.variants)unitMap.set(key(item),item.unit_cost_cents);
     }
-   }catch{unitMap=null;}
+   }catch{unitMap=null;pending.push('AUDIT_PAYLOAD_INVALID');}
   }
   const row=historicalDayCosts(group.items,(itemId,modelId)=>unitMap?.get(itemId+':'+modelId)??null);
-  if(!row)return {state:'UNAVAILABLE'};
+  if(!row)return unavailable('ARITHMETIC_UNSAFE');
   for(const item of group.items){
-   const key=item.item_id+':'+item.model_id,unit=unitMap?.get(key)??null;
-   if(unit===null){unmapped.set(key,(unmapped.get(key)||0)+item.quantity);continue;}
-   if(!knownByVariant.has(key))knownByVariant.set(key,new Set());knownByVariant.get(key).add(unit);
+   const id=key(item),unit=unitMap?.get(id)??null;
+   if(unit===null){unmapped.set(id,(unmapped.get(id)||0n)+BigInt(item.quantity));continue;}
+   if(!knownByVariant.has(id))knownByVariant.set(id,new Set());knownByVariant.get(id).add(unit);
   }
-  if(row.pending_units)complete=false;
-  totalKnown+=BigInt(row.known_production_cost_cents);
-  days.push({date,...row});
+  if(row.pending_units){complete=false;if(!pending.length)pending.push('IDENTITY_OR_COST_UNPROVEN');}
+  totalKnown+=BigInt(row.known_production_cost_cents);days.push({date,...row});
+  day_evidence.push({date,costs_revision:costAudit?.revision??null,cost_rules_revision:ruleAudit?.revision??null,bindings_revision:bindingAudit?.revision??null,pending:row.pending_units?pending:[]});
  }
- if(totalKnown>BigInt(Number.MAX_SAFE_INTEGER))return {state:'UNAVAILABLE'};
- const byVariant=new Map(items.map(row=>[row.item_id+':'+row.model_id,row]));
- const pending=[...unmapped].map(([key,quantity])=>{const row=byVariant.get(key);return row?{item_id:row.item_id,model_id:row.model_id,quantity}:null;}).filter(Boolean);
- return {state:'AVAILABLE',days,known_production_cost_cents:Number(totalKnown),production_cost_cents:complete?Number(totalKnown):null,unmapped_variants:pending,mixed_variants:[...knownByVariant.values()].filter(set=>set.size>1).length};
+ if(safe(totalKnown)===null)return unavailable('ARITHMETIC_UNSAFE');
+ const byVariant=new Map(items.map(row=>[key(row),row])),unmapped_variants=[];
+ for(const [id,count]of unmapped){const quantity=safe(count);if(quantity===null)return unavailable('ARITHMETIC_UNSAFE');const row=byVariant.get(id);unmapped_variants.push({item_id:row.item_id,model_id:row.model_id,quantity});}
+ return {state:'AVAILABLE',days,known_production_cost_cents:Number(totalKnown),production_cost_cents:complete?Number(totalKnown):null,unmapped_variants,mixed_variants:[...knownByVariant.values()].filter(set=>set.size>1).length,audit_scope:{costs_revision:current.costs.revision,cost_rules_revision:current.rules.revision,bindings_revision:current.bindings.revision},day_evidence};
 }

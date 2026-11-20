@@ -6,7 +6,6 @@ import {validateVariantBindings} from './variant-bindings.mjs';
 import {costRuleSnapshotQueries,costRuleReferenceFromSnapshot,mergeCatalogCostReference} from './cost-rules.mjs';
 import {catalogClassificationQueries,catalogClassificationsFromSnapshot} from './catalog-classification.mjs';
 import {projectProductionOrdersFrame,productionOrdersRequestMatches} from '../../finance/src/production-orders-frame.mjs';
-import {readHistoricalCostSchedule} from './business-cost-history.mjs';
 
 export class ProductionCostPeriodsError extends Error{constructor(code,status=503){super(code);this.status=status;}}
 const fail=(code,status=503)=>{throw new ProductionCostPeriodsError(code,status);};
@@ -34,22 +33,16 @@ function stored(row,stamp){
  if(!frame||frame.start_date===null||frame.checked_at!==row.source_checked_at||frame.checked_at>stamp+60)fail('PRODUCTION_COST_PERIODS_STORAGE_INVALID');return frame;
 }
 function empty(period,start_date,end_date,stamp){return {period,start_date,end_date,state:'UNAVAILABLE',source_start_date:null,source_end_date:null,source_checked_at:null,calculated_at:stamp,production_cost_cents:null,known_production_cost_cents:null,coverage:{orders:0,eligible_orders:0,excluded_cancelled:0,excluded_cancel_pending:0,excluded_unpaid:0,review_orders:0,total_units:null,known_units:null,pending_units:0,pending_variants:0},versions:null,pending:['SOURCE_MISSING'],sync_state:'IDLE',days:[]};}
-async function prices(db,items,stamp,datedGroups=null){
+async function prices(db,items,stamp){
  const grouped=new Map();for(const item of items){const key=item.item_id+':'+item.model_id,old=grouped.get(key);const quantity=(old?.quantity||0)+item.quantity;if(!int(quantity,1))fail('PRODUCTION_COST_PERIODS_ARITHMETIC_UNSAFE');grouped.set(key,{item_id:item.item_id,model_id:item.model_id,quantity});}
- const entries=[...grouped.values()],queries=[db.prepare('SELECT revision,payload,updated_at FROM variant_bindings_state WHERE id=1'),db.prepare('SELECT revision,payload,updated_at FROM production_costs_state WHERE id=1')],sections=[];
+ const entries=[...grouped.values()],queries=[db.prepare('SELECT revision,payload FROM variant_bindings_state WHERE id=1'),db.prepare('SELECT revision,payload FROM production_costs_state WHERE id=1')],sections=[];
  for(let index=0;index<Math.max(1,entries.length);index+=1000){const part=entries.slice(index,index+1000),ids=[...new Set(part.map(row=>row.item_id))],rules=costRuleSnapshotQueries(db,ids),classes=catalogClassificationQueries(db,ids,part);sections.push({part,start:queries.length,rules:rules.length,classes:classes.length});queries.push(...rules,...classes);}
  const snapshot=await db.batch(queries),b=snapshot[0]?.results?.[0],c=snapshot[1]?.results?.[0];if(!b||!c||!int(b.revision,1,2147483647)||!int(c.revision,1,2147483647))fail('PRODUCTION_COST_PERIODS_COSTS_UNAVAILABLE');
  const bindings={revision:b.revision,bindings:validateVariantBindings(JSON.parse(b.payload))},costs={revision:c.revision,values:validateProductionCosts(JSON.parse(c.payload))},units=new Map();let versions=null;
  for(const section of sections){const rule=costRuleReferenceFromSnapshot(snapshot.slice(section.start,section.start+section.rules),{now:()=>stamp*1000}),classification=catalogClassificationsFromSnapshot(snapshot.slice(section.start+section.rules,section.start+section.rules+section.classes)),automatic=mergeCatalogCostReference(rule,classification),current={bindings:b.revision,costs:c.revision,cost_rules:rule.revision,classifications:classification.revision};if(versions&&JSON.stringify(versions)!==JSON.stringify(current))fail('PRODUCTION_COST_PERIODS_COSTS_UNAVAILABLE');versions=current;
   const reference=productionCostReference({status:'AVAILABLE',rows:section.part.map(row=>({...row,quantity:1}))},bindings,costs,automatic);for(const row of reference.variants)units.set(row.item_id+':'+row.model_id,row.unit_cost_cents);
  }
- let history=null;
- if(datedGroups!==null&&sections.length===1){
-  const section=sections[0],rulesSnapshot=snapshot.slice(section.start,section.start+section.rules),classification=catalogClassificationsFromSnapshot(snapshot.slice(section.start+section.rules,section.start+section.rules+section.classes));
-  try{history=await readHistoricalCostSchedule(db,{month:null,stamp,frames:[{end_date:datedGroups.at(-1)?.date,daily_breakdown:{days:datedGroups,undated:{coverage:{orders:0}}}}],items:entries,current:{costs:{revision:c.revision,payload:c.payload,updated_at:c.updated_at},rules:rulesSnapshot[0]?.results?.[0],bindings:{revision:b.revision,payload:b.payload,updated_at:b.updated_at}},ruleSnapshot:rulesSnapshot,classification});}
-  catch{history={state:'UNAVAILABLE'};}
- }
- return {units,versions,history};
+ return {units,versions};
 }
 async function weekly(db,row,stamp){
  const current=range(stamp),result=empty('WEEK',current.start_date,current.end_date,stamp),frame=stored(row,stamp);result.sync_state=row.lease_token&&row.lease_until>stamp?'RUNNING':'IDLE';
@@ -66,8 +59,8 @@ async function weekly(db,row,stamp){
  if(coverage.excluded_cancel_pending+coverage.review_orders>0)result.pending.push('STATUS_REVIEW_REQUIRED');if(missingLines)result.pending.push('ORDER_LINES_MISSING');
  coverage.total_units=missingLines?null:safe(units);if(coverage.total_units===null&&!missingLines)result.pending.push('ARITHMETIC_UNSAFE');
  try{
-  const reference=await prices(db,lines,stamp,[...days.values()].map(slot=>({date:slot.date,items:slot._lines})));result.versions=reference.versions;let known=0n,knownUnits=0n,pendingUnits=0n;const unmapped=new Set(),dated=reference.history?.state==='AVAILABLE'?new Map(reference.history.days.map(row=>[row.date,row])):null,unavailable=reference.history?.state==='UNAVAILABLE';result._dated=Boolean(dated||unavailable);
-  for(const slot of days.values()){let cost=0n,mapped=0n,missing=0n;const dateCost=dated?.get(slot.date);if(dated||unavailable){const count=slot._lines.reduce((n,line)=>n+BigInt(line.quantity),0n);if(dateCost&&BigInt(dateCost.total_units)!==count)throw new Error('HISTORICAL_COST_DAY_MISMATCH');cost=BigInt(dateCost?.known_production_cost_cents??0);mapped=BigInt(dateCost?.known_units??0);missing=BigInt(dateCost?.pending_units??count);if(missing>0n)for(const line of slot._lines)unmapped.add(line.item_id+':'+line.model_id);}else for(const line of slot._lines){const unit=reference.units.get(line.item_id+':'+line.model_id);if(unit===null||unit===undefined){missing+=BigInt(line.quantity);unmapped.add(line.item_id+':'+line.model_id);}else{cost+=BigInt(unit)*BigInt(line.quantity);mapped+=BigInt(line.quantity);}}
+  const reference=await prices(db,lines,stamp);result.versions=reference.versions;let known=0n,knownUnits=0n,pendingUnits=0n;const unmapped=new Set();
+  for(const slot of days.values()){let cost=0n,mapped=0n,missing=0n;for(const line of slot._lines){const unit=reference.units.get(line.item_id+':'+line.model_id);if(unit===null||unit===undefined){missing+=BigInt(line.quantity);unmapped.add(line.item_id+':'+line.model_id);}else{cost+=BigInt(unit)*BigInt(line.quantity);mapped+=BigInt(line.quantity);}}
    slot.known_production_cost_cents=safe(cost);slot.known_units=safe(mapped);slot.pending_units=safe(missing);slot.total_units=slot._missing?null:slot.total_units;slot.production_cost_cents=!slot._missing&&missing===0n?slot.known_production_cost_cents:null;known+=cost;knownUnits+=mapped;pendingUnits+=missing;delete slot._lines;delete slot._missing;
   }
   result.known_production_cost_cents=safe(known);coverage.known_units=safe(knownUnits);coverage.pending_units=safe(pendingUnits);coverage.pending_variants=unmapped.size;
@@ -118,15 +111,7 @@ async function monthly(env,db,month,stamp,now){
  if(saved.end_date!==result.end_date||frame?.status!=='COMPLETE')result.pending.push('PERIOD_INCOMPLETE');if(stamp-saved.source_checked_at>900)result.pending.push('SOURCE_STALE');const c=saved.coverage;
  const total=safe(saved.items.reduce((sum,row)=>sum+BigInt(row.quantity),0n));result.coverage={orders:c.orders,eligible_orders:c.paid,excluded_cancelled:c.cancelled,excluded_cancel_pending:c.cancel_pending,excluded_unpaid:c.unpaid,review_orders:c.other+c.unknown,total_units:total,known_units:null,pending_units:0,pending_variants:0};
  if(c.cancel_pending+c.other+c.unknown>0)result.pending.push('STATUS_REVIEW_REQUIRED');if(frame?.result.pending.includes('SOURCE_UNAVAILABLE'))result.pending.push('SOURCE_UNAVAILABLE');
- try{let known=0n,knownUnits=0n,pendingUnits=0n,pendingVariants=0;
-  if(frame?.status==='COMPLETE'&&Array.isArray(frame.cost_schedule)&&frame.end_date===saved.end_date){
-   result._dated=true;result.versions={bindings:frame.bindings_revision,costs:frame.costs_revision,cost_rules:frame.cost_rules_revision,classifications:frame.classification_revision};
-   for(const row of frame.cost_schedule){known+=BigInt(row.known_production_cost_cents);knownUnits+=BigInt(row.known_units);pendingUnits+=BigInt(row.pending_units);}pendingVariants=frame.unmapped_variants.length;
-   if(BigInt(total)!==knownUnits+pendingUnits||known!==BigInt(frame.known_production_cost_cents))throw new Error('HISTORICAL_COST_MONTH_MISMATCH');
-  }else{
-   const reference=await prices(db,saved.items,stamp);result.versions=reference.versions;
-   for(const item of saved.items){const unit=reference.units.get(item.item_id+':'+item.model_id);if(unit===null||unit===undefined){pendingUnits+=BigInt(item.quantity);pendingVariants++;}else{known+=BigInt(unit)*BigInt(item.quantity);knownUnits+=BigInt(item.quantity);}}
-  }
+ try{const reference=await prices(db,saved.items,stamp);result.versions=reference.versions;let known=0n,knownUnits=0n,pendingUnits=0n,pendingVariants=0;for(const item of saved.items){const unit=reference.units.get(item.item_id+':'+item.model_id);if(unit===null||unit===undefined){pendingUnits+=BigInt(item.quantity);pendingVariants++;}else{known+=BigInt(unit)*BigInt(item.quantity);knownUnits+=BigInt(item.quantity);}}
   result.known_production_cost_cents=safe(known);result.coverage.known_units=safe(knownUnits);result.coverage.pending_units=safe(pendingUnits);result.coverage.pending_variants=pendingVariants;if(pendingUnits>0n)result.pending.push('PRODUCTION_COST_INCOMPLETE');if([total,result.known_production_cost_cents,result.coverage.known_units,result.coverage.pending_units].some(value=>value===null)){result.pending.push('ARITHMETIC_UNSAFE');if(result.coverage.pending_units===null)result.coverage.pending_units=0;}
  }catch{result.pending.push('COSTS_UNAVAILABLE');result.coverage.known_units=0;result.coverage.pending_units=total??0;result.coverage.pending_variants=saved.items.length;}
  result.pending=[...new Set(result.pending)];result.state=result.pending.length?'PARTIAL':'COMPLETE';result.production_cost_cents=result.state==='COMPLETE'?result.known_production_cost_cents:null;return result;
@@ -145,5 +130,5 @@ async function sync(db,env,getSource,stamp,now){
 export async function productionCostPeriods(env,input,services={},options={}){
  if(!exact(input,['operation','month'])||!['read','sync'].includes(input.operation)||typeof input.month!=='string'||!/^\d{4}-(0[1-9]|1[0-2])$/.test(input.month)||input.month<'2000-01'||typeof options.now!=='undefined'&&typeof options.now!=='function')fail('PRODUCTION_COST_PERIODS_REQUEST_INVALID',400);
  const now=options.now||(()=>Date.now()),stamp=clock(now);if(input.month>day(stamp).slice(0,7))fail('PRODUCTION_COST_PERIODS_REQUEST_INVALID',400);const db=await setup(env);if(input.operation==='sync')await sync(db,env,services.getFinanceProductionOrders,stamp,now);
- const completed=clock(now),row=await db.prepare('SELECT * FROM production_cost_week_state WHERE id=1').first(),week=await weekly(db,row,completed),month=await monthly(env,db,input.month,completed,now),dated=Boolean(week._dated||month._dated);delete week._dated;delete month._dated;return {schema:'production_cost_periods_v1',reference_month:input.month,checked_at:completed,currency:'BRL',basis:dated?'HISTORICAL_AUDITED_COSTS_PAID_CREATE_DATE':'CURRENT_REGISTERED_COSTS_PAID_CREATE_DATE',weekly:week,monthly:month};
+ const completed=clock(now),row=await db.prepare('SELECT * FROM production_cost_week_state WHERE id=1').first();return {schema:'production_cost_periods_v1',reference_month:input.month,checked_at:completed,currency:'BRL',basis:'CURRENT_REGISTERED_COSTS_PAID_CREATE_DATE',weekly:await weekly(db,row,completed),monthly:await monthly(env,db,input.month,completed,now)};
 }
