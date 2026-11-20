@@ -2,7 +2,7 @@
   "schema": "mls_pr130_merge_candidate_v1",
   "pull_request": 130,
   "base_commit": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
-  "prepared_source_commit": "1ebb367c29d717d21ddb2d2b00b654bdc26b7213",
+  "prepared_source_commit": "a981890ffde45a3b459332a4f013a1dd6c48ebe7",
   "owner_authorization": "OWNER_REQUESTED_PR130_CI_REPAIR_MERGE_WITHOUT_SITE_PUBLICATION_2026_11_20",
   "production_approved": false,
   "live_authorization": false,
