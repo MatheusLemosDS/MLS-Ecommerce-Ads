@@ -88,6 +88,36 @@
     "comparison_checks": 24,
     "comparison_human_approval": "PENDING_NOT_AUTOMATICALLY_APPROVED"
   },
-  "remote_ci": "CONSULT_CURRENT_PR_HEAD_CHECKS",
-  "live_publication": false
+  "remote_ci": "CONSULT_CURRENT_PR_HEAD_CHECKS_NEW_COMPLETE_EXECUTION_REQUIRED_AFTER_CDP_FIX",
+  "live_publication": false,
+  "remote_ci_attempts": [
+    {
+      "run_id": 44799604585,
+      "run_number": 678,
+      "head_sha": "e4cbbd5c210255c13258046d711e01db14592d88",
+      "node_tests": 4492,
+      "node_pass": 4491,
+      "node_fail": 1,
+      "skips": 0,
+      "cancelled": 0,
+      "failure": "CDP_STALE_NODE_BEFORE_NATIVE_CLICK_IN_WEEKLY_MOBILE_MINIFIED",
+      "python": "SKIPPED_AFTER_NODE_FAILURE",
+      "preflight": "SKIPPED_AFTER_NODE_FAILURE",
+      "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/44799604585"
+    }
+  ],
+  "cdp_regression_fix": {
+    "scope": "TEST_AUTOMATION_HELPER_ONLY",
+    "deterministic_tests": 21,
+    "deterministic_pass": 21,
+    "original_weekly_browser_tests": 4,
+    "original_weekly_browser_pass": 4,
+    "original_weekly_test_unchanged": true,
+    "typed_stale_dom_errors_only": true,
+    "max_pre_press_attempts": 8,
+    "retry_after_native_press": false,
+    "visibility_stability_44px_hit_trusted_hover_checks_preserved": true,
+    "application_worker_hashes_unchanged": true,
+    "complete_remote_ci": "REQUIRED_ON_CURRENT_PR_HEAD"
+  }
 }

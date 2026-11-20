@@ -7468,7 +7468,7 @@
     "git_integration": "CHECK_PR121_CURRENT_STATE"
   },
   "pr130_ci_repair_20261120": {
-    "status": "LOCAL_VALIDATION_PASSED_REMOTE_CHECKS_REQUIRED",
+    "status": "CDP_REGRESSION_FIXED_FULL_REMOTE_CI_REQUIRED",
     "pull_request": 130,
     "verified_base_sha": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
     "received_head_sha": "49c5a9b4c04dc0dd80eb6c0076d6d5374ebee827",
@@ -7486,14 +7486,18 @@
       "new_node_tests": 48,
       "compiled_normal_and_minified": "PASS",
       "preflight": "MERGE_ONLY_LOCAL_PASS",
-      "remote_ci": "CONSULT_CURRENT_PR_HEAD_CHECKS"
+      "remote_ci": "CONSULT_CURRENT_PR_HEAD_CHECKS",
+      "cdp_unit_tests": 21,
+      "cdp_unit_pass": 21,
+      "original_weekly_browser_tests_pass": 4,
+      "remote_ci_attempt_678": "4491_OF_4492_PASS_SINGLE_STALE_CDP_FAILURE_PYTHON_PREFLIGHT_SKIPPED"
     },
     "published": false,
     "operational_acceptance": "NOT_CLAIMED",
     "remote_update": "CONSULT_PR_130_HEAD_AND_MERGE_STATE",
     "merge_gate": "FULL_CI_AND_HISTORICAL_VALIDATION_AND_NO_LIVE_PUBLICATION_PROOF",
     "blockers": [],
-    "next": "Require complete remote CI on current head, verify historical code equivalence, ready/merge without publishing; compare Live after Git actions.",
+    "next": "Require a new complete remote CI after the test-helper fix; then verify historical code, ready/merge without publishing, and compare Live.",
     "production_safety": "CURRENT_USER_DASHBOARD_SCREENSHOTS_THREE_PRODUCTION_BUILDS_DISABLED_MAIN_NO_DEPLOY_HOOKS",
     "preview_safety": "EXISTING_ISOLATED_RESOURCES_AND_PREVIEW_BASE_READ_ONLY_VERIFIED",
     "historical_validation": {
