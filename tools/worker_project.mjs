@@ -5,6 +5,8 @@ import path from 'node:path';
 export const PROJECT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 export const TARGETS = Object.freeze({
   app: Object.freeze({name: 'brazacommerce-app', main: '../../dist/app-worker.mjs', baselineHashes: [
+    // Final dependency-resumption and consent guard; exact compiled artifact, full CI and Live gates remain required.
+    '01bca972e621e43278914685a5935b754a66a6ee1339e749e5884921256ec9fc',
     // Reviewed Finance repair and published-operation parity; exact compiled bytes, CI and Live gates remain required.
     '68fff83e36f0616e30ad4be0c0e6eb27069508719b51273d01989747b8bdfc0c',
     // Source completion-clock correction and matching shared release identity; exact reviewed compiled artifact.
