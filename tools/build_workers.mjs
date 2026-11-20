@@ -3,8 +3,9 @@ import path from 'node:path';
 import {execFileSync} from 'node:child_process';
 import {PROJECT_ROOT, TARGETS, sha256, stableJson, error} from './worker_project.mjs';
 import {verifyBrowserAssets} from './browser_assets.mjs';
+import {prepareBuildPreview,verifyBuildPreviewIdentity} from './isolated_preview.mjs';
 
-export function buildWorkers(target = 'all', {root = PROJECT_ROOT, run = execFileSync} = {}) {
+export function buildWorkers(target = 'all', {root = PROJECT_ROOT, run = execFileSync, previewIdentity} = {}) {
   if (target !== 'all' && !Object.hasOwn(TARGETS, target)) throw error('WORKER_TARGET_INVALID');
   const targets = target === 'all' ? Object.keys(TARGETS) : [target];
   const execute = script => run('python3', ['-B', script], {cwd: root, stdio: ['ignore', 'pipe', 'pipe']});
@@ -24,10 +25,14 @@ export function buildWorkers(target = 'all', {root = PROJECT_ROOT, run = execFil
     manifest[name] = {worker: TARGETS[name].name, bytes: source.length, sha256: sha256(source)};
   }
   fs.writeFileSync(path.join(root, 'dist', 'build-manifest.json'), stableJson(manifest));
+  prepareBuildPreview(root,process.env,{verifiedWorker:previewIdentity,builtTargets:targets});
   return manifest;
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === path.join(PROJECT_ROOT, 'tools/build_workers.mjs')) {
-  try { console.log(stableJson(buildWorkers(process.argv[2] || 'all')).trim()); }
+  try {
+    const previewIdentity=verifyBuildPreviewIdentity(PROJECT_ROOT);
+    console.log(stableJson(buildWorkers(process.argv[2] || 'all',{previewIdentity})).trim());
+  }
   catch (failure) { console.error(failure?.code || 'WORKER_BUILD_FAILED'); if(failure?.stack) console.error(failure.stack); process.exitCode = 1; }
 }

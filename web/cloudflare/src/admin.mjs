@@ -50,6 +50,7 @@ import {BUSINESS_PENDING_INCOME_SCAN_SCHEMA,BusinessPendingIncomeScanError,readB
 import {buildBusinessFinancialCloseout} from './business-financial-closeout.mjs';
 import {BUSINESS_RECONCILIATION_SCHEMA,BusinessReconciliationError,readBusinessReconciliation,readBusinessReconciliationEvidence,readBusinessReconciliationMoney,runBusinessReconciliation} from './business-reconciliation.mjs';
 import {BUSINESS_MONTH_SCHEMA,BusinessMonthError,businessMonthClientFrame,readBusinessMonthAdsState,readBusinessMonthDisplay} from './business-month.mjs';
+import {BUSINESS_COST_HISTORY_CONTRACT,readBusinessCostHistoryReport} from './business-cost-history-report.mjs';
 import {ExpenseLedgerError,readExpenseLedger,mutateExpenseLedger} from './expense-ledger.mjs';
 import {PhysicalReturnsError} from './physical-returns.mjs';
 import {readPhysicalReturnsWorkspace,readPhysicalReturnsOriginalItemsWorkspace,mutatePhysicalReturnsWorkspace} from './physical-returns-workspace.mjs';
@@ -492,6 +493,15 @@ async function adminFetchLegacy(request,env,services={}){const url=new URL(reque
  }
  if(path==='/admin/diagnostics'){assert(request.method==='GET','METHOD_NOT_ALLOWED',405);assert(!url.search,'ADMIN_DIAGNOSTICS_REQUEST_INVALID');return panelDiagnosticsPage();}
  if(path==='/api/admin/diagnostics'){assert(request.method==='GET','METHOD_NOT_ALLOWED',405);assert(!url.search,'ADMIN_DIAGNOSTICS_REQUEST_INVALID');return json(await panelD1Probe(env));}
+ // Audited cost references are opt-in and SELECT-only, including on cold D1.
+ // Keep this before global setup: opening the report must never seed costs.
+ if(path==='/api/admin/finance/business-cost-history'){
+  assert(commercialOwnerAction(current),'FORBIDDEN',403);assert(request.method==='GET','METHOD_NOT_ALLOWED',405);
+  const entries=[...url.searchParams];assert(entries.length===1&&entries[0][0]==='month','BUSINESS_COST_HISTORY_REQUEST_INVALID');
+  assert(request.headers.get('x-braza-client-contract')===BUSINESS_COST_HISTORY_CONTRACT,'BUSINESS_COST_HISTORY_CONTRACT_UNSUPPORTED',409);
+  const response=json(await readBusinessCostHistoryReport(env,{month:entries[0][1]}));
+  response.headers.set('x-braza-client-contract',BUSINESS_COST_HISTORY_CONTRACT);response.headers.set('vary','X-Braza-Client-Contract');return response;
+ }
  if(path==='/admin'){assert(request.method==='GET','METHOD_NOT_ALLOWED',405);return dashboard(env,current);}
  // Session confirmation must remain independent of storage initialization,
  // financial collection and optional settings or assistant status reads.

@@ -1,0 +1,123 @@
+{
+  "schema": "mls_pr130_ci_repair_evidence_v1",
+  "date": "2026-11-20",
+  "pull_request": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/130",
+  "base_sha": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
+  "received_head_sha": "49c5a9b4c04dc0dd80eb6c0076d6d5374ebee827",
+  "local_full_suite_commit": "4532420c8bb090a0396763b3d742ae1c5797190b",
+  "previous_ci": {
+    "run_id": 44630749187,
+    "node_tests": 4444,
+    "pass": 4249,
+    "fail": 195
+  },
+  "local_node": {
+    "tests": 4492,
+    "pass": 4492,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0
+  },
+  "python": {
+    "tests": 67,
+    "pass": 67
+  },
+  "preservation": {
+    "existing_node_test_files": 467,
+    "removed_tests": 0,
+    "changed_existing_assertions": 0,
+    "added_node_tests": 48,
+    "protected_financial_source_and_workflow_exact": true,
+    "frozen_release_manifest_unchanged": true
+  },
+  "workers": {
+    "app": {
+      "worker": "brazacommerce-app",
+      "bytes": 3757494,
+      "sha256": "ed24e42b04378086f66e61a85415fbaea8e793d0dd329fdfa39ab28abd0a678c"
+    },
+    "auth": {
+      "worker": "brazacommerce-auth",
+      "bytes": 576198,
+      "sha256": "20a301c45ddb6097a3b458ec6ef7d39686286cc43601f6211d3b865b250ea125"
+    },
+    "finance": {
+      "worker": "brazacommerce-finance",
+      "bytes": 892237,
+      "sha256": "ccce234f36f0a763942bf30e274360b9d1223b3594b6600adf3352fafd92efb4"
+    }
+  },
+  "historical": {
+    "environment": "EXISTING_PRODUCTION_ADMIN_D1_READ_ONLY_SNAPSHOT",
+    "period": "2026-11-13/2026-11-17",
+    "audited_revisions": {
+      "costs": 6,
+      "rules": 10,
+      "bindings": 14
+    },
+    "actual_edit_day_brasilia": "2026-11-17",
+    "all_five_day_arithmetic_matches": true,
+    "module_bytes_match_validated_source": true,
+    "snapshot_sha256": "5e074117f0bc10312d8aebfe5a72e76c43e5378baed40de667ce1d1680c18df8",
+    "scope": "KNOWN_REGISTERED_COST_REFERENCES_WITH_UNKNOWN_PRESERVED",
+    "coverage": "PARTIAL",
+    "total_units": 186,
+    "known_units": 3,
+    "pending_units": 183,
+    "operational_financial_acceptance": false,
+    "remote_rows_written": 0
+  },
+  "publication_safety": {
+    "source": "CURRENT_USER_DASHBOARD_SCREENSHOTS_REVIEWED_BY_TWO_AGENTS",
+    "production_branch": "main",
+    "production_builds_disabled": {
+      "app": true,
+      "auth": true,
+      "finance": true
+    },
+    "deployment_hooks": 0,
+    "native_builds_api_read": "SIX_HTTP_403_CODE_10000_RETAINED_AS_LIMITATION",
+    "preview_resources_and_base_read_only_checks": 9,
+    "preview_resources_and_base_checks_pass": true,
+    "workflow_changed": false,
+    "permission_or_remote_configuration_changes": false,
+    "production_deploy_authorized": false
+  },
+  "visual": {
+    "authenticated_synthetic_browser_tests": "PASS_IN_FULL_SUITE",
+    "comparison_checks": 24,
+    "comparison_human_approval": "PENDING_NOT_AUTOMATICALLY_APPROVED"
+  },
+  "remote_ci": "CONSULT_CURRENT_PR_HEAD_CHECKS_NEW_COMPLETE_EXECUTION_REQUIRED_AFTER_CDP_FIX",
+  "live_publication": false,
+  "remote_ci_attempts": [
+    {
+      "run_id": 44799604585,
+      "run_number": 678,
+      "head_sha": "e4cbbd5c210255c13258046d711e01db14592d88",
+      "node_tests": 4492,
+      "node_pass": 4491,
+      "node_fail": 1,
+      "skips": 0,
+      "cancelled": 0,
+      "failure": "CDP_STALE_NODE_BEFORE_NATIVE_CLICK_IN_WEEKLY_MOBILE_MINIFIED",
+      "python": "SKIPPED_AFTER_NODE_FAILURE",
+      "preflight": "SKIPPED_AFTER_NODE_FAILURE",
+      "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/44799604585"
+    }
+  ],
+  "cdp_regression_fix": {
+    "scope": "TEST_AUTOMATION_HELPER_ONLY",
+    "deterministic_tests": 21,
+    "deterministic_pass": 21,
+    "original_weekly_browser_tests": 4,
+    "original_weekly_browser_pass": 4,
+    "original_weekly_test_unchanged": true,
+    "typed_stale_dom_errors_only": true,
+    "max_pre_press_attempts": 8,
+    "retry_after_native_press": false,
+    "visibility_stability_44px_hit_trusted_hover_checks_preserved": true,
+    "application_worker_hashes_unchanged": true,
+    "complete_remote_ci": "REQUIRED_ON_CURRENT_PR_HEAD"
+  }
+}

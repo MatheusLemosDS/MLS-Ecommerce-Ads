@@ -2,7 +2,7 @@
   "schema": "mls_commerce_os_checkpoint_v1",
   "canonical_roadmap": "docs/ROADMAP_MLS_COMMERCE_OS.md",
   "legacy_roadmap": "docs/ROADMAP_BRAZACOMMERCE.md",
-  "updated_at": "2026-11-14",
+  "updated_at": "2026-11-20",
   "product": {
     "name": "MLS Commerce OS",
     "supervisor": "MLS Hermes",
@@ -7466,5 +7466,56 @@
     "m2_closed": false,
     "m22_closed": false,
     "git_integration": "CHECK_PR121_CURRENT_STATE"
+  },
+  "pr130_ci_repair_20261120": {
+    "status": "CDP_REGRESSION_FIXED_FULL_REMOTE_CI_REQUIRED",
+    "pull_request": 130,
+    "verified_base_sha": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
+    "received_head_sha": "49c5a9b4c04dc0dd80eb6c0076d6d5374ebee827",
+    "working_branch": "fix/pr130-ci-contracts-20261120",
+    "record": "docs/MLS_PR130_CI_REPAIR_2026_11_20.md",
+    "legacy_cost_contract": "CURRENT_REGISTERED_COSTS_PRESERVED_EXACT_SOURCE",
+    "historical_contract": "EXPLICIT_READ_ONLY_AUDITED_REFERENCE",
+    "implemented": "LOCAL_IMPLEMENTATION_COMPLETE",
+    "tested": {
+      "node": 4492,
+      "node_failures": 0,
+      "node_skips": 0,
+      "python": 67,
+      "existing_test_files_preserved": 467,
+      "new_node_tests": 48,
+      "compiled_normal_and_minified": "PASS",
+      "preflight": "MERGE_ONLY_LOCAL_PASS",
+      "remote_ci": "CONSULT_CURRENT_PR_HEAD_CHECKS",
+      "cdp_unit_tests": 21,
+      "cdp_unit_pass": 21,
+      "original_weekly_browser_tests_pass": 4,
+      "remote_ci_attempt_678": "4491_OF_4492_PASS_SINGLE_STALE_CDP_FAILURE_PYTHON_PREFLIGHT_SKIPPED"
+    },
+    "published": false,
+    "operational_acceptance": "NOT_CLAIMED",
+    "remote_update": "CONSULT_PR_130_HEAD_AND_MERGE_STATE",
+    "merge_gate": "FULL_CI_AND_HISTORICAL_VALIDATION_AND_NO_LIVE_PUBLICATION_PROOF",
+    "blockers": [],
+    "next": "Require a new complete remote CI after the test-helper fix; then verify historical code, ready/merge without publishing, and compare Live.",
+    "production_safety": "CURRENT_USER_DASHBOARD_SCREENSHOTS_THREE_PRODUCTION_BUILDS_DISABLED_MAIN_NO_DEPLOY_HOOKS",
+    "preview_safety": "EXISTING_ISOLATED_RESOURCES_AND_PREVIEW_BASE_READ_ONLY_VERIFIED",
+    "historical_validation": {
+      "scope": "REAL_D1_SNAPSHOT_2026_11_13_TO_17_KNOWN_COSTS_AND_UNKNOWNS",
+      "days_checked": 5,
+      "arithmetic": "PASS",
+      "coverage": "PARTIAL",
+      "known_units": 3,
+      "pending_units": 183,
+      "operational_acceptance": false
+    },
+    "evidence": "docs/evidence/pr130-ci-repair-20261120.json",
+    "last_verified_live": {
+      "version": "2026-11-17.3",
+      "app": "b09080a7",
+      "auth": "fb3925e2",
+      "finance": "d41571a9",
+      "source_distinct_from_pr_base": true
+    }
   }
 }

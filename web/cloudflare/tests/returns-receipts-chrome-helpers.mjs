@@ -73,16 +73,33 @@ export async function receiptWait(cdp,expression,label,diagnostic=()=>null){for(
 // No DOM .click(), form submission bypass, or synthetic activation is used.
 export async function receiptClick(cdp,selector){
  await cdp.send('Input.dispatchKeyEvent',{type:'keyDown',key:'Escape',code:'Escape',windowsVirtualKeyCode:27,modifiers:0});await cdp.send('Input.dispatchKeyEvent',{type:'keyUp',key:'Escape',code:'Escape',windowsVirtualKeyCode:27,modifiers:0});
- const doc=await cdp.send('DOM.getDocument'),target=await cdp.send('DOM.querySelector',{nodeId:doc.root.nodeId,selector});assert.ok(target.nodeId,'native action target exists: '+selector);
+ const acquire=async root=>{if(root===undefined)root=(await cdp.send('DOM.getDocument')).root.nodeId;const target=await cdp.send('DOM.querySelector',{nodeId:root,selector});assert.ok(target.nodeId,'native action target exists: '+selector);return {...target,root};};
+ const staleNode=error=>['DOM.querySelector','DOM.scrollIntoViewIfNeeded','DOM.getContentQuads'].includes(error?.cdpMethod)&&[-32000,-32001].includes(error.cdpProtocolCode)&&['Could not find node with given id','No node with given id found'].includes(error.cdpProtocolMessage);
  await cdp.evaluate(`(()=>{globalThis.__receiptHover=null;globalThis.__receiptTarget=${JSON.stringify(selector)};if(!globalThis.__receiptHoverListener){globalThis.__receiptActivations=[];globalThis.__receiptHoverListener=true;addEventListener('pointermove',event=>{const target=document.querySelector(__receiptTarget);__receiptHover={trusted:event.isTrusted,matches:!!target&&(target===event.target||target.contains(event.target))};},true);for(const type of ['mousedown','click'])addEventListener(type,event=>{const target=document.querySelector(__receiptTarget);__receiptActivations.push({selector:__receiptTarget,type,trusted:event.isTrusted,matches:!!target&&(target===event.target||target.contains(event.target)),target:event.target.id||event.target.className});if(__receiptActivations.length>30)__receiptActivations.shift();},true);}})()`);
  let point;
  for(let attempt=0;attempt<8;attempt++){
+  try{
+  let target=await acquire();
   await cdp.evaluate(`document.querySelector(${JSON.stringify(selector)}).scrollIntoView({block:'center',behavior:'instant'})`);
   await cdp.send('DOM.scrollIntoViewIfNeeded',{nodeId:target.nodeId});
   const rect=await cdp.evaluate(`(async()=>{await document.fonts.ready;let prior=null,stable=0,last;for(let i=0;i<120;i++){await new Promise(requestAnimationFrame);const node=document.querySelector(${JSON.stringify(selector)}),r=node.getBoundingClientRect(),hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);last={x:r.x,y:r.y,width:r.width,height:r.height,visible:node.checkVisibility({checkVisibilityCSS:true}),unobscured:hit===node||node.contains(hit)};stable=last.visible&&last.unobscured&&prior&&['x','y','width','height'].every(key=>Math.abs(last[key]-prior[key])<.25)?stable+1:0;if(stable>=5)return {...last,stable};prior=last;}return {...last,stable};})()`);assert.equal(rect.visible,true,selector);assert.equal(rect.unobscured,true,'action is clear of sticky navigation');assert.ok(rect.height>=44,'actions retain44px targets');assert.ok(rect.stable>=5,'action settles before native activation');
-  await cdp.send('Page.captureScreenshot',{format:'png',fromSurface:true,captureBeyondViewport:false});const quads=await cdp.send('DOM.getContentQuads',{nodeId:target.nodeId}),q=quads.quads?.[0];assert.equal(q?.length,8);point={x:(q[0]+q[2]+q[4]+q[6])/4,y:(q[1]+q[3]+q[5]+q[7])/4};const metrics=await cdp.send('Page.getLayoutMetrics'),visual=metrics.cssVisualViewport;
+  await cdp.send('Page.captureScreenshot',{format:'png',fromSurface:true,captureBeyondViewport:false});
+  // Settling/screenshot may replace the panel's nodes. Resolve the current
+  // selector again instead of reusing a CDP id from before those awaits.
+  const measured=await acquire(target.root);
+  if(measured.nodeId!==target.nodeId){if(attempt===7)assert.fail('native action target kept changing: '+selector);continue;}
+  target=measured;const quads=await cdp.send('DOM.getContentQuads',{nodeId:target.nodeId}),q=quads.quads?.[0];assert.equal(q?.length,8);point={x:(q[0]+q[2]+q[4]+q[6])/4,y:(q[1]+q[3]+q[5]+q[7])/4};const metrics=await cdp.send('Page.getLayoutMetrics'),visual=metrics.cssVisualViewport;
   assert.equal(await cdp.evaluate(`(()=>{const node=document.querySelector(${JSON.stringify(selector)}),hit=document.elementFromPoint(${point.x+visual.offsetX},${point.y+visual.offsetY});return hit===node||node.contains(hit);})()`),true,'measured native point belongs to action');
-  await cdp.send('Input.dispatchMouseEvent',{type:'mouseMoved',x:1,y:1,modifiers:0});await cdp.send('Input.dispatchMouseEvent',{type:'mouseMoved',...point,modifiers:0});await receiptPause(30);const hover=await cdp.evaluate('globalThis.__receiptHover');if(hover?.trusted&&hover.matches)break;if(attempt===7)assert.fail('trusted native hover did not reach '+selector);
+  await cdp.send('Input.dispatchMouseEvent',{type:'mouseMoved',x:1,y:1,modifiers:0});await cdp.send('Input.dispatchMouseEvent',{type:'mouseMoved',...point,modifiers:0});await receiptPause(30);const hover=await cdp.evaluate('globalThis.__receiptHover');if(hover?.trusted&&hover.matches){
+   const hovered=await acquire(target.root);if(hovered.nodeId!==target.nodeId){if(attempt===7)assert.fail('native action target kept changing: '+selector);continue;}
+   const current=await cdp.evaluate(`(()=>{const node=document.querySelector(${JSON.stringify(selector)});if(!node)return null;const r=node.getBoundingClientRect(),hit=document.elementFromPoint(${point.x+visual.offsetX},${point.y+visual.offsetY});return {visible:node.checkVisibility({checkVisibilityCSS:true}),height:r.height,unobscured:hit===node||node.contains(hit)};})()`);
+   assert.ok(current,'native action target exists: '+selector);assert.equal(current.visible,true,selector);assert.equal(current.unobscured,true,'action is clear of sticky navigation');assert.ok(current.height>=44,'actions retain44px targets');break;
+  }if(attempt===7)assert.fail('trusted native hover did not reach '+selector);
+  }catch(error){
+   // Only a typed stale DOM reference is retryable, and only before press.
+   // Assertion, visibility, transport and Runtime errors remain failures.
+   if(!staleNode(error)||attempt===7)throw error;
+  }
  }
  await cdp.send('Input.dispatchMouseEvent',{type:'mousePressed',button:'left',buttons:1,clickCount:1,...point,modifiers:0});await cdp.send('Input.dispatchMouseEvent',{type:'mouseReleased',button:'left',buttons:0,clickCount:1,...point,modifiers:0});return point;
 }

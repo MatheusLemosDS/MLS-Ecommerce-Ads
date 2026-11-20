@@ -246,6 +246,8 @@ export const TARGETS = Object.freeze({
     '477e7054779cefd866a14d84401510089e1c1d4fdcc8dae5ccdd2193ef112751',
     // Owner-confirmed manufacturing coverage: exact reviewed App candidate.
     '26612b7ea0edbea55e06f5fc817a18defd6b4fe65381e6d564b7d360b7b80278',
+    // PR130: exact compiled read-only history report; merge review only, no Live authorization.
+    'ed24e42b04378086f66e61a85415fbaea8e793d0dd329fdfa39ab28abd0a678c',
   ]}),
   auth: Object.freeze({name: 'brazacommerce-auth', main: '../../dist/auth-worker.mjs', baselineHashes: [
     // Source completion-clock correction and matching shared release identity; exact reviewed compiled artifact.

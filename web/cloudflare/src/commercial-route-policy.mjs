@@ -40,6 +40,7 @@ const entries=[
  ['jobs','GET','finance.read'],['jobs','POST','finance.write'],['jobs/cost','POST','finance.write'],['audit','GET','audit.read','finance.read'],
  ['finance/expense-ledger','GET','finance.read'],['finance/expense-ledger','POST','finance.write'],
  ['finance/business-month-ads-state','GET','finance.read'],['finance/cost-diagnostics','GET','finance.read','costs.read'],['finance/cost-recovery','POST','costs.write','finance.read'],
+ ['finance/business-cost-history','GET','finance.read','costs.read'],
  ['finance/escrow-release-coverage','GET','finance.read'],['finance/escrow-releases','GET','finance.read'],['finance/income-overview','GET','finance.read'],['finance/income-detail','GET','finance.read'],
  ['finance/closeout','GET','finance.read'],['finance/reconciliation','GET','finance.read'],
  ['finance/business-month-view','GET','finance.read'],['finance/business-month','GET','finance.read'],['finance/business-month-request','POST','finance.write'],

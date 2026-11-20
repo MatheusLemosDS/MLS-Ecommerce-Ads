@@ -1,3 +1,7 @@
+<!-- PR130_CI_REPAIR_CURRENT -->
+**Retomada da PR #130 — 20/11/2026:** corrigir as 195 falhas preservando testes, contratos financeiros e segurança; base main `346f30f`, head recebido `49c5a9b`. Cálculo histórico em contrato explícito, separado das referências legadas de custos atuais. Sem publicação nesta entrega. Local: 4.492 Node/67 Python aprovados, histórico real conferido com cobertura parcial preservada. Produção automática desativada nos três Workers conforme capturas atuais; a limitação API 403 permanece registrada. CI remota 678 teve uma falha CDP; helper corrigido com 21 testes determinísticos e quatro cenários semanais aprovados. Exigir nova CI completa antes de ready/merge; manter Live sem publicação. [Estado, evidências e próximo passo](MLS_PR130_CI_REPAIR_2026_11_20.md). Os registros anteriores permanecem históricos.
+<!-- END_PR130_CI_REPAIR_CURRENT -->
+
 FINANCIAL_AUTOMATION_20261113 — PUBLISHED_VERIFIED_TECHNICAL_PUBLIC_ONLY — release 2026-11-13.3
 Fonte f68525ea1d136350ece9942433352accdf97d992; preparado 3cf489e33071b32bc73e2efaf2aecfc62618d46a; CI 43531882471 success (4432 Node/67 Python), publicação conferida em 2026-11-14T00:22:15.598Z. URL https://app.brazacommerce.com.br/admin?tab=agent-finance#financialAutomation. App 9bfc21d6-dec9-4fa6-89d8-7ea1dec50993, Auth dfd2fc99-728f-4f29-96ee-a4b256c5640a, Finance 50b31451-c6cf-4456-bd09-be5d1956e0da retido. Recibos em docs/financial-automation/publication-live-20261113.json; consultar PR #121 para integração Git.
 
