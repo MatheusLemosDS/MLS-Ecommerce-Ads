@@ -2,7 +2,7 @@
   "schema": "mls_pr130_merge_candidate_v1",
   "pull_request": 130,
   "base_commit": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
-  "prepared_source_commit": "a981890ffde45a3b459332a4f013a1dd6c48ebe7",
+  "prepared_source_commit": "6eaead047a0960f96020633e1baddfc3ba30bc6d",
   "owner_authorization": "OWNER_REQUESTED_PR130_CI_REPAIR_MERGE_WITHOUT_SITE_PUBLICATION_2026_11_20",
   "production_approved": false,
   "live_authorization": false,
@@ -15,27 +15,27 @@
   "files": [
     {
       "path": "NEXT_CHAT_HANDOFF.txt",
-      "sha256": "76c21ca54b4d51407b88b9b0328463a2578fe65bd5c602edf4c8eaa996b71a75"
+      "sha256": "da2590d15793a43a62f3f393cf0e3b85715928effedd6cf9b0ebcd449c379b29"
     },
     {
       "path": "docs/MLS_CODEX_HANDOFF_2026_10_28.md",
-      "sha256": "dc11dc16af0b302798501f0331d7aa1a52adde53dcd9880e5a730a9feb54bf47"
+      "sha256": "00d5d1b4c8949aed50de0600acf04146844f3cfb2686ab3c759e10c5a3fc62c5"
     },
     {
       "path": "docs/MLS_COMMERCE_OS_CHECKPOINT.json",
-      "sha256": "8d97ff016354ba47125ceb789f94448ab15850d2232440247e612cb21535f7f3"
+      "sha256": "60f5f7ab64954a8aad53a6ab95e9695458107f529d606988109eda98374e20c1"
     },
     {
       "path": "docs/MLS_PR130_CI_REPAIR_2026_11_20.md",
-      "sha256": "a272b5f42f045e0e03c0a6ee7086f508365f829fec653f67b45740c99b572507"
+      "sha256": "159d59bdded06501dcead6cc4fca4364924778a722731d508c1b76f99a34192a"
     },
     {
       "path": "docs/ROADMAP_MLS_COMMERCE_OS.md",
-      "sha256": "fb303ac7b9ecbeb7ac569d8194aca8b3f70c208445fcb8b065e20a08945ae90d"
+      "sha256": "8f83e745f14f5e8c366f026616774e12873c77edb388dc6645eb18709a9fb97b"
     },
     {
       "path": "docs/evidence/pr130-ci-repair-20261120.json",
-      "sha256": "85ad6e6037f1bf5adb695bce29ba90be3177a8c7f9f7a80141a1656f419debdf"
+      "sha256": "4c69588bee6a342fb1adb8d74bc9228a0ea5dcd613ccc0d9033c8fb2f36b5534"
     },
     {
       "path": "previews/isolated-builds.json",
@@ -108,6 +108,14 @@
     {
       "path": "web/cloudflare/tests/historical-cost-timeline.test.mjs",
       "sha256": "c698cb53ece2554d294c5a4ccd5475a18d4a6ffe9269a3ec79fc11e52aeb5e16"
+    },
+    {
+      "path": "web/cloudflare/tests/receipt-click-stale-node.test.mjs",
+      "sha256": "c91d019a62e243583c70a19d5432df62353203b9b4d003aa897fb1d20228e7d7"
+    },
+    {
+      "path": "web/cloudflare/tests/returns-receipts-chrome-helpers.mjs",
+      "sha256": "d1ba7be6126ceb61446bb209cf9a6e0cd211dc069fb0ed242a858e970f60890a"
     }
   ]
 }
