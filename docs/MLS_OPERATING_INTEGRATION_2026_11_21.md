@@ -19,3 +19,5 @@ A Live17.3 permaneceu com os três Workers, vetores, rotas e configurações id�
 ## Próxima ação executável
 
 Após o verde no SHA exato e a integração validada da132, ligar pedidos salvos, composições físicas aprovadas, estoque e recebimentos a necessidades por tamanho/cor, reservas atômicas, lista de faltas/compras e disponibilidade DTF. Compartilhar as mesmas fontes com Hermes, Finance, Products e Production; não presumir quantidade, prazo, custo, fornecedor ou estoque ausente.
+
+A primeira CI combinada,44895273590, executou5.061 testes Node:5.053 passaram e8 perfis do teste de descoberta das notas falharam por esperar a ordem anterior dos links. A lista explícita foi reconciliada com o link da Visão geral e ganhou verificação adicional de que Finance continua acessível. Nenhuma verificação foi removida, e nenhum runtime financeiro mudou. A integração continua condicionada à nova CI completa aprovada.

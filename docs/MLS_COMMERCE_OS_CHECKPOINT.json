@@ -2,7 +2,7 @@
   "schema": "mls_commerce_os_checkpoint_v1",
   "canonical_roadmap": "docs/ROADMAP_MLS_COMMERCE_OS.md",
   "legacy_roadmap": "docs/ROADMAP_BRAZACOMMERCE.md",
-  "updated_at": "2026-11-21T11:16:15.465879+00:00",
+  "updated_at": "2026-11-21T11:18:58.010070+00:00",
   "product": {
     "name": "MLS Commerce OS",
     "supervisor": "MLS Hermes",
@@ -31,7 +31,7 @@
   },
   "current_phase": "M2_FINANCE_RETURNS_RECONCILIATION",
   "working_branch": "feature/order-materials-dtf-chain-20261121",
-  "current_status": "PR133_PR132_MERGED_MATERIAL_IMPLEMENTED_FOCUSED_PASS_FINAL_CI_PENDING",
+  "current_status": "PR133_PR132_INTEGRATED_MATERIAL_FUNCTIONS_IMPLEMENTED_FINAL_VALIDATION_PENDING",
   "completed_this_phase": [
     "Conciliação de liberações por pedido com estados VERIFIED, LOCATED_UNVERIFIED, AMBIGUOUS e NOT_LOCATED",
     "Repasse-base, ajuste, repasse após ajuste e liberação exibidos sem dupla dedução",
@@ -193,9 +193,11 @@
         "run": 44896599372,
         "node_pass": 5061,
         "python_pass": 67,
-        "required_checks_pass": 4
+        "required_checks_pass": 4,
+        "all_four_checks_success": true
       }
-    }
+    },
+    "base_main": "de0bb72e583a84d86b20952e55b352722996cbed"
   },
   "incident": {
     "id": "INCIDENT_2026_10_27_PANEL_AGENT_REGRESSION",
@@ -3558,9 +3560,9 @@
   "last_verified_live_release": {
     "release_id": "2026-11-17.3",
     "status": "UNCHANGED_TECHNICAL_READ_ONLY_VERIFIED",
-    "verified_at": "2026-11-21T10:26:28.770389+00:00",
+    "verified_at": "2026-11-21T11:14:21.633882+00:00",
     "verification_scope": "TECHNICAL_GET_ONLY",
-    "proof_workspace_path": "/workspace/work/pr130-ci-evidence/live-readonly-before-pr133-integration-20261121-20261120.json",
+    "proof_workspace_path": "/workspace/work/pr130-ci-evidence/live-readonly-after-pr132-integration-20261121-20261120.json",
     "new_publication": false,
     "account_financial_acceptance": false,
     "owner_live_authenticated_qa": "NOT_PERFORMED"
@@ -8198,7 +8200,7 @@
     ],
     "implementation": "IMPLEMENTED",
     "validation": {
-      "state": "RECONCILED_FOCUSED_AND_BROWSER_PASS_FULL_REMOTE_CI_PENDING",
+      "state": "FULL_REMOTE_EXACT_HEAD_PASS",
       "prior_pr_head": "01ba4e3dfd92dc11c90386cbee7d2fce82d6db41",
       "prior_node_pass": 5003,
       "prior_python_pass": 67,
@@ -8221,9 +8223,42 @@
         "app": "b40e717dbe762330e1c3e5feaf6480a77c3e7185c4be35dc4c77062eab032409",
         "auth": "d582efcf139bac5327f8a745ec7a5ea2e1f77757d51c11a6d16b200bc93b9466",
         "finance": "012c0eaced495c53b3b143a6298ec8c7221a0a5198c67455eb538e16508c86a4"
-      }
+      },
+      "combined_first_remote_attempt": {
+        "head": "1e857ea76b5d5c650ca897b7c5ce7cb29788377e",
+        "run": 44895273590,
+        "job": 136819466142,
+        "node_tests": 5061,
+        "node_pass": 5053,
+        "node_fail": 8,
+        "node_skipped": 0,
+        "node_cancelled": 0,
+        "cause": "Eight browser profiles retained the earlier current-release link order; the combined current notes introduce Overview while retaining the Finance destination in the historical section",
+        "file": "web/cloudflare/tests/app-release-discovery-chrome.test.mjs",
+        "fix": "Explicit current href order reconciled and Finance destination assertion added; no assertion removed, runtime or financial module changed",
+        "python": "NOT_RUN_AFTER_NODE_FAILURE",
+        "isolated_builds_pass": 3
+      },
+      "release_discovery_corrected_profiles": {
+        "tests": 8,
+        "pass": 8,
+        "fail": 0,
+        "skipped": 0,
+        "runtime_changed": false,
+        "original_finance_destination_preserved": true
+      },
+      "head": "99f8d9ae9f13424cdfd127539b13063ebeff4bdb",
+      "node_tests": 5061,
+      "node_pass": 5061,
+      "node_fail": 0,
+      "node_skipped": 0,
+      "node_cancelled": 0,
+      "python_pass": 67,
+      "required_checks_pass": 4,
+      "ci_run": 44896599372,
+      "ci_url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/44896599372"
     },
-    "git_integration": "NOT_INTEGRATED",
+    "git_integration": "INTEGRATED_IN_MAIN",
     "publication": "NOT_PUBLISHED",
     "real_data_validation": "NOT_PERFORMED",
     "live_baseline": "2026-11-17.3",
@@ -8234,10 +8269,8 @@
       "Physical shirts by size/color with explicit initial count, receipts and protected reservations"
     ],
     "next_actions": [
-      "Complete conflict resolutions preserving both runtime implementations and exact security guards",
-      "Run focused and full Node/Python/generated Worker desktop/mobile QA against reconciled tree",
-      "Push PR132 update, require all exact-head checks, then merge without Live publication",
-      "Implement shared physical needs/reservations/purchase planning and DTF readiness using approved sources"
+      "Continue the independent material-chain increment; do not repeat this integration",
+      "Keep Live and real financial actions separate from Git integration"
     ],
     "subsequent_items": [
       "Purchase needs from confirmed physical demand and firm receipts",
@@ -8246,7 +8279,7 @@
     ],
     "evidence": "docs/MLS_OPERATING_INCREMENT_2026_11_20.md",
     "git_delivery": {
-      "state": "PREPARED_FOR_REQUIRED_EXACT_HEAD_CI",
+      "state": "MERGED",
       "branch": "feature/weekly-payments-physical-shirts-20261120",
       "candidate_manifest": "tools/release-operating-increment-candidate.json",
       "source_commit_field": "prepared_source_commit",
@@ -8254,9 +8287,12 @@
       "github_ci": "CONSULT_REQUIRED_CHECKS_AT_CURRENT_PR_HEAD",
       "pull_request_lookup": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pulls?q=is%3Apr+head%3Afeature%2Fweekly-payments-physical-shirts-20261120",
       "pull_request": 132,
-      "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/132"
+      "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/132",
+      "head": "99f8d9ae9f13424cdfd127539b13063ebeff4bdb",
+      "merge_commit": "de0bb72e583a84d86b20952e55b352722996cbed",
+      "merged": true
     },
-    "next_command": "git -C /workspace/work/mls-operating-integration-20261121 status --short",
+    "next_command": "git -C /workspace/work/mls-order-materials-dtf-20261121 status --short",
     "pending_real_inputs": [
       "Provider contracts, actual weekly obligations and receipts of already-made payments",
       "Actual initial counts and received shirts by physical size/color/fit/material",
@@ -8311,7 +8347,8 @@
     },
     "reconciled_main": "426b1de037b075afa066ace4742e3cf398294bbf",
     "integration_report": "docs/MLS_OPERATING_INTEGRATION_2026_11_21.md",
-    "integration_evidence": "docs/financial-automation/validation/operating-integration-20261121.json"
+    "integration_evidence": "docs/financial-automation/validation/operating-integration-20261121.json",
+    "merge_commit": "de0bb72e583a84d86b20952e55b352722996cbed"
   },
   "previous_last_verified_live_release_before_operating_increment": {
     "status": "PUBLISHED_VERIFIED",
@@ -8522,8 +8559,10 @@
         "run": 44896599372,
         "node_pass": 5061,
         "python_pass": 67,
-        "required_checks_pass": 4
+        "required_checks_pass": 4,
+        "all_four_checks_success": true
       }
-    }
+    },
+    "base_main": "de0bb72e583a84d86b20952e55b352722996cbed"
   }
 }
