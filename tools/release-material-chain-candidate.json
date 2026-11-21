@@ -2,36 +2,36 @@
   "schema": "mls_material_chain_merge_candidate_v1",
   "scope": "MERGE_ONLY",
   "base_commit": "de0bb72e583a84d86b20952e55b352722996cbed",
-  "prepared_source_commit": "e7bd1ef9094ecaa6889522c4d24ed4b30831932e",
+  "prepared_source_commit": "05f42eff189d2754fec32c12c15157cfd8453bc3",
   "owner_authorization": "OWNER_REQUESTED_ORDER_MATERIALS_DTF_WITHOUT_EXTERNAL_PUBLICATION_2026_11_21",
   "production_approved": false,
   "live_authorization": false,
   "commercial_writes_allowed": false,
   "expected_hashes": {
-    "app": "6404abe0282c03dcffb376f43bde7f69f0f67d4193076f3298a46fff40eea966",
+    "app": "8fa250fef04e577d116c9e46b700836a50a066b3450a11c42c330786a3c0be8b",
     "auth": "be46381be7e8c100973a948fa7dceb31266a1455282d73fb7b99a0c2d860e8d4",
     "finance": "012c0eaced495c53b3b143a6298ec8c7221a0a5198c67455eb538e16508c86a4"
   },
   "files": [
     {
       "path": "AGENTS.md",
-      "sha256": "30159fbcf34185098b07cb7408fc93495504e53ab904eaab54386278bec5a4b9"
+      "sha256": "49a1ea291a91339cb20ceee9cc9f40d7415a46b772fb90b61216094a6a2ea682"
     },
     {
       "path": "NEXT_CHAT_HANDOFF.txt",
-      "sha256": "80a7d1a844cbff139ff67ad654e86d976f84c26a0bf0e9b27521fc212529d9c7"
+      "sha256": "45f7119436e0b606933ef64d4e2e8611c5af41a830279bbe93e667f8021a2692"
     },
     {
       "path": "docs/MLS_CODEX_HANDOFF_2026_10_28.md",
-      "sha256": "f5ef4c539e99e4c89ed5dfb2434d20706e9976515d24c48f41b3a58b9f3a3775"
+      "sha256": "1bb5f9168e8fec3101d1e86f1420e9288a84e5075407ab23b3b6b52131b910bb"
     },
     {
       "path": "docs/MLS_COMMERCE_OS_CHECKPOINT.json",
-      "sha256": "e6249b1dc37c7ecbfa9b3e0e3f3fb8aefd6946e277a69d5b0a19ac6d899287ae"
+      "sha256": "39d33a838e1d7903432fac73a30004d91a5be9e47ae501dad777d0f8a663a1b2"
     },
     {
       "path": "docs/MLS_ORDER_MATERIALS_DTF_2026_11_21.md",
-      "sha256": "a8e0209e810f64014dab4f320467c34fbb4f08c80649d4af29436d34a4b0a68a"
+      "sha256": "1b80a000aa688051ac5280efe5f2f583de0014e0b55d2ec73f2b0de96c86e752"
     },
     {
       "path": "docs/ROADMAP_MLS_COMMERCE_OS.md",
@@ -39,7 +39,7 @@
     },
     {
       "path": "docs/financial-automation/validation/order-materials-dtf-20261121.json",
-      "sha256": "e544d12289f8e029371915a47a8014c3afed6be1bfd147d1dca554df5e2218b3"
+      "sha256": "e87850ba3974657f5f9c75095bd50c539125410f6df9418abdad3bb37bdcd879"
     },
     {
       "path": "previews/isolated-builds.json",
@@ -47,7 +47,7 @@
     },
     {
       "path": "tools/release_preflight.mjs",
-      "sha256": "37b351f64dfdb430f87ec62465515478eb35b0db114704e87944a12b79cfe7a4"
+      "sha256": "cbddb55eb16f024f8aecfa893bc605b6732f34df8c205c3287720d02d3634873"
     },
     {
       "path": "tools/tests/operating-integration-gates.test.mjs",
@@ -71,11 +71,11 @@
     },
     {
       "path": "tools/tests/release-material-chain-review-fixture.mjs",
-      "sha256": "452dac2cc16b95633a8dc32355cd0028cbaa06a86d2200a315bfb9c529355093"
+      "sha256": "8e4c095e9ff56a23b832cd11235701bf6d989c4c01218bf921891e220456433f"
     },
     {
       "path": "tools/tests/release-material-chain-reviewed-source.test.mjs",
-      "sha256": "3a7bdbe76f2ae6b113b9bebd44582d340f99012126dceb31cb5059e63818fb1b"
+      "sha256": "f37770fdb30f3737da598ddb3167678041abaa1c6e31669e0fecb39d776a612e"
     },
     {
       "path": "tools/tests/release-operating-increment-preflight.test.mjs",
@@ -83,7 +83,7 @@
     },
     {
       "path": "tools/worker_project.mjs",
-      "sha256": "c2f8ef8735662669c49fb72958986d2658bbd81ed229eee8976b0a5e0668cc3d"
+      "sha256": "18d8e9dce3ffff05ff3b1981f91c10b028421c0722929eefed7128b338e1da38"
     },
     {
       "path": "web/cloudflare/build.py",
@@ -116,6 +116,10 @@
     {
       "path": "web/cloudflare/src/browser-assets-manifest.mjs",
       "sha256": "d778927e7c0106521e8550aee629e6e05f419827bc783a0eacc4728748bf6473"
+    },
+    {
+      "path": "web/cloudflare/src/commercial-route-policy.mjs",
+      "sha256": "4a42ee7ae2ab8dafd31d6504f14dcaf4eb4903199add4960bb99506963b02a13"
     },
     {
       "path": "web/cloudflare/src/dtf-view.mjs",
@@ -168,6 +172,10 @@
     {
       "path": "web/cloudflare/tests/browser-assets.test.mjs",
       "sha256": "ab46e2201b813cc1de1a264f5405d8a9ef24cfbd7a45df8552b139f8a817e081"
+    },
+    {
+      "path": "web/cloudflare/tests/commercial-route-policy.test.mjs",
+      "sha256": "5e7505a22df9cbd2b6917f43f5b11ed9f9898155d7aae9279303e8e23f63528c"
     },
     {
       "path": "web/cloudflare/tests/dtf-ui.test.mjs",
