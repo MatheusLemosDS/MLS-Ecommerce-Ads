@@ -6,6 +6,7 @@ import path from 'node:path';
 import {spawnSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 import {createHash} from 'node:crypto';
+import {restoreFinanceSourceBeforeNumberedKitAddition} from './historical-profit-reviewed-source-fixture.mjs';
 import {evaluateOperatingIncrementMergePreflight,operatingIncrementPriorVerifierMatchesBaseline,financeCompletionPriorVerifierMatchesBaseline,OPERATING_INCREMENT_MERGE_BASE_COMMIT,OPERATING_INCREMENT_MERGE_MANIFEST_PATH,OPERATING_INCREMENT_OWNER_AUTHORIZATION,OPERATING_INCREMENT_ALLOWED_FILES,OPERATING_INCREMENT_FROZEN_FILES,OPERATING_INCREMENT_BASE_PREFLIGHT_SHA256,FINANCE_COMPLETION_MERGE_BASE_COMMIT,FINANCE_COMPLETION_FROZEN_FILES,RELEASE_MANUAL_GATES} from '../release_preflight.mjs';
 
 const root=fileURLToPath(new URL('../../',import.meta.url)),digest=value=>createHash('sha256').update(value).digest('hex');
@@ -30,7 +31,14 @@ test('operating authority cannot reuse earlier Live/Finance permissions, broaden
 });
 
 test('all earlier frozen inputs and financial contracts remain frozen, including the existing packaging guards and manifests',()=>{
- for(const [filename,sha256] of Object.entries(FINANCE_COMPLETION_FROZEN_FILES))assert.equal(OPERATING_INCREMENT_FROZEN_FILES[filename],sha256,filename);
+ for(const [filename,sha256] of Object.entries(FINANCE_COMPLETION_FROZEN_FILES)){
+  if(['web/cloudflare/src/cost-rules.mjs','web/cloudflare/src/production-costs.mjs'].includes(filename)){
+   // PR133's exact finite recognizer delta is already integrated. Recover and
+   // check the original Finance bytes as well as freezing the current bytes.
+   const current=fs.readFileSync(path.join(root,filename),'utf8'),original=restoreFinanceSourceBeforeNumberedKitAddition(filename,current);
+   assert.equal(typeof original,'string',filename);assert.equal(digest(original),sha256,filename);
+  }else assert.equal(OPERATING_INCREMENT_FROZEN_FILES[filename],sha256,filename);
+ }
  for(const [filename,sha256] of Object.entries(OPERATING_INCREMENT_FROZEN_FILES)){
   assert.equal(digest(fs.readFileSync(path.join(root,filename))),sha256,filename);
   const input=good();input.candidate.files=[{path:filename,sha256}];assert.deepEqual(evaluateOperatingIncrementMergePreflight(input).failures,['RELEASE_OPERATING_INCREMENT_MANIFEST_INVALID'],filename);

@@ -78,6 +78,7 @@ import {ReturnManufacturingLinksError} from './return-manufacturing-links.mjs';
 import {readReturnManufacturingLinksWorkspace,mutateReturnManufacturingLinksWorkspace} from './return-manufacturing-links-workspace.mjs';
 import {RETURN_MANUFACTURING_LINKS_CSS,RETURN_MANUFACTURING_LINKS_CLIENT} from './return-manufacturing-links-view.mjs';
 import {BusinessMonthViewError,buildBusinessMonthView,requestBusinessMonthRefresh} from './business-month-view-state.mjs';
+import {readHistoricalDailyBusinessSummary} from './business-daily-history.mjs';
 import {BUSINESS_CHECKPOINT_SCHEMA,businessMonthWithCheckpoint,readBusinessCheckpoints,BusinessCheckpointError} from './business-checkpoint.mjs';
 import {CATALOG_CLASSIFICATION_SCHEMA,enqueueCatalogClassifications,enqueueSoldCatalogGaps,runCatalogClassifications,readCatalogClassificationState,catalogClassificationQueries,catalogClassificationsFromSnapshot,CatalogClassificationError} from './catalog-classification.mjs';
 import {readBusinessTaxPolicy,saveBusinessTaxPolicy,readBusinessTaxPolicyAudit,BusinessTaxPolicyError} from './business-tax-policy.mjs';
@@ -854,12 +855,21 @@ async function adminFetchLegacy(request,env,services={}){const url=new URL(reque
   assert(request.method==='GET','METHOD_NOT_ALLOWED',405);
   const entries=[...url.searchParams];assert(entries.length===1&&entries[0][0]==='month','BUSINESS_MONTH_REQUEST_INVALID');
   const contract=request.headers.get('x-braza-client-contract')??'business-month-view-v1';
-  assert(['business-month-view-v1','business-month-view-v2','business-month-view-v3','business-month-view-v4','business-month-view-v5'].includes(contract),'BUSINESS_MONTH_VIEW_CONTRACT_UNSUPPORTED',409);
-  const observed=await readBusinessMonthDisplay(env,{month:entries[0][1]});
-  if(contract==='business-month-view-v5'&&observed.display_source==='PUBLISHED'){
+  assert(['business-month-view-v1','business-month-view-v2','business-month-view-v3','business-month-view-v4','business-month-view-v5','business-month-view-v6'].includes(contract),'BUSINESS_MONTH_VIEW_CONTRACT_UNSUPPORTED',409);
+  const captured=Date.now(),now=()=>captured,historical=contract==='business-month-view-v6';
+  const observed=await readBusinessMonthDisplay(env,{month:entries[0][1]},historical?{now}:undefined);
+  if(['business-month-view-v5','business-month-view-v6'].includes(contract)&&observed.display_source==='PUBLISHED'){
    try{observed.variant_contributions=await readBusinessMonthVariantContributions(env,observed);}catch{observed.variant_contributions=null;}
   }
-  const response=json(buildBusinessMonthView(observed,await readBusinessSyncState(env),{contract}));
+  const syncState=await readBusinessSyncState(env);
+  let historicalDailySummary=null;
+  if(historical&&observed.display_source==='PUBLISHED'){
+   // Reuse the same captured publication and source frames. An independent
+   // publication read here could attach historical costs to another cohort.
+   const reference=buildBusinessMonthView(observed,syncState,{contract:'business-month-view-v5',now});
+   historicalDailySummary=await readHistoricalDailyBusinessSummary(env,observed,reference.daily_summary,{now});
+  }
+  const response=json(buildBusinessMonthView(observed,syncState,{contract,...(historical?{now,historicalDailySummary}:{})}));
   response.headers.set('x-braza-client-contract',contract);response.headers.set('vary','X-Braza-Client-Contract');return response;
  }
  if(path==='/api/admin/finance/business-month-request'){

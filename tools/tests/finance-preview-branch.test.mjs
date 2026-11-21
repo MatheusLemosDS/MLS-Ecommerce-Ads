@@ -6,8 +6,6 @@ import {selectPreviewRole,assertProductionDeploymentContext} from '../isolated_p
 
 const root=path.resolve(import.meta.dirname,'../..'),branch='fix/finance-completion-20261120';
 test('Finance repair adds only its exact reviewed branch to the existing isolated preview policy',()=>{
- // Preserve the Finance increment's exact cutoff. The operating gate test
- // independently proves the current policy adds only its one exact branch.
  const file='previews/isolated-builds.json',current=JSON.parse(execFileSync('git',['show','dc784188e72c1a35dc014155e23c474b95b17cfe:'+file],{cwd:root,encoding:'utf8'})),prior=JSON.parse(execFileSync('git',['show','4cfdf465b2fda58dd27ae693126b7fe1625f69d6:'+file],{cwd:root,encoding:'utf8'}));
  assert.deepEqual(current.authorized_branches,[...prior.authorized_branches,branch]);assert.deepEqual({...current,authorized_branches:prior.authorized_branches},prior,'identities, resources and production policy remain exact');
  for(const role of ['app','auth','finance']){

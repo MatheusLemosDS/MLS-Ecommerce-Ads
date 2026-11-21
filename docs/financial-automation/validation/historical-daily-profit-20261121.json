@@ -1,0 +1,87 @@
+{
+  "schema": "mls_historical_daily_profit_validation_v1",
+  "recorded_at": "2026-11-21T02:22:55.745056+00:00",
+  "base_commit": "dc784188e72c1a35dc014155e23c474b95b17cfe",
+  "release_id": "2026-11-21.2",
+  "implementation": "IMPLEMENTED",
+  "testing": "LOCAL_COMPLETE_PASS",
+  "git_integration": "NOT_INTEGRATED",
+  "git_delivery": {
+    "remote_branch": "fix/historical-profit-20261121",
+    "state_source": "GITHUB_CURRENT_PULL_REQUEST_HEAD_AND_CHECKS",
+    "pull_request_search_url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pulls?q=is%3Apr+head%3Afix%2Fhistorical-profit-20261121"
+  },
+  "publication": "NOT_PUBLISHED",
+  "real_account_acceptance": "PARTIAL_NOT_ACCEPTED",
+  "live_release_preserved": "2026-11-17.3",
+  "node": {
+    "tests": 4963,
+    "pass": 4963,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0
+  },
+  "python": {
+    "pass": 67,
+    "fail": 0
+  },
+  "focused": {
+    "financial": 50,
+    "ui_and_legacy": 21,
+    "release_and_preview_gates": 66
+  },
+  "browser": {
+    "profiles": 4,
+    "normal_and_minified": true,
+    "widths": [
+      320,
+      1365
+    ],
+    "scenario_observations": 24,
+    "synthetic": true,
+    "provider_calls": 0,
+    "real_account_writes": 0
+  },
+  "dependencies": {
+    "wrangler": "4.153.0",
+    "undici_override": "7.30.2",
+    "vulnerabilities": 0
+  },
+  "workers": {
+    "app": {
+      "bytes": 3887899,
+      "sha256": "0fefd0902e36d346c1b420c8349bce873550d07e543b5f50e87ec4346446ab87"
+    },
+    "auth": {
+      "bytes": 591816,
+      "sha256": "08c21816776036fc43fbcbfc4d5c59a0fe509bd85d24390a2df8a2b1378c20e2"
+    },
+    "finance": {
+      "bytes": 933881,
+      "sha256": "a5c5ab153113b3ce6a64619d3efce89618cde44116b4a3fea7b925f646a42266"
+    }
+  },
+  "historical_readonly_replay": {
+    "private_capture_integrity_verified": true,
+    "numbered_kit_current_reference": "PASS",
+    "historical_coverage": "PARTIAL",
+    "historical_unknowns_preserved": true,
+    "historical_profit_accepted": false,
+    "realized_net_cents": null,
+    "account_values_omitted_from_public_git": true,
+    "evidence_receipts": [
+      "docs/financial-automation/validation/historical-profit-nov11-readonly-20261121.json",
+      "docs/financial-automation/validation/numbered-kit-real-replay-20261121.json"
+    ]
+  },
+  "recovery": {
+    "same_original_workspace": true,
+    "changed_files_preserved": 53,
+    "code_snapshot_files_matching": 46,
+    "source_reconstruction_performed": false,
+    "discard_operations": 0
+  },
+  "financial_movements": 0,
+  "live_mutations": 0,
+  "required_remote_ci": "ALL_REQUIRED_CHECKS_AT_CURRENT_PR_HEAD_BEFORE_INTEGRATION"
+}

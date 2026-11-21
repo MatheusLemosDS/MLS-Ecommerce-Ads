@@ -10,7 +10,7 @@ import {receiptChrome,receiptBrowser,receiptClick,receiptPause} from './returns-
 import {weeklyProductionFixture,weeklyProductionClock} from './production-weekly-browser-fixture.mjs';
 import {readProductionCoverageWorkspace,mutateProductionCoverageWorkspace} from '../src/production-coverage.mjs';
 import {incurredProductionRange} from '../src/incurred-production.mjs';
-import {assertReviewedCostSources,REVIEWED_COST_SOURCE_PINS} from './reviewed-cost-source-invariants.mjs';
+import {assertReviewedCostSources,REVIEWED_COST_SOURCE_PINS,normalizeReviewedNumberedKitCostSource} from './reviewed-cost-source-invariants.mjs';
 
 const results=[],reportFile=process.env.MLS_PRODUCTION_WORKSPACE_QA_FILE||null,screens=process.env.MLS_PRODUCTION_WORKSPACE_SCREENSHOT_DIR||null;
 const guards=['legacy_contracts_unchanged','overview_agents_preserved','daily_cost_chart_interactive','selected_day_drafts_preserved','weekly_cut_refresh_verified','friday_boundary_explicit','coverage_confirmation_explicit','pricing_formula_unchanged','dto_unchanged','no_new_provider_reads','unknown_not_zero','month_drafts_preserved','weekly_originals_preserved'];
@@ -23,7 +23,7 @@ const sourcePins={
  'production-weekly-store.mjs':'6774503f20b3aa1a7861d8fc92b54220d809625f36228ffe701dd6a9379d1229',
  'production-coverage.mjs':'a0896f3d2b3cdafd38659abb9e7a0624d00d807f89ab28076878a475e13df3d0'
 };
-function invariantSources(){assertReviewedCostSources();for(const [name,expected]of Object.entries(sourcePins))assert.ok((Array.isArray(expected)?expected:[expected]).includes(digest(readFileSync(new URL('../src/'+name,import.meta.url)))),'canonical production formulas and DTOs retain exact reviewed source: '+name);}
+function invariantSources(){assertReviewedCostSources();for(const [name,expected]of Object.entries(sourcePins))assert.ok((Array.isArray(expected)?expected:[expected]).includes(digest(normalizeReviewedNumberedKitCostSource(name,readFileSync(new URL('../src/'+name,import.meta.url),'utf8')))),'canonical production formulas and DTOs retain exact reviewed source: '+name);}
 const workerHashes=()=>Object.fromEntries(['app','auth','finance'].map(name=>[name,digest(readFileSync(new URL('../../../dist/'+name+'-worker.mjs',import.meta.url)))]));
 let frozenWorkers=null;
 async function wait(cdp,expression,label){for(let n=0;n<180;n++){if(await cdp.evaluate(expression))return;await receiptPause(50);}assert.fail(label+' '+JSON.stringify(await cdp.evaluate('({errors:globalThis.__productionWorkspaceErrors,view:globalThis.brazaProductionWorkspace?.getSnapshot?.(),status:document.getElementById("incurredProductionStatus")?.textContent,coverage:document.getElementById("productionCoverageStatus")?.textContent})')));}

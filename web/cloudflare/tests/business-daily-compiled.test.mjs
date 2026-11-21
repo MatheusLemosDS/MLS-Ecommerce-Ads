@@ -7,13 +7,17 @@ import {readBusinessMonthDisplay,projectBusinessMonth} from '../src/business-mon
 import {readBusinessSyncState} from '../src/business-sync.mjs';
 import {buildBusinessMonthView,projectBusinessMonthView,projectBusinessMonthAuditScope} from '../src/business-month-view-state.mjs';
 import {projectDailyBusinessSummary} from '../src/business-daily-summary.mjs';
+import {projectHistoricalDailyBusinessSummary,readHistoricalDailyBusinessSummary} from '../src/business-daily-history.mjs';
+import {projectExpenseSchedule} from '../src/expense-schedule.mjs';
+import {projectBusinessMonthVariantContributions} from '../src/business-variant-attribution.mjs';
+import {installSyntheticPreSaleCostHistory} from './business-daily-history-browser-fixture.mjs';
 
 const providerCounts=f=>({finance:f.calls.finance.length,ads:f.calls.ads.length,list:f.calls.list.length,detail:f.calls.detail.length,payment:f.calls.payment.length});
 
-for(const minify of [false,true])test(`the deployed monthly script renders the exact v3 daily estimate and keeps local date selection passive (minify=${minify})`,async t=>{
+for(const minify of [false,true])test(`the deployed monthly script renders the exact audited v6 daily estimate and keeps local date selection passive (minify=${minify})`,async t=>{
  const f=await collectionFixture({daily:true,allPaid:true,windowCounts:[2,1],paymentDelayMs:0});
  t.after(()=>{f.env.ADMIN_DB.db.close();f.financeEnv.FINANCE_DB.db.close();});
- await f.env.ADMIN_DB.batch(SCHEMA.map(sql=>f.env.ADMIN_DB.prepare(sql)));
+ await f.env.ADMIN_DB.batch(SCHEMA.map(sql=>f.env.ADMIN_DB.prepare(sql)));installSyntheticPreSaleCostHistory(f);
  let frame=await f.invoke('start');
  for(let attempt=0;frame.status==='RUNNING'&&attempt<20;attempt++){
   f.clock.time+=Math.max(1,frame.collection?.retry_after_seconds??0)*1000;
@@ -21,9 +25,13 @@ for(const minify of [false,true])test(`the deployed monthly script renders the e
  }
  assert.equal(frame.status,'COMPLETE');await f.invoke('ads');
  const display=await readBusinessMonthDisplay(f.env,{month:'2026-10'},{now:f.now}),sync=await readBusinessSyncState(f.env);
- const view=buildBusinessMonthView(display,sync,{now:f.now,contract:'business-month-view-v3'});
- assert.ok(projectBusinessMonthView(view,projectBusinessMonth,projectBusinessMonthAuditScope,projectDailyBusinessSummary));
- assert.equal(view.schema,'business_month_view_v3');assert.equal(view.display_source,'PUBLISHED');assert.ok(view.daily_summary);
+ const legacy=buildBusinessMonthView(display,sync,{now:f.now,contract:'business-month-view-v3'});
+ const historicalDailySummary=await readHistoricalDailyBusinessSummary(f.env,display,legacy.daily_summary,{now:f.now});
+ const view=buildBusinessMonthView(display,sync,{now:f.now,contract:'business-month-view-v6',historicalDailySummary});
+ assert.ok(projectBusinessMonthView(legacy,projectBusinessMonth,projectBusinessMonthAuditScope,projectDailyBusinessSummary));
+ assert.deepEqual(view.daily_summary,legacy.daily_summary,'the financial v3 contract remains intact');
+ assert.ok(projectBusinessMonthView(view,projectBusinessMonth,projectBusinessMonthAuditScope,projectDailyBusinessSummary,projectExpenseSchedule,projectBusinessMonthVariantContributions,projectHistoricalDailyBusinessSummary));
+ assert.equal(view.schema,'business_month_view_v6');assert.equal(view.display_source,'PUBLISHED');assert.ok(view.daily_summary);
  const selected=view.daily_summary.days.find(row=>row.date==='2026-10-20');
  assert.deepEqual([selected.payout_cents,selected.production_cost_cents,selected.ads_spend_cents,selected.allocated_das_cents,selected.allocated_expenses_cents],[4751,1590,125,277,40]);
  assert.equal(selected.estimate_cents,2719);assert.equal(selected.coverage.paid,1);

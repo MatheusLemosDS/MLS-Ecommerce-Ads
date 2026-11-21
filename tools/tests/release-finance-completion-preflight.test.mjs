@@ -6,6 +6,7 @@ import path from 'node:path';
 import {spawnSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 import {createHash} from 'node:crypto';
+import {HISTORICAL_PROFIT_REVIEWED_SOURCE_ADDITIONS,restoreFinanceSourceBeforeNumberedKitAddition} from './historical-profit-reviewed-source-fixture.mjs';
 import {evaluateFinanceCompletionMergePreflight,financeCompletionPriorVerifierMatchesBaseline,FINANCE_COMPLETION_MERGE_BASE_COMMIT,FINANCE_COMPLETION_MERGE_MANIFEST_PATH,FINANCE_COMPLETION_OWNER_AUTHORIZATION,FINANCE_COMPLETION_ALLOWED_FILES,FINANCE_COMPLETION_FROZEN_FILES,FINANCE_COMPLETION_BASE_PREFLIGHT_SHA256,RELEASE_MANUAL_GATES} from '../release_preflight.mjs';
 
 const root=fileURLToPath(new URL('../../',import.meta.url)),digest=value=>createHash('sha256').update(value).digest('hex');
@@ -56,7 +57,14 @@ test('both previous verifier implementations remain byte-identical after removin
  const observed=spawnSync('git',['show',FINANCE_COMPLETION_MERGE_BASE_COMMIT+':tools/release_preflight.mjs'],{cwd:root,encoding:'utf8'});assert.equal(observed.status,0,observed.stderr);const baseline=observed.stdout,current=fs.readFileSync(path.join(root,'tools/release_preflight.mjs'),'utf8');assert.equal(digest(baseline),FINANCE_COMPLETION_BASE_PREFLIGHT_SHA256);assert.equal(financeCompletionPriorVerifierMatchesBaseline(current,baseline),true);
  for(const changed of [current+'\n',current.replace("export const PR130_MERGE_BASE_COMMIT='346f30f200e5cbd3d9efd26663a483c625d9c6e7'","export const PR130_MERGE_BASE_COMMIT='"+'b'.repeat(40)+"'"),current.replace('if(baseCommit!==RELEASE_BASE_COMMIT)','if(false)'),current.replace('\n // BEGIN FINANCE_COMPLETION_DISPATCH_V1\n','\n // CHANGED FINANCE_COMPLETION_DISPATCH_V1\n')])assert.equal(financeCompletionPriorVerifierMatchesBaseline(changed,baseline),false);
  assert.equal(financeCompletionPriorVerifierMatchesBaseline(current,baseline+'\n'),false);
- for(const [filename,expected] of Object.entries(FINANCE_COMPLETION_FROZEN_FILES))assert.equal(digest(fs.readFileSync(path.join(root,filename))),expected,filename);
+ // This later local increment has a finite, test-only reviewed source delta.
+ // The prior runtime verifier and every pinned baseline hash stay untouched;
+ // reverse only the exact additions before checking their original bytes.
+ for(const [filename,expected] of Object.entries(FINANCE_COMPLETION_FROZEN_FILES)){
+  const source=fs.readFileSync(path.join(root,filename),'utf8');
+  const original=Object.hasOwn(HISTORICAL_PROFIT_REVIEWED_SOURCE_ADDITIONS,filename)?restoreFinanceSourceBeforeNumberedKitAddition(filename,source):source;
+  assert.equal(typeof original,'string','unreviewed source delta: '+filename);assert.equal(digest(original),expected,filename);
+ }
 });
 
 test('new merge verification keeps owner-only features, read-only CI and required bundle composition',()=>{

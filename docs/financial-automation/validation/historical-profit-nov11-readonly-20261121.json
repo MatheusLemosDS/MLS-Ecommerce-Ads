@@ -1,0 +1,17 @@
+{
+  "schema": "mls_public_historical_profit_readonly_replay_receipt_v1",
+  "day": "2026-11-11",
+  "private_capture_sha256": "1c5ef28f8b656879568cf2c0cd7cbe6ae8790470bca1400b62f315451484dd80",
+  "source_integrity_verified": true,
+  "numbered_current_cost_reference_replay": "PASS",
+  "historical_incomplete_evidence_preserved": true,
+  "original_historical_profit_snapshot_recovered": false,
+  "historical_profit_accepted": false,
+  "realized_net_cents": null,
+  "module_sha256": {},
+  "account_values_omitted_from_public_git": true,
+  "remote_rows_written": 0,
+  "financial_movements": 0,
+  "published": false,
+  "note": "Detailed account values and quantities remain only in the original private workspace/evidence. Current prices are not substituted as proof of historical or realized profit."
+}

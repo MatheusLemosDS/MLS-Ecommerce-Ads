@@ -16,7 +16,8 @@ export const dailyProductionClock=Date.UTC(2026,9,25,15);
 export const dailyProductionNow=()=>dailyProductionClock;
 const identity={artwork:'Arte de QA sintética',color:'Preto',size:'M',garment_type:'ADULT',fit:'UNISEX',confirmed:true,item_id:null,model_id:null,sku:null};
 
-export async function dailyProductionFixture(){
+export async function dailyProductionFixture({monthlyViewContract='business-month-view-v5'}={}){
+ assert.ok(['business-month-view-v5','business-month-view-v6'].includes(monthlyViewContract),'daily production fixture requires a supported monthly view contract');
  const env={ADMIN_DB:new D1()};let ordinal=0;
  async function record(produced_date,quantity,unit_cost_cents){
   const frame=await readIncurredProduction(env,{now:dailyProductionNow}),record_id=crypto.randomUUID();
@@ -35,10 +36,10 @@ export async function dailyProductionFixture(){
  try{
   let monthly=await finance.invoke('start');for(let turn=0;monthly.status==='RUNNING'&&turn<12;turn++)monthly=await finance.invoke('step');assert.equal(monthly.status,'COMPLETE');await finance.invoke('ads');
   const observed=await readBusinessMonthDisplay(finance.env,{month:'2026-10'},{now:finance.now});
-  const financialView=buildBusinessMonthView(observed,{enabled:true,status:'COMPLETE',next_run_at:finance.now()/1000+60,last_attempt_at:finance.now()/1000-5},{now:finance.now,contract:'business-month-view-v5'});
+  const financialView=buildBusinessMonthView(observed,{enabled:true,status:'COMPLETE',next_run_at:finance.now()/1000+60,last_attempt_at:finance.now()/1000-5},{now:finance.now,contract:monthlyViewContract});
   assert.ok(financialView.daily_summary,'the fixture must retain genuine daily financial evidence');
   const september=completeWorkspaceFrame({month:'2026-09',review:false,at:dailyProductionClock/1000-30}),septemberScope={publication_revision:4,start_date:september.start_date,end_date:september.end_date,sources:[1,16].map((first,index)=>({run_id:'abcdef02-0000-4000-8000-'+String(index+1).padStart(12,'0'),source_revision:1,start_date:'2026-09-'+String(first).padStart(2,'0'),end_date:'2026-09-'+String(first+14).padStart(2,'0')}))};
-  const septemberView=buildBusinessMonthView({display:september,active:september,display_source:'PUBLISHED',audit_scope:septemberScope,source_frames:null},{enabled:true,status:'COMPLETE',next_run_at:dailyProductionClock/1000+60,last_attempt_at:dailyProductionClock/1000-5},{now:dailyProductionNow,contract:'business-month-view-v5'});
+  const septemberView=buildBusinessMonthView({display:september,active:september,display_source:'PUBLISHED',audit_scope:septemberScope,source_frames:null},{enabled:true,status:'COMPLETE',next_run_at:dailyProductionClock/1000+60,last_attempt_at:dailyProductionClock/1000-5},{now:dailyProductionNow,contract:monthlyViewContract});
   assert.equal(septemberView.daily_summary,null,'saved monthly totals alone never manufacture a daily profit series');
   const hermesContext=buildHermesFinancialContext(observed.display,{analysisDate:'2026-10-23',capturedAt:finance.now()/1000});assert.ok(projectHermesFinancialContext(hermesContext));assert.equal(hermesContext.available,true);
   const jobId='abcdef03-0000-4000-8000-000000000001',hermesJob={id:jobId,status:'completed',start_date:'2026-10-23',end_date:'2026-10-23',settings_revision:1,reserve_cents:0,cost_cents:1,cost_source:'operator_confirmed',failure:null,created_at:'2026-10-24T12:00:00Z',started_at:'2026-10-24T12:00:01Z',completed_at:'2026-10-24T12:00:02Z',result:'Análise de 2026-10-23\nInvestimento: 52.77\nCliques: 123\nImpressões: 2000\nROAS 12.5 19.28\nPedidos 9 15\nStatus econômico: UNKNOWN\nRecomendação: OBSERVE\nQualidade e limitações\nAnúncios não alterados.'};
