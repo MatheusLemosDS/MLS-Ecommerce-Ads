@@ -556,6 +556,133 @@ function runFinanceCompletionPreflight(input){
  const ancestor=(earlier,later)=>{try{execFileSync('git',['merge-base','--is-ancestor',earlier,later],{cwd:root,stdio:['ignore','pipe','pipe']});return true;}catch{return false;}};
  return evaluateFinanceCompletionMergePreflight({...input,candidate,currentFileHashes,preparedFileHashes,frozenCurrentFileHashes,frozenPreparedFileHashes,preparedSourceIsAncestor:ancestor(candidate.prepared_source_commit,'HEAD'),preparedSourceDescendsFromBase:ancestor(FINANCE_COMPLETION_MERGE_BASE_COMMIT,candidate.prepared_source_commit),priorVerifierPreserved:financeCompletionPriorVerifierMatchesBaseline(read('tools/release_preflight.mjs'),baseline)});
 }
+// BEGIN OPERATING_INCREMENT_MERGE_V1
+// Exact owner-requested operating increment. This separate policy approves Git
+// integration only, without website publication, money movement or new grants.
+export const OPERATING_INCREMENT_MERGE_BASE_COMMIT='dc784188e72c1a35dc014155e23c474b95b17cfe';
+export const OPERATING_INCREMENT_MERGE_MANIFEST_PATH='tools/release-operating-increment-candidate.json';
+export const OPERATING_INCREMENT_OWNER_AUTHORIZATION='OWNER_REQUESTED_WEEKLY_PAYMENTS_AND_PHYSICAL_SHIRTS_WITHOUT_EXTERNAL_PUBLICATION_2026_11_20';
+export const OPERATING_INCREMENT_BASE_PREFLIGHT_SHA256='c0c8d750a7599e7226462125127f545bfed0f860c6641e329b36a7e108339860';
+// Literal paths are reviewed independently from the candidate metadata. They
+// cannot authorize another payment flow, deploy tool or financial formula.
+export const OPERATING_INCREMENT_ALLOWED_FILES=Object.freeze([
+ "AGENTS.md",
+ "NEXT_CHAT_HANDOFF.txt",
+ "docs/MLS_CODEX_HANDOFF_2026_10_28.md",
+ "docs/MLS_COMMERCE_OS_CHECKPOINT.json",
+ "docs/MLS_OPERATING_INCREMENT_2026_11_20.md",
+ "docs/ROADMAP_MLS_COMMERCE_OS.md",
+ "docs/history/AGENTS_before_operating_increment_20261120.md",
+ "previews/isolated-builds.json",
+ "tools/release_preflight.mjs",
+ "tools/tests/browser-assets.test.mjs",
+ "tools/tests/compact-worker-namespaces.test.mjs",
+ "tools/tests/finance-preview-branch.test.mjs",
+ "tools/tests/release-operating-increment-preflight.test.mjs",
+ "tools/worker_project.mjs",
+ "web/cloudflare/build.py",
+ "web/cloudflare/src/admin-client.mjs",
+ "web/cloudflare/src/admin.mjs",
+ "web/cloudflare/src/app-release-view.mjs",
+ "web/cloudflare/src/app-release.mjs",
+ "web/cloudflare/src/browser-assets-manifest.mjs",
+ "web/cloudflare/src/commercial-route-policy.mjs",
+ "web/cloudflare/src/operational-journal.mjs",
+ "web/cloudflare/src/physical-shirt-stock-view.mjs",
+ "web/cloudflare/src/physical-shirt-stock.mjs",
+ "web/cloudflare/src/production-weekly-payments-view.mjs",
+ "web/cloudflare/src/production-weekly-payments.mjs",
+ "web/cloudflare/src/tenant-schema-manifest.mjs",
+ "web/cloudflare/tests/app-release-discovery-chrome.test.mjs",
+ "web/cloudflare/tests/app-release.test.mjs",
+ "web/cloudflare/tests/browser-assets-http-fixture.mjs",
+ "web/cloudflare/tests/browser-assets.test.mjs",
+ "web/cloudflare/tests/commercial-route-policy.test.mjs",
+ "web/cloudflare/tests/operating-increment-chrome.test.mjs",
+ "web/cloudflare/tests/operating-increment-integration.test.mjs",
+ "web/cloudflare/tests/operational-journal.test.mjs",
+ "web/cloudflare/tests/physical-shirt-stock-view.test.mjs",
+ "web/cloudflare/tests/physical-shirt-stock.test.mjs",
+ "web/cloudflare/tests/production-weekly-payments-view.test.mjs",
+ "web/cloudflare/tests/production-weekly-payments.test.mjs",
+ "web/cloudflare/tests/tenant-sql-isolation.test.mjs",
+ "workers/app/browser-assets.json"
+]);
+export const OPERATING_INCREMENT_FROZEN_FILES=Object.freeze({
+ ...FINANCE_COMPLETION_FROZEN_FILES,
+ "package-lock.json": "4409908ac817f03105eb0c33ac243de786bee326440b0c4668531889b1e8236e",
+ "package.json": "414befb162361a800ce16d4e8e012683102b4d1bb7d2412858696d1a6ac36a17",
+ "tools/complete_worker_module.mjs": "4dd7a86bbb8a4120b16247a3478c3cf17c93f041dcae9fcb68e0f34151ab57eb",
+ "tools/release-finance-completion-candidate.json": "b6dc33c01f73ff75eecac4b50b2c050af469daea552d429317787ec8b6c0cdd4",
+ "tools/tests/complete-worker-module.test.mjs": "0dead42c307b4f62ef91142b2f6bb6412c0cfd8245cc20e6e6fff167d06aad6e",
+ "tools/tests/release-finance-completion-preflight.test.mjs": "1639ee4d17282c4200c0fbce16ef4f417613d3d3f8dfe0622417e26fa7a3a993",
+ "tools/tests/verified-worker-deploy.test.mjs": "df5b3f6bfee5eccccc3da4918ab10dce3355ad28ce607c4a5761c5efd93a4940",
+ "tools/verified_worker_deploy.mjs": "b6060f5836e2768274d059f44ae2c5e04624d9761c82e622cba3fa8669602138",
+ "web/cloudflare/src/financial-accounting-projection.mjs": "70c8821efbb8a95ae6f4c72baf115649d7d7497daad191f3423733ab9bf83a27",
+ "web/cloudflare/src/financial-automation-service.mjs": "884d6e658b33db67a3246773bb26d4b1f321013224058059691b4ea157248ba0",
+ "web/cloudflare/src/financial-automation-sources.mjs": "2cce3149a1859cb8b35402366c9e0fe0f805a197433514b9a09cd81a573ac438",
+ "web/cloudflare/src/financial-automation-store.mjs": "95ff304e8e1ddcd8309441ee0ad04cf5f2dde15ffff4fe37837ffead8aeb8e01",
+ "web/cloudflare/src/financial-cash-allocation-store.mjs": "723f93e0d6641978e46b283037ca8d0af622cb9933a372d53d978b660f82ef06",
+ "web/cloudflare/src/financial-inventory-bridge.mjs": "3e3d561f0a367f689b1bf40aaf04eaa6715ddb16fffc6f685427a7c7c77fb2ee",
+ "web/cloudflare/src/financial-obligation-app-source.mjs": "85bcbc3fa8a5e6f67dd2e7e961e7e4f4452bb3db81fd9155c93d7d5c16d34ddd",
+ "web/finance/src/financial-bank-connector.mjs": "15664aad8538c657e268119f4e0870127d8b2962a8da6bcf5edca3401fa02b3b",
+ "web/finance/src/financial-cash-allocation.mjs": "fb6b7e95c7f64253ce92b40a517735c8bd56db1fec43051df6e2a84c8b71b66c"
+});
+const operatingSectionBegin='// BEGIN OPERATING_INCREMENT_MERGE_V1\n',operatingSectionEnd='// END OPERATING_INCREMENT_MERGE_V1\n';
+const operatingDispatchBegin=' // BEGIN OPERATING_INCREMENT_DISPATCH_V1\n',operatingDispatchEnd=' // END OPERATING_INCREMENT_DISPATCH_V1\n';
+export function operatingIncrementPriorVerifierMatchesBaseline(source,baseline){
+ if(typeof source!=='string'||typeof baseline!=='string'||mergeSourceDigest(baseline)!==OPERATING_INCREMENT_BASE_PREFLIGHT_SHA256)return false;
+ let normalized=source;
+ for(const [begin,end] of [[operatingSectionBegin,operatingSectionEnd],[operatingDispatchBegin,operatingDispatchEnd]]){
+  const first=normalized.indexOf(begin),last=normalized.indexOf(end);
+  if(first<0||last<first||normalized.indexOf(begin,first+begin.length)!==-1||normalized.indexOf(end,last+end.length)!==-1)return false;
+  normalized=normalized.slice(0,first)+normalized.slice(last+end.length);
+ }
+ return normalized===baseline;
+}
+function validOperatingIncrementCandidate(candidate){
+ const keys=['schema','scope','base_commit','prepared_source_commit','owner_authorization','production_approved','live_authorization','commercial_writes_allowed','expected_hashes','files'];
+ if(!mergeExact(candidate,keys)||candidate.schema!=='mls_operating_increment_merge_candidate_v1'||candidate.scope!=='MERGE_ONLY'||candidate.base_commit!==OPERATING_INCREMENT_MERGE_BASE_COMMIT||!(/^[a-f0-9]{40}$/).test(candidate.prepared_source_commit)||candidate.prepared_source_commit===candidate.base_commit||candidate.owner_authorization!==OPERATING_INCREMENT_OWNER_AUTHORIZATION||candidate.production_approved!==false||candidate.live_authorization!==false||candidate.commercial_writes_allowed!==false||!mergeExact(candidate.expected_hashes,['app','auth','finance'])||!Object.values(candidate.expected_hashes).every(exactSha)||!Array.isArray(candidate.files)||candidate.files.length<1||candidate.files.length>OPERATING_INCREMENT_ALLOWED_FILES.length)return false;
+ let previous='';
+ for(const file of candidate.files){
+  if(!mergeExact(file,['path','sha256'])||!literalReleasePath(file.path)||!exactSha(file.sha256)||file.path<=previous||!OPERATING_INCREMENT_ALLOWED_FILES.includes(file.path)||Object.hasOwn(OPERATING_INCREMENT_FROZEN_FILES,file.path))return false;
+  previous=file.path;
+ }
+ return true;
+}
+export function evaluateOperatingIncrementMergePreflight({baseCommit,changedPaths,buildHashes,appConfig,adminSource,buildSource,workflowSource,candidate,currentFileHashes,preparedFileHashes,preparedSourceIsAncestor,preparedSourceDescendsFromBase,frozenCurrentFileHashes,frozenPreparedFileHashes,priorVerifierPreserved}={}){
+ const result=failures=>Object.freeze({ok:failures.length===0,failures:Object.freeze([...new Set(failures)]),manualGates:RELEASE_MANUAL_GATES,scope:'MERGE_ONLY',remoteCloudflareVerified:false,productionApproved:false,liveAuthorization:false,commercialWritesAllowed:false});
+ if(!validOperatingIncrementCandidate(candidate))return result(['RELEASE_OPERATING_INCREMENT_MANIFEST_INVALID']);
+ const failures=[];
+ if(baseCommit!==OPERATING_INCREMENT_MERGE_BASE_COMMIT)failures.push('RELEASE_OPERATING_INCREMENT_BASE_MISMATCH');
+ if(preparedSourceIsAncestor!==true||preparedSourceDescendsFromBase!==true)failures.push('RELEASE_OPERATING_INCREMENT_SOURCE_ANCESTRY_INVALID');
+ if(priorVerifierPreserved!==true)failures.push('RELEASE_PRIOR_VERIFIER_CHANGED');
+ const paths=cleanPaths(changedPaths),expected=[OPERATING_INCREMENT_MERGE_MANIFEST_PATH,...candidate.files.map(file=>file.path)].sort();
+ if(!paths||paths.length===0||paths.length!==changedPaths.length)failures.push('RELEASE_DIFF_UNAVAILABLE');
+ else if(paths.length!==expected.length||paths.some(filename=>!expected.includes(filename)))failures.push('RELEASE_OPERATING_INCREMENT_UNREVIEWED_PATH');
+ const fileKeys=candidate.files.map(file=>file.path);
+ for(const hashes of [currentFileHashes,preparedFileHashes])if(!mergeExact(hashes,fileKeys)||candidate.files.some(file=>hashes[file.path]!==file.sha256)){failures.push('RELEASE_OPERATING_INCREMENT_SOURCE_HASH_MISMATCH');break;}
+ const frozenKeys=Object.keys(OPERATING_INCREMENT_FROZEN_FILES);
+ for(const hashes of [frozenCurrentFileHashes,frozenPreparedFileHashes])if(!mergeExact(hashes,frozenKeys)||frozenKeys.some(filename=>hashes[filename]!==OPERATING_INCREMENT_FROZEN_FILES[filename])){failures.push('RELEASE_OPERATING_INCREMENT_FROZEN_SOURCE_CHANGED');break;}
+ if(!mergeExact(buildHashes,['app','auth','finance'])||Object.keys(candidate.expected_hashes).some(kind=>buildHashes[kind]!==candidate.expected_hashes[kind]))failures.push('RELEASE_WORKER_HASH_MISMATCH');
+ failures.push(...releaseEnvironmentFailures({appConfig,adminSource,buildSource,workflowSource}));return result(failures);
+}
+function runOperatingIncrementPreflight(input){
+ let candidate;try{candidate=JSON.parse(read(OPERATING_INCREMENT_MERGE_MANIFEST_PATH));}catch{throw Error('RELEASE_OPERATING_INCREMENT_MANIFEST_INVALID');}
+ if(!validOperatingIncrementCandidate(candidate))throw Error('RELEASE_OPERATING_INCREMENT_MANIFEST_INVALID');
+ const currentFileHashes={},preparedFileHashes={},frozenCurrentFileHashes={},frozenPreparedFileHashes={};
+ const snapshot=(filename,commit)=>{
+  try{return createHash('sha256').update(execFileSync('git',['show',commit+':'+filename],{cwd:root,stdio:['ignore','pipe','pipe'],maxBuffer:16*1024*1024})).digest('hex');}
+  catch{throw Error('RELEASE_OPERATING_INCREMENT_SOURCE_SNAPSHOT_UNAVAILABLE');}
+ };
+ const current=filename=>{const absolute=path.join(root,filename),real=fs.realpathSync(absolute);if(!real.startsWith(root+path.sep)||!fs.lstatSync(absolute).isFile()||fs.lstatSync(absolute).isSymbolicLink())throw Error('RELEASE_OPERATING_INCREMENT_SOURCE_FILE_INVALID');return hash(filename);};
+ for(const file of candidate.files){currentFileHashes[file.path]=current(file.path);preparedFileHashes[file.path]=snapshot(file.path,candidate.prepared_source_commit);}
+ for(const filename of Object.keys(OPERATING_INCREMENT_FROZEN_FILES)){frozenCurrentFileHashes[filename]=current(filename);frozenPreparedFileHashes[filename]=snapshot(filename,candidate.prepared_source_commit);}
+ let baseline;try{baseline=execFileSync('git',['show',OPERATING_INCREMENT_MERGE_BASE_COMMIT+':tools/release_preflight.mjs'],{cwd:root,encoding:'utf8',stdio:['ignore','pipe','pipe']});}catch{throw Error('RELEASE_OPERATING_INCREMENT_PRIOR_VERIFIER_UNAVAILABLE');}
+ const ancestor=(earlier,later)=>{try{execFileSync('git',['merge-base','--is-ancestor',earlier,later],{cwd:root,stdio:['ignore','pipe','pipe']});return true;}catch{return false;}};
+ return evaluateOperatingIncrementMergePreflight({...input,candidate,currentFileHashes,preparedFileHashes,frozenCurrentFileHashes,frozenPreparedFileHashes,preparedSourceIsAncestor:ancestor(candidate.prepared_source_commit,'HEAD'),preparedSourceDescendsFromBase:ancestor(OPERATING_INCREMENT_MERGE_BASE_COMMIT,candidate.prepared_source_commit),priorVerifierPreserved:operatingIncrementPriorVerifierMatchesBaseline(read('tools/release_preflight.mjs'),baseline)});
+}
+// END OPERATING_INCREMENT_MERGE_V1
 // END FINANCE_COMPLETION_MERGE_V1
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 function read(filename){return fs.readFileSync(path.join(root,filename),'utf8');}
@@ -578,6 +705,10 @@ export function runReleasePreflight({base='origin/main'}={}){
   workflowSource:read('.github/workflows/validate.yml')
  };
  // BEGIN FINANCE_COMPLETION_DISPATCH_V1
+ // BEGIN OPERATING_INCREMENT_DISPATCH_V1
+ // Exact new base cannot fall back to older publication authorities.
+ if(input.baseCommit===OPERATING_INCREMENT_MERGE_BASE_COMMIT)return runOperatingIncrementPreflight(input);
+ // END OPERATING_INCREMENT_DISPATCH_V1
  // Exact new base selects only this merge policy; failure cannot fall back.
  if(input.baseCommit===FINANCE_COMPLETION_MERGE_BASE_COMMIT)return runFinanceCompletionPreflight(input);
  // END FINANCE_COMPLETION_DISPATCH_V1

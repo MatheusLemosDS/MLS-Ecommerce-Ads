@@ -2,7 +2,7 @@
   "schema": "mls_commerce_os_checkpoint_v1",
   "canonical_roadmap": "docs/ROADMAP_MLS_COMMERCE_OS.md",
   "legacy_roadmap": "docs/ROADMAP_BRAZACOMMERCE.md",
-  "updated_at": "2026-11-20",
+  "updated_at": "2026-11-21T00:22:47.100639+00:00",
   "product": {
     "name": "MLS Commerce OS",
     "supervisor": "MLS Hermes",
@@ -30,8 +30,8 @@
     "merge_commit": "9c418fd3010f46957d1ce52345baacd76041c788"
   },
   "current_phase": "M2_FINANCE_RETURNS_RECONCILIATION",
-  "working_branch": "fix/finance-completion-20261120",
-  "current_status": "FINANCE_CODE_INTEGRATION_AND_SEPARATE_REAL_ACCOUNT_ACCEPTANCE",
+  "working_branch": "feature/weekly-payments-physical-shirts-20261120",
+  "current_status": "M2_M2_2_OPERATING_INCREMENT_IMPLEMENTED_TESTED_LOCAL_NOT_INTEGRATED_NOT_PUBLISHED",
   "completed_this_phase": [
     "Conciliação de liberações por pedido com estados VERIFIED, LOCATED_UNVERIFIED, AMBIGUOUS e NOT_LOCATED",
     "Repasse-base, ajuste, repasse após ajuste e liberação exibidos sem dupla dedução",
@@ -129,11 +129,10 @@
     }
   },
   "next_actions": [
-    "Require full Node/Python/build/source/security checks at exact PR131head",
-    "Verify historical replay on final financial module hashes",
-    "Validate the specific Live release, rollback/assets and real account readiness separately",
-    "Recollect genuinely missing sources through normal authorized work and review historical identities",
-    "Complete native bank/wallet/payout/source and physical/financial operational acceptance with real evidence"
+    "Review the local source, signed candidate and synthetic usage evidence",
+    "Continue the independent purchase-needs planner from explicit physical demand and stock, preserving UNKNOWN and no external ordering",
+    "After specific authorization, push the exact branch for PR/required CI and isolated Cloudflare Builds; do not publish the Live",
+    "Only integrate Git after exact-head remote CI; record publication and real-data acceptance separately"
   ],
   "m0_followup": [
     "Conferir visual autenticado em desktop e celular durante M1; corrigir apenas branding/layout sem renomear infraestrutura"
@@ -142,155 +141,78 @@
     "Mission Control M1.1 (opção 3) integrado com 7 painéis independentes; conferir visual autenticado desktop/celular e retorno às telas antigas"
   ],
   "latest_increment": {
-    "schema": "mls_finance_completion_increment_v1",
-    "recorded_at": "2026-11-20T22:57:04.998033+00:00",
-    "base_commit": "4cfdf465b2fda58dd27ae693126b7fe1625f69d6",
-    "branch": "fix/finance-completion-20261120",
-    "release_id": "2026-11-20.1",
-    "implementation": "IMPLEMENTED",
-    "validation": "CONSULT_REQUIRED_CHECKS_AT_PR131_CURRENT_HEAD",
-    "git_delivery": {
-      "pull_request": 131,
-      "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/131",
-      "state_source": "GITHUB_CURRENT_PR_STATE"
-    },
-    "publication": "NOT_PUBLISHED",
-    "operational_acceptance": "NOT_PERFORMED",
-    "live_last_verified_release": "2026-11-17.3",
-    "live_last_verified_at_utc": "2026-11-20T21:53:45.948298+00:00",
-    "financial_completeness": "PARTIAL",
-    "m2_closed": false,
-    "commercial_writes_allowed": false,
-    "report": "docs/MLS_FINANCE_COMPLETION_2026_11_20.md",
-    "evidence": "docs/financial-automation/validation/finance-completion-20261120.json",
-    "implemented": [
-      "Immutable source cohort continuation and exact declared/cutoff window coverage",
-      "Durable two-phase source retention with CAS confirmation and renewable source leases",
-      "Previous-month continuation and protected source-lane fairness",
-      "Account positions require all declared account balances",
-      "Causal same-instant inventory returns",
-      "Durable original obligation retry command without freshness extension",
-      "Bank consent checks after final asynchronous gates",
-      "Finance refresh after interrupted hidden reads",
-      "Historical calendar close identity and immutable rectification",
-      "Explicit original sale-item pagination beyond100 choices",
-      "Independent dated historical name/composition evidence with manual hash/revision review",
-      "Shared source lease checked atomically for manual and scheduled dated evidence",
-      "Account transport deadline across body/fetch/response",
-      "Pinned compatible dependency security update",
-      "Fresh consent is checked immediately before provider access, including the capability-await microtask boundary",
-      "A verified missing source invalidates its unavailable cohort; generic404 does not authorize replacement",
-      "Unavailable order dependencies yield a partial pass while independent lanes refresh; exact cursors survive deferred transport retries",
-      "Published catalogue/adult-cost/DTF functionality restored; global114-command workspace compatibility preserved"
+    "schema": "mls_operating_increment_v1",
+    "recorded_at": "2026-11-21T00:22:47.100639+00:00",
+    "base_commit": "dc784188e72c1a35dc014155e23c474b95b17cfe",
+    "branch": "feature/weekly-payments-physical-shirts-20261120",
+    "release_id": "2026-11-20.2",
+    "roadmap_items": [
+      "M2.2-WEEKLY-PRODUCTION-PAYMENTS",
+      "M2.2-PHYSICAL-SHIRT-STOCK"
     ],
-    "not_proven": [
-      "Full current candidate CI and authenticated generated-Worker QA",
-      "Recovery of five already absent September/October source runs through authorized new collection",
-      "Real bank/native wallet/payout adapters and account coverage",
-      "Approved accounting policy, tax/expense facts and Ads timezone evidence",
-      "Physical production/returns source matching and real financial close acceptance"
+    "implementation": "IMPLEMENTED",
+    "validation": {
+      "state": "PASS_LOCAL_FULL",
+      "node_tests": 5003,
+      "node_pass": 5003,
+      "node_fail": 0,
+      "node_skipped": 0,
+      "node_cancelled": 0,
+      "python_pass": 67,
+      "npm_audit_vulnerabilities": 0,
+      "chromium_profiles": 4,
+      "chromium_themes": [
+        "light",
+        "dark"
+      ],
+      "chromium_screenshots": 24,
+      "first_full_attempt": {
+        "node_pass": 5002,
+        "node_fail": 1,
+        "cause": "New operational schema missing from the tenant-isolation test fixture; original assertions preserved and fixture extended"
+      },
+      "final_full_source_hashes": "/workspace/work/operating-increment-evidence/full-gates-source-hashes-attempt2.json",
+      "financial_core_unchanged_modules": 11,
+      "legacy_setup_sql_statements": 114
+    },
+    "git_integration": "NOT_INTEGRATED",
+    "publication": "NOT_PUBLISHED",
+    "real_data_validation": "NOT_PERFORMED",
+    "live_baseline": "2026-11-17.3",
+    "financial_transfers_allowed": false,
+    "external_publication_allowed": false,
+    "observable_results": [
+      "Preview and audit manual partial payments against oldest weekly obligations per provider",
+      "Physical shirts by size/color with explicit initial count, receipts and protected reservations"
     ],
     "next_actions": [
-      "Require full Node/Python/build/source/security checks at exact PR131head",
-      "Verify historical replay on final financial module hashes",
-      "Validate the specific Live release, rollback/assets and real account readiness separately",
-      "Recollect genuinely missing sources through normal authorized work and review historical identities",
-      "Complete native bank/wallet/payout/source and physical/financial operational acceptance with real evidence"
+      "Review the local source, signed candidate and synthetic usage evidence",
+      "Continue the independent purchase-needs planner from explicit physical demand and stock, preserving UNKNOWN and no external ordering",
+      "After specific authorization, push the exact branch for PR/required CI and isolated Cloudflare Builds; do not publish the Live",
+      "Only integrate Git after exact-head remote CI; record publication and real-data acceptance separately"
     ],
-    "python_tests": {
-      "passed": 67,
-      "failed": 0
+    "subsequent_items": [
+      "Purchase needs from confirmed physical demand and firm receipts",
+      "Link physical reservations to eligible DTF work without inferring manufacture",
+      "Connect confirmed production and weekly closing without duplicate expense or COGS"
+    ],
+    "evidence": "docs/MLS_OPERATING_INCREMENT_2026_11_20.md",
+    "git_delivery": {
+      "state": "LOCAL_BRANCH_COMMITTED",
+      "branch": "feature/weekly-payments-physical-shirts-20261120",
+      "candidate_manifest": "tools/release-operating-increment-candidate.json",
+      "source_commit_field": "prepared_source_commit",
+      "remote_push": false,
+      "github_ci": "NOT_RUN_FOR_THIS_INCREMENT"
     },
-    "dependency_audit": {
-      "before": {
-        "moderate": 2,
-        "high": 1
-      },
-      "after": {
-        "total": 0
-      },
-      "wrangler": "4.153.0",
-      "undici_override": "7.30.2"
-    },
-    "historical_replay": {
-      "state": "PASS_CURRENT_WORKTREE_FINAL_SHA_PENDING",
-      "scope": [
-        "2026-11-13",
-        "2026-11-17"
-      ],
-      "integer_cents": true,
-      "all_five_days_match": true,
-      "known_units": 3,
-      "pending_units": 183,
-      "current_catalog_used_to_reprice_history": false,
-      "edit_day_unknown": true,
-      "remote_writes": 0
-    },
-    "scheduler_budget": {
-      "limit": 50,
-      "complete_cost_includes_retention_posts": true,
-      "observed_turns": [
-        42,
-        47
-      ]
-    },
-    "ci": {
-      "current_head_checks": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/131/checks",
-      "scope": "Every required check must pass at the exact current head before merge; production authorization remains separate",
-      "attempt1": {
-        "run": 44824267259,
-        "head": "35cf9a35eb5f3cc09871733f7e78eefb3ce1436a",
-        "node_pass": 4803,
-        "node_fail": 65,
-        "cancelled": 0,
-        "skipped": 0,
-        "cloudflare_isolated_builds_pass": 3
-      },
-      "followup": "All65failures traced to specific integration fixtures/inventory expectations and fixed without removing financial assertions; full rerun required",
-      "validated_runtime": {
-        "run": 44828314821,
-        "head": "465bd72c9887eb6fc051541121e1130b8008f3e2",
-        "node_pass": 4886,
-        "node_fail": 0,
-        "node_skipped": 0,
-        "python_pass": 67,
-        "required_checks_pass": 4,
-        "source_preflight": "MERGE_ONLY_PASS",
-        "publication_approved": false
-      }
-    },
-    "current_local_build": {
-      "app": {
-        "bytes": 3859516,
-        "sha256": "01bca972e621e43278914685a5935b754a66a6ee1339e749e5884921256ec9fc"
-      },
-      "auth": {
-        "bytes": 591809,
-        "sha256": "b0470c5f7d43381fb5ee168012ced82895d7c42bcf84c813d4584a2bb5d80dbe"
-      },
-      "finance": {
-        "bytes": 933881,
-        "sha256": "a5c5ab153113b3ce6a64619d3efce89618cde44116b4a3fea7b925f646a42266"
-      }
-    },
-    "live_after_first_push": {
-      "get_requests": 22,
-      "writes": 0,
-      "all_match_17_3": true
-    },
-    "packaging": {
-      "state": "IMPLEMENTED_VALIDATED_DRY_RUN",
-      "legacy_deployer_sha256": "3d68df3c8c64d3b3fcd5f4246fc3f760a2880c7ddb3868df0ccddc965ebdfb32",
-      "delegates_legacy_guards": true,
-      "complete_esm_source_cap_default_export_no_imports_free_commonjs_checked": true,
-      "actual_manifest_bytes_and_sha256_required": true,
-      "no_bundle_required": true,
-      "guard_tests_pass": 74,
-      "module_and_three_real_dry_run_tests_pass": 6,
-      "runtime_worker_bytes_unchanged_from_validated_465": true,
-      "real_deployments": 0,
-      "current_head_full_ci_source": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/131/checks"
-    }
+    "next_command": "git -C /workspace/work/mls-operating-increment-20261120 status --short",
+    "pending_real_inputs": [
+      "Provider contracts, actual weekly obligations and receipts of already-made payments",
+      "Actual initial counts and received shirts by physical size/color/fit/material",
+      "Future mappings of orders/components to reservations, purchase needs and DTF"
+    ],
+    "no_money_moved": true,
+    "no_real_operational_facts_created": true
   },
   "incident": {
     "id": "INCIDENT_2026_10_27_PANEL_AGENT_REGRESSION",
@@ -7685,6 +7607,169 @@
     "implementation": "IMPLEMENTED",
     "validation": "CONSULT_REQUIRED_CHECKS_AT_PR131_CURRENT_HEAD",
     "git_delivery": {
+      "status": "MERGED",
+      "pull_request": 131,
+      "main_commit": "dc784188e72c1a35dc014155e23c474b95b17cfe",
+      "approved_head": "6219bd5098c8dbad237b114593cdd368e697d003",
+      "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/131"
+    },
+    "publication": "NOT_PUBLISHED",
+    "operational_acceptance": "NOT_PERFORMED",
+    "live_last_verified_release": "2026-11-17.3",
+    "live_last_verified_at_utc": "2026-11-20T21:53:45.948298+00:00",
+    "financial_completeness": "PARTIAL",
+    "m2_closed": false,
+    "commercial_writes_allowed": false,
+    "report": "docs/MLS_FINANCE_COMPLETION_2026_11_20.md",
+    "evidence": "docs/financial-automation/validation/finance-completion-20261120.json",
+    "implemented": [
+      "Immutable source cohort continuation and exact declared/cutoff window coverage",
+      "Durable two-phase source retention with CAS confirmation and renewable source leases",
+      "Previous-month continuation and protected source-lane fairness",
+      "Account positions require all declared account balances",
+      "Causal same-instant inventory returns",
+      "Durable original obligation retry command without freshness extension",
+      "Bank consent checks after final asynchronous gates",
+      "Finance refresh after interrupted hidden reads",
+      "Historical calendar close identity and immutable rectification",
+      "Explicit original sale-item pagination beyond100 choices",
+      "Independent dated historical name/composition evidence with manual hash/revision review",
+      "Shared source lease checked atomically for manual and scheduled dated evidence",
+      "Account transport deadline across body/fetch/response",
+      "Pinned compatible dependency security update",
+      "Fresh consent is checked immediately before provider access, including the capability-await microtask boundary",
+      "A verified missing source invalidates its unavailable cohort; generic404 does not authorize replacement",
+      "Unavailable order dependencies yield a partial pass while independent lanes refresh; exact cursors survive deferred transport retries",
+      "Published catalogue/adult-cost/DTF functionality restored; global114-command workspace compatibility preserved"
+    ],
+    "not_proven": [
+      "Full current candidate CI and authenticated generated-Worker QA",
+      "Recovery of five already absent September/October source runs through authorized new collection",
+      "Real bank/native wallet/payout adapters and account coverage",
+      "Approved accounting policy, tax/expense facts and Ads timezone evidence",
+      "Physical production/returns source matching and real financial close acceptance"
+    ],
+    "next_actions": [
+      "Require full Node/Python/build/source/security checks at exact PR131head",
+      "Verify historical replay on final financial module hashes",
+      "Validate the specific Live release, rollback/assets and real account readiness separately",
+      "Recollect genuinely missing sources through normal authorized work and review historical identities",
+      "Complete native bank/wallet/payout/source and physical/financial operational acceptance with real evidence"
+    ],
+    "python_tests": {
+      "passed": 67,
+      "failed": 0
+    },
+    "dependency_audit": {
+      "before": {
+        "moderate": 2,
+        "high": 1
+      },
+      "after": {
+        "total": 0
+      },
+      "wrangler": "4.153.0",
+      "undici_override": "7.30.2"
+    },
+    "historical_replay": {
+      "state": "PASS_FINAL_HEAD_6219BD5_COVERAGE_PARTIAL",
+      "scope": [
+        "2026-11-13",
+        "2026-11-17"
+      ],
+      "integer_cents": true,
+      "all_five_days_match": true,
+      "known_units": 3,
+      "pending_units": 183,
+      "current_catalog_used_to_reprice_history": false,
+      "edit_day_unknown": true,
+      "remote_writes": 0
+    },
+    "scheduler_budget": {
+      "limit": 50,
+      "complete_cost_includes_retention_posts": true,
+      "observed_turns": [
+        42,
+        47
+      ]
+    },
+    "ci": {
+      "current_head_checks": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/131/checks",
+      "scope": "Every required check must pass at the exact current head before merge; production authorization remains separate",
+      "attempt1": {
+        "run": 44824267259,
+        "head": "35cf9a35eb5f3cc09871733f7e78eefb3ce1436a",
+        "node_pass": 4803,
+        "node_fail": 65,
+        "cancelled": 0,
+        "skipped": 0,
+        "cloudflare_isolated_builds_pass": 3
+      },
+      "followup": "All65failures traced to specific integration fixtures/inventory expectations and fixed without removing financial assertions; full rerun required",
+      "validated_runtime": {
+        "run": 44828314821,
+        "head": "465bd72c9887eb6fc051541121e1130b8008f3e2",
+        "node_pass": 4886,
+        "node_fail": 0,
+        "node_skipped": 0,
+        "python_pass": 67,
+        "required_checks_pass": 4,
+        "source_preflight": "MERGE_ONLY_PASS",
+        "publication_approved": false
+      }
+    },
+    "current_local_build": {
+      "app": {
+        "bytes": 3859516,
+        "sha256": "01bca972e621e43278914685a5935b754a66a6ee1339e749e5884921256ec9fc"
+      },
+      "auth": {
+        "bytes": 591809,
+        "sha256": "b0470c5f7d43381fb5ee168012ced82895d7c42bcf84c813d4584a2bb5d80dbe"
+      },
+      "finance": {
+        "bytes": 933881,
+        "sha256": "a5c5ab153113b3ce6a64619d3efce89618cde44116b4a3fea7b925f646a42266"
+      }
+    },
+    "live_after_first_push": {
+      "get_requests": 22,
+      "writes": 0,
+      "all_match_17_3": true
+    },
+    "packaging": {
+      "state": "IMPLEMENTED_VALIDATED_DRY_RUN",
+      "legacy_deployer_sha256": "3d68df3c8c64d3b3fcd5f4246fc3f760a2880c7ddb3868df0ccddc965ebdfb32",
+      "delegates_legacy_guards": true,
+      "complete_esm_source_cap_default_export_no_imports_free_commonjs_checked": true,
+      "actual_manifest_bytes_and_sha256_required": true,
+      "no_bundle_required": true,
+      "guard_tests_pass": 74,
+      "module_and_three_real_dry_run_tests_pass": 6,
+      "runtime_worker_bytes_unchanged_from_validated_465": true,
+      "real_deployments": 0,
+      "current_head_full_ci_source": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/131/checks"
+    },
+    "final_validation": {
+      "status": "PASS",
+      "pull_request_run": 44833658749,
+      "main_run": 44835846808,
+      "node_pass": 4910,
+      "node_fail": 0,
+      "node_skipped": 0,
+      "python_pass": 67,
+      "main_tree_identical": true
+    }
+  },
+  "previous_increment_before_weekly_payments_physical_shirts": {
+    "schema": "mls_finance_completion_increment_v1",
+    "recorded_at": "2026-11-20T22:57:04.998033+00:00",
+    "base_commit": "4cfdf465b2fda58dd27ae693126b7fe1625f69d6",
+    "branch": "fix/finance-completion-20261120",
+    "release_id": "2026-11-20.1",
+    "implementation": "IMPLEMENTED",
+    "validation": "CONSULT_REQUIRED_CHECKS_AT_PR131_CURRENT_HEAD",
+    "git_delivery": {
       "pull_request": 131,
       "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/131",
       "state_source": "GITHUB_CURRENT_PR_STATE"
@@ -7826,5 +7911,79 @@
       "real_deployments": 0,
       "current_head_full_ci_source": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/131/checks"
     }
+  },
+  "operating_increment_20261120": {
+    "schema": "mls_operating_increment_v1",
+    "recorded_at": "2026-11-21T00:22:47.100639+00:00",
+    "base_commit": "dc784188e72c1a35dc014155e23c474b95b17cfe",
+    "branch": "feature/weekly-payments-physical-shirts-20261120",
+    "release_id": "2026-11-20.2",
+    "roadmap_items": [
+      "M2.2-WEEKLY-PRODUCTION-PAYMENTS",
+      "M2.2-PHYSICAL-SHIRT-STOCK"
+    ],
+    "implementation": "IMPLEMENTED",
+    "validation": {
+      "state": "PASS_LOCAL_FULL",
+      "node_tests": 5003,
+      "node_pass": 5003,
+      "node_fail": 0,
+      "node_skipped": 0,
+      "node_cancelled": 0,
+      "python_pass": 67,
+      "npm_audit_vulnerabilities": 0,
+      "chromium_profiles": 4,
+      "chromium_themes": [
+        "light",
+        "dark"
+      ],
+      "chromium_screenshots": 24,
+      "first_full_attempt": {
+        "node_pass": 5002,
+        "node_fail": 1,
+        "cause": "New operational schema missing from the tenant-isolation test fixture; original assertions preserved and fixture extended"
+      },
+      "final_full_source_hashes": "/workspace/work/operating-increment-evidence/full-gates-source-hashes-attempt2.json",
+      "financial_core_unchanged_modules": 11,
+      "legacy_setup_sql_statements": 114
+    },
+    "git_integration": "NOT_INTEGRATED",
+    "publication": "NOT_PUBLISHED",
+    "real_data_validation": "NOT_PERFORMED",
+    "live_baseline": "2026-11-17.3",
+    "financial_transfers_allowed": false,
+    "external_publication_allowed": false,
+    "observable_results": [
+      "Preview and audit manual partial payments against oldest weekly obligations per provider",
+      "Physical shirts by size/color with explicit initial count, receipts and protected reservations"
+    ],
+    "next_actions": [
+      "Review the local source, signed candidate and synthetic usage evidence",
+      "Continue the independent purchase-needs planner from explicit physical demand and stock, preserving UNKNOWN and no external ordering",
+      "After specific authorization, push the exact branch for PR/required CI and isolated Cloudflare Builds; do not publish the Live",
+      "Only integrate Git after exact-head remote CI; record publication and real-data acceptance separately"
+    ],
+    "subsequent_items": [
+      "Purchase needs from confirmed physical demand and firm receipts",
+      "Link physical reservations to eligible DTF work without inferring manufacture",
+      "Connect confirmed production and weekly closing without duplicate expense or COGS"
+    ],
+    "evidence": "docs/MLS_OPERATING_INCREMENT_2026_11_20.md",
+    "git_delivery": {
+      "state": "LOCAL_BRANCH_COMMITTED",
+      "branch": "feature/weekly-payments-physical-shirts-20261120",
+      "candidate_manifest": "tools/release-operating-increment-candidate.json",
+      "source_commit_field": "prepared_source_commit",
+      "remote_push": false,
+      "github_ci": "NOT_RUN_FOR_THIS_INCREMENT"
+    },
+    "next_command": "git -C /workspace/work/mls-operating-increment-20261120 status --short",
+    "pending_real_inputs": [
+      "Provider contracts, actual weekly obligations and receipts of already-made payments",
+      "Actual initial counts and received shirts by physical size/color/fit/material",
+      "Future mappings of orders/components to reservations, purchase needs and DTF"
+    ],
+    "no_money_moved": true,
+    "no_real_operational_facts_created": true
   }
 }

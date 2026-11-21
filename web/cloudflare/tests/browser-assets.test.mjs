@@ -19,6 +19,8 @@ import {PRODUCTION_DAILY_FINANCE_CLIENT} from '../src/production-daily-finance-v
 import {PRODUCTION_WEEKLY_CLIENT} from '../src/production-weekly-view.mjs';
 import {PRODUCTION_COVERAGE_CLIENT} from '../src/production-coverage-view.mjs';
 import {PRODUCTION_WORKSPACE_CLIENT} from '../src/production-workspace-view.mjs';
+import {PRODUCTION_WEEKLY_PAYMENTS_CLIENT} from '../src/production-weekly-payments-view.mjs';
+import {PHYSICAL_SHIRT_STOCK_CLIENT} from '../src/physical-shirt-stock-view.mjs';
 import {createLocalBrowserAssets,verifyBrowserAssets} from '../../../tools/browser_assets.mjs';
 import {assertCompiledBrowserScriptInventory} from './browser-assets-http-fixture.mjs';
 import {compiledOwnerReportPage} from './owner-report-browser-fixture.mjs';
@@ -59,10 +61,12 @@ test('the DTF asset preserves the exact published engine/workspace bytes while b
  const warning=browserWorkspaceFailureScript();assert.ok(warning.includes(JSON.stringify(row.path)));assert.doesNotMatch(warning,/fetch\(|\.start\(|localStorage|sessionStorage/);
 });
 
-test('the complete production asset matches its seven current controllers and retains the frozen published prototype',()=>{
+test('the complete production asset preserves the seven reviewed controllers and appends exactly two operational controllers',()=>{
  const row=manifest.assets.find(value=>value.id==='production'),bytes=readFileSync(path.join(root,'dist','browser-assets',...row.path.slice(1).split('/')));
  const previousInline=[PRODUCTION_COST_PERIODS_CLIENT,PRODUCTION_CONFIRMATION_PROPOSAL_CLIENT,INCURRED_PRODUCTION_CLIENT,PRODUCTION_DAILY_FINANCE_CLIENT,PRODUCTION_WEEKLY_CLIENT,PRODUCTION_COVERAGE_CLIENT,PRODUCTION_WORKSPACE_CLIENT].join('\n').replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g,character=>'\\u'+character.charCodeAt(0).toString(16).padStart(4,'0'));
- assert.deepEqual(bytes,Buffer.from(previousInline),'extraction cannot change or reorder any legacy production client');
+ assert.deepEqual(bytes.subarray(0,Buffer.byteLength(previousInline)),Buffer.from(previousInline),'new functionality cannot change or reorder any legacy production client');
+ const complete=[previousInline,PRODUCTION_WEEKLY_PAYMENTS_CLIENT,PHYSICAL_SHIRT_STOCK_CLIENT].join('\n').replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g,character=>'\\u'+character.charCodeAt(0).toString(16).padStart(4,'0'));
+ assert.equal(createHash('sha256').update(bytes).digest('hex'),createHash('sha256').update(complete).digest('hex'),'only the two exact new controllers may follow the reviewed prefix');
  // Captured from the authenticated synthetic HTML of the pre-extraction
  // Wrangler prototype (4,228,030 bytes, SHA 06078c1f...52eb39), rather than
  // computed solely from the new asset exports.
@@ -125,7 +129,15 @@ test('the reviewed current seven-asset inventory preserves exact controller byte
  // Month was reviewed again after TEN-05 cleanup (sourceb91ff45049ab42b3a34182c970e066b336a2aa8cf84a66c79e2da9d4bed8083e).
  // Its previous61f017... hash predates private-cache/DOM teardown; this is a functional security change, not distribution drift.
  const reviewed={bank:'0d6250f5888258fa29664eac45b2cd821d3872b1c96ac47dda46bd7fd10e6a0c',month:'5203d255416bacb97cd44ddef29a2fc76b1432f0a1ea731fabacc4bb071fcd07',orders:'ec6397070416275d880f293d4abe8d7f531215af369d7e9a275c10f019a8c3c8',production:'549c2b0f6ae183249bed2472af894cf5211d4a6853fc33c0ce6c127aa3ebf034',weekly:'04ae3166780be18f31754212640b0887abe9e20830ac4309a6e31109398e4eeb'};
- for(const [id,sha]of Object.entries(reviewed))assert.equal(manifest.assets.find(row=>row.id===id).sha256,sha,'the reviewed exact '+id+' asset must not drift');
+ for(const [id,sha]of Object.entries(reviewed)){
+  const row=manifest.assets.find(row=>row.id===id);
+  if(id==='production'){
+   const prefix=[PRODUCTION_COST_PERIODS_CLIENT,PRODUCTION_CONFIRMATION_PROPOSAL_CLIENT,INCURRED_PRODUCTION_CLIENT,PRODUCTION_DAILY_FINANCE_CLIENT,PRODUCTION_WEEKLY_CLIENT,PRODUCTION_COVERAGE_CLIENT,PRODUCTION_WORKSPACE_CLIENT].join('\n').replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g,c=>'\\u'+c.charCodeAt(0).toString(16).padStart(4,'0'));
+   assert.equal(createHash('sha256').update(prefix).digest('hex'),sha,'the original seven controllers retain their frozen reviewed hash');
+   const current=[prefix,PRODUCTION_WEEKLY_PAYMENTS_CLIENT,PHYSICAL_SHIRT_STOCK_CLIENT].join('\n').replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g,c=>'\\u'+c.charCodeAt(0).toString(16).padStart(4,'0'));
+   assert.equal(row.sha256,createHash('sha256').update(current).digest('hex'),'the complete extension is exact');
+  }else assert.equal(row.sha256,sha,'the reviewed exact '+id+' asset must not drift');
+ }
  const row=manifest.assets.find(row=>row.id==='workspace');assert.ok(row);assert.ok(row.bytes>262144&&row.bytes<=1048576);
  const emitted=Buffer.from(CLIENT.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g,c=>'\\u'+c.charCodeAt(0).toString(16).padStart(4,'0')));const bytes=readFileSync(path.join(root,'dist','browser-assets',...row.path.slice(1).split('/')));assert.deepEqual(bytes,emitted,'workspace distribution preserves every frozen controller byte');
  const tag=browserAssetScript('workspace');assert.equal(tag,'<script src="'+row.path+'" integrity="'+row.integrity+'" crossorigin="anonymous"></script>');assert.doesNotMatch(tag,/\b(async|defer|onerror)\b/);

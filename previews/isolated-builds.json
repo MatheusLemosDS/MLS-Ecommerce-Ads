@@ -50,6 +50,7 @@
     "fix/system-stability-20261116",
     "fix/builds-recovery-20261116",
     "fix/dated-cost-history-20261119",
-    "fix/finance-completion-20261120"
+    "fix/finance-completion-20261120",
+    "feature/weekly-payments-physical-shirts-20261120"
   ]
 }
