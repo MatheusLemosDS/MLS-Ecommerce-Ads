@@ -2,7 +2,7 @@
   "schema": "mls_operating_increment_merge_candidate_v1",
   "scope": "MERGE_ONLY",
   "base_commit": "dc784188e72c1a35dc014155e23c474b95b17cfe",
-  "prepared_source_commit": "b042605f5374ac1a368f922b1d7d35e4fbfe2b30",
+  "prepared_source_commit": "3d74d9563b0c92d3a6cdffe2412c23ab4672a306",
   "owner_authorization": "OWNER_REQUESTED_WEEKLY_PAYMENTS_AND_PHYSICAL_SHIRTS_WITHOUT_EXTERNAL_PUBLICATION_2026_11_20",
   "production_approved": false,
   "live_authorization": false,
@@ -15,27 +15,27 @@
   "files": [
     {
       "path": "AGENTS.md",
-      "sha256": "0f3b2783dbd092ab225cd4de6459c57c123fef8be699e2afa65d86e45cc527af"
+      "sha256": "e2821ee5c558607c7526f20e88d11b3d2998148da38df2e1fbd5edfa484d2b07"
     },
     {
       "path": "NEXT_CHAT_HANDOFF.txt",
-      "sha256": "4a9243db222a060b7c128b0fbb733f53ab06c1a55f0ce4dc4b608728a29950cc"
+      "sha256": "d03b2a2caf30819d43e7e8ac42ceb68d9c9e19f4fd3532f2c1123d00c812cd96"
     },
     {
       "path": "docs/MLS_CODEX_HANDOFF_2026_10_28.md",
-      "sha256": "a7ab21ddd2189a4f4fc3df7c4f88ff3ec501e34c37917a9eb0731c09a4bf94ab"
+      "sha256": "4bbd554ea3a416913036e94a85030447529a18f498ff2788c71a53e6a7f6a45a"
     },
     {
       "path": "docs/MLS_COMMERCE_OS_CHECKPOINT.json",
-      "sha256": "e9ba924937fe04a53f28f640e205d6863c2dc62c12f4845a544fa54b2cfde5b0"
+      "sha256": "e8a538faa3ef8e6d6a12d22cbd1ff35ab242e2633438ee19d10b7f0067fde62a"
     },
     {
       "path": "docs/MLS_OPERATING_INCREMENT_2026_11_20.md",
-      "sha256": "7b5d86fbb0d87a50f1eff2fa70abb32da324bc7c7bc6bd2efc4789f962a78971"
+      "sha256": "51e0cbbb7b8445b96bcf0ccf3e96643a9888f10a2e6509f182c32cf088fe7883"
     },
     {
       "path": "docs/ROADMAP_MLS_COMMERCE_OS.md",
-      "sha256": "fd829d931c682c2aef04241f6d2985d39f87c3227985331153c173b43a1b9050"
+      "sha256": "0e1420e617fec1745e0bbd8f28bdd0b3e2c14f8d84b594d26a8e524af1d4264a"
     },
     {
       "path": "docs/history/AGENTS_before_operating_increment_20261120.md",
