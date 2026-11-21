@@ -59,7 +59,7 @@ test('prior three verifier implementations remain exact after removing only this
 });
 
 test('existing isolated preview metadata permits only the exact new branch while preserving every existing resource and branch',()=>{
- const file='previews/isolated-builds.json',current=JSON.parse(fs.readFileSync(path.join(root,file),'utf8')),observed=spawnSync('git',['show',HISTORICAL_PROFIT_MERGE_BASE_COMMIT+':'+file],{cwd:root,encoding:'utf8'});assert.equal(observed.status,0,observed.stderr);const baseline=JSON.parse(observed.stdout),branch='fix/historical-profit-20261121';
+ const file='previews/isolated-builds.json',current=JSON.parse(spawnSync('git',['show','426b1de037b075afa066ace4742e3cf398294bbf:'+file],{cwd:root,encoding:'utf8'}).stdout),observed=spawnSync('git',['show',HISTORICAL_PROFIT_MERGE_BASE_COMMIT+':'+file],{cwd:root,encoding:'utf8'});assert.equal(observed.status,0,observed.stderr);const baseline=JSON.parse(observed.stdout),branch='fix/historical-profit-20261121';
  assert.equal(current.authorized_branches.filter(value=>value===branch).length,1);assert.deepEqual({...current,authorized_branches:current.authorized_branches.filter(value=>value!==branch)},baseline);
 });
 

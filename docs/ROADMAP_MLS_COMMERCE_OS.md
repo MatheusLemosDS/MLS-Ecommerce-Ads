@@ -1,10 +1,17 @@
+INTEGRAÇÃO VIGENTE — 21/11/2026
+PR133 integrada na main em 426b1de037b075afa066ace4742e3cf398294bbf, HEAD validado 1a2e1e76, 4/4 checks, 4.963 Node e 67 Python. A PR132 está sendo reconciliada preservando pagamentos semanais, estoque físico e a correção histórica. A união precisa de nova CI no SHA exato antes da integração. Os registros de validação anteriores abaixo mantêm seu escopo original; não comprovam esta combinação. Live 17.3 preservada; não publicar nem criar fatos físicos/financeiros reais. Checkpoint único: docs/MLS_COMMERCE_OS_CHECKPOINT.json. Próximo incremento após integração validada: pedidos → necessidade por tamanho/cor → reservas → faltas/compras → fila DTF → fabricação → fechamento, sem dupla dedução.
+
+<!-- OPERATING_INCREMENT_CURRENT -->
+Continuação operacional — 20/11/2026: main `dc784188e72c1a35dc014155e23c474b95b17cfe`, PR130 e PR131 integradas. CI final PR131 e main aprovadas: 4.910 Node/67 Python. A Live permanece 2026-11-17.3, conferida por leitura nativa em 20/11 às 23:34:22 UTC. Branch atual `feature/weekly-payments-physical-shirts-20261120`: pagamentos parciais semanais e estoque físico implementados/testados localmente (5.003 Node/67 Python, Chromium móvel/desktop normal/minificado). Envio ao GitHub/PR/CI/prévias isoladas autorizado pelo proprietário em 21/11/2026; consultar o estado remoto no SHA exato. Live, transferências e aceite real não autorizados/comprovados neste incremento. Próximo trabalho independente: necessidades de compra. Estado e próximo comando: docs/MLS_COMMERCE_OS_CHECKPOINT.json; uso/evidências: docs/MLS_OPERATING_INCREMENT_2026_11_20.md. Os registros abaixo preservam cortes históricos; não repetir merges concluídos.
+<!-- END_OPERATING_INCREMENT_CURRENT -->
+
 Correção operacional de 21/11/2026: main dc78418 com PR130/131 integradas; novo resultado diário com custos históricos auditados e reconhecimento financeiro de conjuntos numerados, preservando as referências legadas. Em validação LOCAL, sem integração/publicação/aceite financeiro real. Live 17.3 preservada. Estado atual no único checkpoint docs/MLS_COMMERCE_OS_CHECKPOINT.json; detalhes em docs/MLS_HISTORICAL_DAILY_PROFIT_2026_11_21.md. Registros abaixo são históricos.
 
 Atualização financeira de 20/11/2026: implementação na PR #131 (https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/131), branch fix/finance-completion-20261120, base 4cfdf465b2fda58dd27ae693126b7fe1625f69d6. Consultar os checks do HEAD da PR para validação completa e seu estado atual para integração Git. SEM PUBLICAÇÃO e SEM ACEITE FINANCEIRO REAL neste registro. Live 17.3 preservada às 21:53:45 UTC; paridade de catálogo/custos/DTF incorporada ao candidato. Uso, fontes e etapas separadas em docs/MLS_FINANCE_COMPLETION_2026_11_20.md e docs/financial-automation/validation/finance-completion-20261120.json. Custos desconhecidos, revisão humana e dependências externas permanecem explícitos.
 
-<!-- PR130_CI_REPAIR_CURRENT -->
+<!-- PR130_CI_REPAIR_HISTORICAL -->
 **Retomada da PR #130 — 20/11/2026:** corrigir as 195 falhas preservando testes, contratos financeiros e segurança; base main `346f30f`, head recebido `49c5a9b`. Cálculo histórico em contrato explícito, separado das referências legadas de custos atuais. Sem publicação nesta entrega. Local: 4.492 Node/67 Python aprovados, histórico real conferido com cobertura parcial preservada. Produção automática desativada nos três Workers conforme capturas atuais; a limitação API 403 permanece registrada. CI remota 678 teve uma falha CDP; helper corrigido com 21 testes determinísticos e quatro cenários semanais aprovados. Exigir nova CI completa antes de ready/merge; manter Live sem publicação. [Estado, evidências e próximo passo](MLS_PR130_CI_REPAIR_2026_11_20.md). Os registros anteriores permanecem históricos.
-<!-- END_PR130_CI_REPAIR_CURRENT -->
+<!-- END_PR130_CI_REPAIR_HISTORICAL -->
 
 <!-- FINANCIAL_AUTOMATION_CURRENT -->
 **Complemento financeiro — `PUBLISHED_VERIFIED` somente no escopo técnico/público:** versão `2026-11-13.3`, conferida em **13/11/2026 às 21:22:15 Brasília**, fonte `f68525ea1d136350ece9942433352accdf97d992`, [CI 43531882471](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43531882471) aprovada: **4.432 Node/67 Python**. App/Auth atualizados e Finance retido; três vetores/configuração, 17 verificações HTTP, oito assets e 24 perfis públicos conferidos. A correção valida pelo horário após a leitura assíncrona, preservando a rejeição de datas futuras. Na execução natural de 14/11 às 00:32:51 UTC, novembro avançou à fonte v2: 100 eventos de pedidos preservados e 13 eventos diários de Ads, sem novo SOURCE_INVALID ou reinício do cursor. A coleta continua parcial. MLS Finance reúne oito áreas, gráficos/CSV canônicos, custos históricos, conciliação e fechamentos versionados. Carteira/saques e banco automático ainda precisam de contrato, adaptadores e acessos comprovados; as demais lacunas da matriz e M2/M2.2 continuam abertas. QA autenticada é sintética/local; **aceite financeiro da conta real não realizado**. O recibo conserva integralmente a publicação .2 e sua falha posterior; publicação não comprova merge Git. [Uso, recibo e limites](financial-automation/README.md).
@@ -537,6 +544,21 @@ A [primeira etapa PR98](MLS_M22_PHYSICAL_RETURNS_2026_11_01.md) entrega o contro
 - [ ] Validar o ciclo original → devolução → inspeção → revenda, inclusive mudança de mês, custos ausentes e reservas concorrentes, antes de integrá-lo ao resultado financeiro.
 
 O controle físico, o ledger e a associação publicados oferecem contagens, custos e origem internos declarados, com quantidades originais UNAVAILABLE/null e avaliação de estoque UNKNOWN/null. Não alteram totais financeiros, reservas, revendas ou estoque externo. Custos registrados não comprovam pagamento nem a completude da produção real da loja. Valoração e lucro dependem de evidências adicionais e da futura integração contábil sem dupla contagem; uso físico real do proprietário e o ciclo completo permanecem sem validação. Triggers D1 persistem no rollback: código antigo pode retornar 503, exigindo recuperação compatível e desvinculação explícita antes de corrigir os pais. M2 e M2.2 continuam abertas.
+
+### Continuação de M2.2 — pagamentos semanais e camisetas físicas
+
+- M2.2-WEEKLY-PRODUCTION-PAYMENTS: obrigação declarada por prestador e semana,
+  prévia FIFO das semanas mais antigas, pagamento já realizado, aplicação parcial,
+  replay, retificação e histórico. Não enviar dinheiro nem reconhecer outra despesa.
+- M2.2-PHYSICAL-SHIRT-STOCK: variantes por tamanho/cor, saldo inicial desconhecido,
+  contagem explícita, recebimentos, ajustes, reservas/liberações e consumo confirmado.
+  Uma compra aberta não recebe mercadoria, e exportar DTF não consome uma camiseta.
+- Depois: necessidades de compra → fila DTF → fabricação/fechamento, vinculando
+  origens e política de custo sem segunda dedução. Fonte financeira ausente não
+  bloqueia os controles físicos independentes nem conclui o aceite financeiro.
+
+Não reinicia M2/M2.2 ou fases concluídas. O único estado atual fica no checkpoint
+canônico; [uso e evidências do incremento](MLS_OPERATING_INCREMENT_2026_11_20.md).
 
 ### M3 — Products + Pricing Intelligence
 

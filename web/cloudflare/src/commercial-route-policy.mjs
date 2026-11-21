@@ -19,6 +19,8 @@ const entries=[
  ['production/weekly-closing','GET','production.read','costs.read'],['production/weekly-closing','POST','production.write','costs.read'],
  ['production/proposal','GET','production.read','costs.read'],
  ['production/incurred','GET','production.read','costs.read'],['production/incurred','POST','production.write','costs.read'],
+ ['production/weekly-payments','GET','finance.read'],['production/weekly-payments','POST','finance.read','finance.write'],
+ ['production/shirt-stock','GET','production.read'],['production/shirt-stock','POST','production.read','production.write'],
  ['returns/manufacturing-links','GET','returns.read','production.read','costs.read'],['returns/manufacturing-links','POST','returns.write','production.read','costs.read'],
  ['returns/receipts','GET','returns.read','finance.read','costs.read'],['returns/receipts','POST','returns.write','finance.read','costs.read'],
  ['returns/physical','GET','returns.read'],['returns/physical','POST','returns.write'],

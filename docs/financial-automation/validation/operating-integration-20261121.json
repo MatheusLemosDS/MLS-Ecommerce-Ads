@@ -1,0 +1,94 @@
+{
+  "schema": "mls_operating_integration_validation_v1",
+  "recorded_at": "2026-11-21T10:35:48.133734+00:00",
+  "base_main_after_pr133": "426b1de037b075afa066ace4742e3cf398294bbf",
+  "pr133": {
+    "state": "MERGED",
+    "head": "1a2e1e76aefa5ab785e21128cc43271c1da258a7",
+    "merge_commit": "426b1de037b075afa066ace4742e3cf398294bbf",
+    "node_pass": 4963,
+    "python_pass": 67,
+    "required_checks_pass": 4
+  },
+  "pr132": {
+    "original_head": "01ba4e3dfd92dc11c90386cbee7d2fce82d6db41",
+    "prior_node_pass": 5003,
+    "prior_python_pass": 67,
+    "current_status": "RECONCILED_LOCAL_FOCUSED_PASS_FULL_CI_PENDING"
+  },
+  "implementation": "IMPLEMENTED_AND_CONFLICTS_RECONCILED",
+  "tested": {
+    "financial_and_stock_focused": {
+      "pass": 77,
+      "fail": 0,
+      "skipped": 0
+    },
+    "full_combined_ci": "NEW_EXACT_HEAD_RUN_REQUIRED",
+    "build_assets_and_browser": {
+      "pass": 24,
+      "fail": 0,
+      "skipped": 0,
+      "browser_profiles": 8,
+      "screenshots": 36
+    },
+    "release_and_preview_gates": {
+      "pass": 81,
+      "fail": 0,
+      "skipped": 0
+    },
+    "historical_sources_identical_to_pr133": {
+      "web/cloudflare/src/production-costs.mjs": "44636ea31d7b9a573c2bd3cbacf7cf313c169c941c1cc669597fcc3462e3a2ca",
+      "web/cloudflare/src/cost-rules.mjs": "a6db866f802e4c5b52964d023ada26c11c4767c6c357c74924ab2d21587e0f35",
+      "web/cloudflare/src/numbered-adult-kit-costs.mjs": "803a83c4b095be0de7ac471e83466588e6eeff161d3dec5200c6862050284768",
+      "web/cloudflare/src/business-daily-history.mjs": "10c260fe350a7da954f3a1e4530310e76711ea7868f8c4492a2d9f9021ab529c"
+    },
+    "combined_first_remote_attempt": {
+      "head": "1e857ea76b5d5c650ca897b7c5ce7cb29788377e",
+      "run": 44895273590,
+      "job": 136819466142,
+      "node_tests": 5061,
+      "node_pass": 5053,
+      "node_fail": 8,
+      "node_skipped": 0,
+      "node_cancelled": 0,
+      "cause": "Eight browser profiles retained the earlier current-release link order; the combined current notes introduce Overview while retaining the Finance destination in the historical section",
+      "file": "web/cloudflare/tests/app-release-discovery-chrome.test.mjs",
+      "fix": "Explicit current href order reconciled and Finance destination assertion added; no assertion removed, runtime or financial module changed",
+      "python": "NOT_RUN_AFTER_NODE_FAILURE",
+      "isolated_builds_pass": 3
+    },
+    "corrected_release_discovery": {
+      "pass": 8,
+      "fail": 0,
+      "skipped": 0,
+      "assertions_removed": 0,
+      "finance_destination_assertion_added": true
+    }
+  },
+  "integrated_to_main": false,
+  "published_to_live": false,
+  "real_company_operational_acceptance": "NOT_PERFORMED",
+  "live_baseline": "2026-11-17.3",
+  "live_native_vector_after_pr133": {
+    "verified_at": "2026-11-21T10:31:32.459922+00:00",
+    "get_requests": 22,
+    "all_workers_and_configs_preserved": true,
+    "receipt_workspace_path": "/workspace/work/pr130-ci-evidence/live-readonly-after-pr133-integration-20261121-20261120.json"
+  },
+  "financial_movements": 0,
+  "real_operational_facts_created": 0,
+  "live_mutations": 0,
+  "historical_acceptance": "PARTIAL",
+  "m2_closed": false,
+  "m22_closed": false,
+  "next_actions": [
+    "Require complete combined CI and exact generated Worker checks at final PR132 head",
+    "Merge PR132 only if validation remains green",
+    "Continue physical demand and procurement planning from proved server sources without real writes"
+  ],
+  "workers": {
+    "app": "b40e717dbe762330e1c3e5feaf6480a77c3e7185c4be35dc4c77062eab032409",
+    "auth": "d582efcf139bac5327f8a745ec7a5ea2e1f77757d51c11a6d16b200bc93b9466",
+    "finance": "012c0eaced495c53b3b143a6298ec8c7221a0a5198c67455eb538e16508c86a4"
+  }
+}

@@ -36,6 +36,11 @@ export function assertCompiledBrowserScriptInventory(html,{listingFactory=true,a
  assert.ok(listenerIndex>=0&&external.every(row=>listenerIndex<row.index),'the failure guard is installed before every external dependency');assert.equal(external.at(-1).index,tags.length-1,'workspace startup executes last');
  for(const [label,marker]of families)assert.equal(scripts.filter(script=>script.includes(marker)).length,1,label+' is shipped once');
  assert.equal(scripts.filter(script=>script.includes('globalThis.brazaReturnManufacturingLinks=')).length,1,'physical-return links are retained');
+ for(const marker of ['globalThis.brazaProductionWeeklyPayments=','globalThis.brazaPhysicalShirtStock=']){
+  const production=scripts[external.find(row=>row.id==='production').index];
+  assert.equal(production.split(marker).length,2,'each operational controller is shipped once inside the existing production asset');
+  assert.equal(scripts.filter(script=>script.includes(marker)).length,1,'operational controllers cannot add unsigned duplicate scripts');
+ }
  const dtf=scripts[external.find(row=>row.id==='dtf').index],workspace=scripts.at(-1),separator='/* MLS_DTF_ENGINE_END */';assert.equal(dtf.split(separator).length,2,'the signed DTF asset contains both original fragments');const [engine,controller]=dtf.split(separator);
  assert.ok(engine.includes('globalThis.brazaDtfEngine='));assert.ok(controller.includes('globalThis.brazaDtfWorkspace='));
  for(const marker of ['globalThis.brazaDtfEngine=','globalThis.brazaDtfWorkspace='])assert.equal(scripts.filter(script=>script.includes(marker)).length,1,'the original DTF fragment is shipped once: '+marker);
