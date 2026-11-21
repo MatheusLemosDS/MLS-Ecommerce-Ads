@@ -1,3 +1,6 @@
+PR134 — continuação vigente
+Entrega pública na worktree /workspace/work/mls-order-materials-final-20261121, branch local fix/material-commercial-policy-20261121, branch remota feature/order-materials-dtf-chain-20261121. O candidato59b e sua primeira suíte estão preservados na worktree anterior. Consultar PR134 no HEAD atual e o único checkpoint; as correções são incrementais, sem reset, descarte, Live ou dados financeiros reais. PR133/132 já integradas na mainDE0; não repetir esses merges.
+
 RETOMADA MAIS RECENTE — 21/11/2026
 PR133 integrada em426b1de ePR132 emde0bb72, com CI2 de5.061Node/67Python e4/4checks. Esta branch implementa necessidades, fornecedores/compras declaradas, reservas/recebimentos atômicos, DTF e leitura semanal compartilhada. Ler docs/MLS_ORDER_MATERIALS_DTF_2026_11_21.md e o único checkpoint. A integração desta nova função ainda depende da CI final no SHA exato. Live17.3 preservada; nenhuma compra/pagamento/fato físico ou financeiro real autorizado nesta tarefa. Registros antigos abaixo têm escopo histórico, não são próximos passos vigentes.
 

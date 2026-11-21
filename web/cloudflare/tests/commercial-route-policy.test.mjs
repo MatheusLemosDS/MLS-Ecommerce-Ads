@@ -26,6 +26,44 @@ test('saved DTF batch reads have only the exact existing read capability while l
  const mutation=await commercialRoutePolicy(new Request('https://fixture.local/api/admin/production/batches/action',{method:'POST',headers:{'content-type':'application/json'},body:'{}'}));assert.deepEqual(mutation.capabilities,['dtf.write']);assert.equal(mutation.mutating,true);
 });
 
+test('material workspaces require every exposed domain and retain exact method and suffix boundaries',async()=>{
+ const routes=[
+  ['/api/admin/production/material-needs','GET',['production.read','orders.read','costs.read']],
+  ['/api/admin/production/material-needs','POST',['production.read','orders.read','costs.read','production.write']],
+  ['/api/admin/production/weekly-materials','GET',['production.read','finance.read']],
+ ];
+ for(const [path,method,required]of routes){
+  const options={method,...(method==='POST'?{body:{action:'reserve_order'}}:{})};
+  const policy=await commercialRoutePolicy(request(path,options));
+  assert.deepEqual(policy.capabilities,required,path+':'+method);
+  assert.equal(policy.mutating,method==='POST');
+  assert.equal(await commercialRouteAllowed(principal('OWNER',required),request(path,options)),true);
+  for(const missing of required)assert.equal(await commercialRouteAllowed(principal('OWNER',required.filter(cap=>cap!==missing)),request(path,options)),false,path+':'+method+' must require '+missing);
+  // Quotes and declared purchase plans do not edit financial cost rules, post
+  // another expense, send a purchase order or grant banking authority.
+  for(const capability of ['finance.write','bank.read','bank.write','costs.write'])assert.equal(required.includes(capability),false,capability);
+  for(const suffix of ['/','/extra','/sync'])assert.equal(await read(path+suffix,options),null,path+suffix);
+  for(const unsupported of ['HEAD','PUT','PATCH','DELETE','OPTIONS'])assert.equal(await read(path,{method:unsupported}),null,path+':'+unsupported);
+ }
+ assert.equal(await read('/api/admin/production/weekly-materials',{method:'POST',body:{}}),null,'the weekly observation has no mutation method');
+});
+
+test('material observations and writes respect role ceilings and explicit read grants without finance promotion',async()=>{
+ const path='/api/admin/production/material-needs',required=['production.read','orders.read','costs.read'];
+ const readonly=principal('VIEWER',required),operations=principal('OPERATIONS'),grantedOperations=principal('OPERATIONS',[...ACCOUNT_ROLES.OPERATIONS.capabilities,'costs.read']);
+ assert.equal(await commercialRouteAllowed(readonly,request(path)),true);
+ assert.equal(await commercialRouteAllowed(readonly,request(path,{method:'POST',body:{action:'reserve_order'}})),false,'read access cannot reserve or mutate material facts');
+ assert.equal(await commercialRouteAllowed(principal('OWNER',required),request(path,{method:'POST',body:{action:'save_supplier'}})),false,'a quotation declaration still requires operational write authority');
+ assert.equal(await commercialRouteAllowed(operations,request(path)),false,'the closed material DTO includes supplier quotation prices');
+ assert.equal(await commercialRouteAllowed(grantedOperations,request(path)),true);
+ assert.equal(await commercialRouteAllowed(grantedOperations,request(path,{method:'POST',body:{action:'save_purchase'}})),true);
+ assert.equal(await commercialRouteAllowed(grantedOperations,request('/api/admin/production/weekly-materials')),false,'material access must not disclose weekly obligations without finance.read');
+ assert.equal(await commercialRouteAllowed(principal('FINANCE'),request(path)),false,'the finance role has no implicit physical-production grant');
+ assert.equal(await commercialRouteAllowed(principal('FINANCE',[...ACCOUNT_ROLES.FINANCE.capabilities,'production.read']),request(path)),false,'a grant outside the existing role ceiling is rejected');
+ const headers={'x-role':'OWNER','x-mls-capability':'production.write'};
+ assert.equal(await commercialRouteAllowed(readonly,request(path,{method:'POST',headers,body:{action:'save_purchase',capability:'production.write',role:'OWNER'}})),false,'headers and command fields cannot promote a read grant');
+});
+
 test('all emitted requirements exist in account-policy rather than invented administrator grants',async()=>{
  const known=new Set(Object.values(ACCOUNT_ROLES).flatMap(value=>value.allowedCapabilities));
  for(const path of COMMERCIAL_OPERATIONAL_ROUTES){let mapped=0;for(const method of ['GET','POST']){

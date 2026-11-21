@@ -46,9 +46,11 @@ test('every separately reviewed UI/error/wrapper/test adapter reconstructs its e
   'tools/tests/release-historical-profit-preflight.test.mjs',
   'tools/tests/release-operating-increment-preflight.test.mjs',
   'web/cloudflare/src/agent-registry-view.mjs',
+  'web/cloudflare/src/commercial-route-policy.mjs',
   'web/cloudflare/src/incurred-production.mjs',
   'web/cloudflare/src/production-weekly-payments.mjs',
   'web/cloudflare/tests/browser-assets.test.mjs',
+  'web/cloudflare/tests/commercial-route-policy.test.mjs',
   'web/cloudflare/tests/production-closing-workspace-chrome.test.mjs',
   'web/cloudflare/tests/reviewed-cost-source-invariants.mjs',
  ].sort();
@@ -111,4 +113,19 @@ test('the prior DTF controller hash and length stay pinned without replacing the
  assert.equal(prior,git(MATERIAL_CHAIN_MERGE_BASE_COMMIT,filename));
  for(const assertion of ["assert.equal(row.sha256,'1f0ca4ce395126c895b9e79afff57f1ca0ed74c3df31c6b7b0a1ac6dd0673026')",'assert.equal(row.bytes,53814)','assert.deepEqual(bytes,Buffer.from(emitted))'])assert.ok(prior.includes(assertion));
  for(const assertion of ['assert.deepEqual(bytes,Buffer.from(emitted))',"assert.deepEqual(bytes.subarray(0,engine.length),reviewed.subarray(0,engine.length))","assert.deepEqual(bytes.subarray(0,engine.length),engine"])assert.ok(current.includes(assertion));
+});
+
+test('material route classification adds only three exact existing-capability combinations and preserves every original authorization function',()=>{
+ const filename='web/cloudflare/src/commercial-route-policy.mjs',current=source(filename),before=git(MATERIAL_CHAIN_MERGE_BASE_COMMIT,filename);
+ const entries=text=>{const first=text.indexOf('const entries=['),last=text.indexOf('\n];',first);assert.ok(first>=0&&last>first);return [...text.slice(first,last).matchAll(/\['[^']+','(?:GET|POST)'(?:,'[^']+')+\]/g)].map(match=>[...match[0].matchAll(/'([^']*)'/g)].map(value=>value[1]));};
+ const previous=entries(before),observed=entries(current),expected=[
+  ['production/material-needs','GET','production.read','orders.read','costs.read'],
+  ['production/material-needs','POST','production.read','orders.read','costs.read','production.write'],
+  ['production/weekly-materials','GET','production.read','finance.read'],
+ ];
+ const key=row=>row[0]+':'+row[1],oldKeys=new Set(previous.map(key)),newKeys=new Set(expected.map(key));
+ assert.equal(observed.length,previous.length+3);assert.deepEqual(observed.filter(row=>!oldKeys.has(key(row))),expected);assert.deepEqual(observed.filter(row=>!newKeys.has(key(row))),previous);
+ const suffix='const routes=new Map';assert.equal(current.split(suffix).length,2);assert.equal(current.slice(current.indexOf(suffix)),before.slice(before.indexOf(suffix)),'no selector, all-of check, role ceiling, tab policy or grant-resolution body changes');
+ assert.equal(restore(filename,current),before);
+ for(const row of expected)for(const capability of row.slice(2))assert.ok(!['finance.write','costs.write','bank.read','bank.write'].includes(capability));
 });

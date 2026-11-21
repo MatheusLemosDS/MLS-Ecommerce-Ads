@@ -3,7 +3,7 @@
   "recorded_at": "2026-11-21T11:16:15.465879+00:00",
   "release_id": "2026-11-21.4",
   "implementation": "IMPLEMENTED",
-  "testing": "FOCUSED_PASS_FULL_VALIDATION_AT_CURRENT_PR_HEAD",
+  "testing": "CONSULT_REQUIRED_CHECKS_AT_EXACT_CURRENT_PR_HEAD",
   "integration": "NOT_INTEGRATED",
   "publication": "NOT_PUBLISHED",
   "company_real_data_validation": "NOT_PERFORMED",
@@ -24,7 +24,9 @@
     "previous_and_source_gates": 91,
     "agent_dtf_real_d1_contract": 10,
     "release_gates": 101,
-    "browser_assets": 14
+    "browser_assets": 14,
+    "commercial_policy_and_corrected_media": 20,
+    "release_and_policy_gates": 118
   },
   "external_purchase_actions": 0,
   "financial_movements": 0,
@@ -56,12 +58,18 @@
     "branch": "feature/order-materials-dtf-chain-20261121",
     "state_source": "GITHUB_CURRENT_PULL_REQUEST_HEAD_CHECKS_AND_STATE",
     "pull_request_lookup": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pulls?q=is%3Apr+head%3Afeature%2Forder-materials-dtf-chain-20261121",
-    "candidate_manifest": "tools/release-material-chain-candidate.json"
+    "candidate_manifest": "tools/release-material-chain-candidate.json",
+    "pull_request": 134,
+    "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/134",
+    "public_worktree": "/workspace/work/mls-order-materials-final-20261121",
+    "public_local_branch": "fix/material-commercial-policy-20261121",
+    "previous_candidate_preserved_at": "/workspace/work/mls-order-materials-dtf-20261121",
+    "local_full_pipeline_receipt": "/workspace/work/operations-chain-evidence-20261121/material-final-local-pipeline.json"
   },
   "workers": {
     "app": {
-      "sha256": "6404abe0282c03dcffb376f43bde7f69f0f67d4193076f3298a46fff40eea966",
-      "bytes": 4077700
+      "sha256": "8fa250fef04e577d116c9e46b700836a50a066b3450a11c42c330786a3c0be8b",
+      "bytes": 4077953
     },
     "auth": {
       "sha256": "be46381be7e8c100973a948fa7dceb31266a1455282d73fb7b99a0c2d860e8d4",
@@ -90,5 +98,37 @@
     "large_assertions_retained": true,
     "compact_length_digest_checks_added": true,
     "asset_caps_increased": false
+  },
+  "previous_remote_attempt": {
+    "head": "59b29abc0a0ab2ae4381b27af4e6b4a4c4e6236d",
+    "run": 44900135795,
+    "node_tests": 5204,
+    "node_pass": 5203,
+    "node_fail": 1,
+    "skipped": 0,
+    "cancelled": 0,
+    "cause": "Explicit commercial route whitelist lacked the new material routes; account requests correctly failed closed",
+    "corrected": "Only three exact all-of capability entries added, with roles/grants/authorization functions unchanged"
+  },
+  "previous_local_attempt": {
+    "head": "59b29abc0a0ab2ae4381b27af4e6b4a4c4e6236d",
+    "node_tests": 5204,
+    "node_pass": 5200,
+    "node_fail": 4,
+    "source_issues": 1,
+    "media_preparation_failures": 3,
+    "cause_of_media_failures": "Auxiliary local media setup omitted the explicit existing espeak binary flags; assets regenerated successfully without code changes",
+    "python_pass": 67,
+    "build_pass": true,
+    "merge_only_preflight_pass": true
+  },
+  "route_policy_correction": {
+    "focused_tests": 20,
+    "pass": 20,
+    "fail": 0,
+    "gates_and_policy_tests": 118,
+    "capabilities_added": false,
+    "roles_changed": false,
+    "permission_prefixes_allowed": false
   }
 }

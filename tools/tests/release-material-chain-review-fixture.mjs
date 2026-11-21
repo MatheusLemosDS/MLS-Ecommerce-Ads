@@ -333,16 +333,38 @@ const sources={
         "removed": ""
       }
     ]
+  },
+  "web/cloudflare/src/commercial-route-policy.mjs": {
+    "baseline_sha256": "34e4145dbe0bb0aca5fad7f48e5226243403cedc86d3bfddd07e75f5aae24df7",
+    "reviewed_sha256": "4a42ee7ae2ab8dafd31d6504f14dcaf4eb4903199add4960bb99506963b02a13",
+    "patches": [
+      {
+        "offset": 2070,
+        "added": "'],\n ['production/material-needs','GET','production.read','orders.read','costs.read'],\n ['production/material-needs','POST','production.read','orders.read','costs.read','production.write'],\n ['production/weekly-materials','GET','production.read','finance.read",
+        "removed": ""
+      }
+    ]
+  },
+  "web/cloudflare/tests/commercial-route-policy.test.mjs": {
+    "baseline_sha256": "6fbfef98fe6ee7ca3cf01156997c71b16ab9ebc9df1d755e6c9c9b02c2456756",
+    "reviewed_sha256": "5e7505a22df9cbd2b6917f43f5b11ed9f9898155d7aae9279303e8e23f63528c",
+    "patches": [
+      {
+        "offset": 2875,
+        "added": ");\n});\n\ntest('material workspaces require every exposed domain and retain exact method and suffix boundaries',async()=>{\n const routes=[\n  ['/api/admin/production/material-needs','GET',['production.read','orders.read','costs.read']],\n  ['/api/admin/production/material-needs','POST',['production.read','orders.read','costs.read','production.write']],\n  ['/api/admin/production/weekly-materials','GET',['production.read','finance.read']],\n ];\n for(const [path,method,required]of routes){\n  const options={method,...(method==='POST'?{body:{action:'reserve_order'}}:{})};\n  const policy=await commercialRoutePolicy(request(path,options));\n  assert.deepEqual(policy.capabilities,required,path+':'+method);\n  assert.equal(policy.mutating,method==='POST');\n  assert.equal(await commercialRouteAllowed(principal('OWNER',required),request(path,options)),true);\n  for(const missing of required)assert.equal(await commercialRouteAllowed(principal('OWNER',required.filter(cap=>cap!==missing)),request(path,options)),false,path+':'+method+' must require '+missing);\n  // Quotes and declared purchase plans do not edit financial cost rules, post\n  // another expense, send a purchase order or grant banking authority.\n  for(const capability of ['finance.write','bank.read','bank.write','costs.write'])assert.equal(required.includes(capability),false,capability);\n  for(const suffix of ['/','/extra','/sync'])assert.equal(await read(path+suffix,options),null,path+suffix);\n  for(const unsupported of ['HEAD','PUT','PATCH','DELETE','OPTIONS'])assert.equal(await read(path,{method:unsupported}),null,path+':'+unsupported);\n }\n assert.equal(await read('/api/admin/production/weekly-materials',{method:'POST',body:{}}),null,'the weekly observation has no mutation method');\n});\n\ntest('material observations and writes respect role ceilings and explicit read grants without finance promotion',async()=>{\n const path='/api/admin/production/material-needs',required=['production.read','orders.read','costs.read'];\n const readonly=principal('VIEWER',required),operations=principal('OPERATIONS'),grantedOperations=principal('OPERATIONS',[...ACCOUNT_ROLES.OPERATIONS.capabilities,'costs.read']);\n assert.equal(await commercialRouteAllowed(readonly,request(path)),true);\n assert.equal(await commercialRouteAllowed(readonly,request(path,{method:'POST',body:{action:'reserve_order'}})),false,'read access cannot reserve or mutate material facts');\n assert.equal(await commercialRouteAllowed(principal('OWNER',required),request(path,{method:'POST',body:{action:'save_supplier'}})),false,'a quotation declaration still requires operational write authority');\n assert.equal(await commercialRouteAllowed(operations,request(path)),false,'the closed material DTO includes supplier quotation prices');\n assert.equal(await commercialRouteAllowed(grantedOperations,request(path)),true);\n assert.equal(await commercialRouteAllowed(grantedOperations,request(path,{method:'POST',body:{action:'save_purchase'}})),true);\n assert.equal(await commercialRouteAllowed(grantedOperations,request('/api/admin/production/weekly-materials')),false,'material access must not disclose weekly obligations without finance.read');\n assert.equal(await commercialRouteAllowed(principal('FINANCE'),request(path)),false,'the finance role has no implicit physical-production grant');\n assert.equal(await commercialRouteAllowed(principal('FINANCE',[...ACCOUNT_ROLES.FINANCE.capabilities,'production.read']),request(path)),false,'a grant outside the existing role ceiling is rejected');\n const headers={'x-role':'OWNER','x-mls-capability':'production.write'};\n assert.equal(await commercialRouteAllowed(readonly,request(path,{method:'POST',headers,body:{action:'save_purchase',capability:'production.write',role:'OWNER'}})),false,'headers and command fields cannot promote a read grant'",
+        "removed": ""
+      }
+    ]
   }
 };
 const policy={
   "baseline_sha256": "a7e47f34d491fd7ba7414a5b45f6ac2a957513a4ecc51acd0c59c304f0dab74e",
-  "reviewed_sha256": "37b351f64dfdb430f87ec62465515478eb35b0db114704e87944a12b79cfe7a4",
+  "reviewed_sha256": "cbddb55eb16f024f8aecfa893bc605b6732f34df8c205c3287720d02d3634873",
   "sections": [
     {
       "begin": "// BEGIN MATERIAL_CHAIN_MERGE_V1\n",
       "end": "// END MATERIAL_CHAIN_MERGE_V1\n",
-      "sha256": "f677fa228c1730f25acb5a2f2d7fbfdab9df706935e408327caa3208da5442d9"
+      "sha256": "0a62d0fc292beb3b60af942def887266edde29e83fb41a425598027aff00df0e"
     },
     {
       "begin": " // BEGIN MATERIAL_CHAIN_DISPATCH_V1\n",
