@@ -9,6 +9,12 @@ import {tenantArtworkDatabaseName} from '../src/tenant-browser-storage.mjs';
 const settings={film_width_mm:570,max_length_mm:500,gap_mm:5,margin_mm:5,dpi:300,allow_rotate:false};
 const line=(patch={})=>({unit_key:'pedido:1:0',order_id:'PEDIDO1',line_key:'1:0',item_id:'1',model_id:'0',sku:'vivaosanos80-27',model_name:'P',quantity:1,status:'READY_TO_SHIP',production_state:'PENDING',requires_pair:false,last_seen_at:1792843200,...patch});
 const snapshot=lines=>({settings:{revision:1,values:settings},lines,batches:[],last_sync_at:1792843200});
+const materialHash=value=>value.repeat(64);
+function materialWorkspace(lines){return {
+ schema:'production_material_workspace_v1',scope:{organization_id:'legacy-brazacommerce',store_id:'legacy-shopee'},planning_date:new Date().toISOString().slice(0,10),checked_at:new Date().toISOString(),fence_hash:materialHash('a'),source_vector:{schema:'production_material_source_vector_v1',orders_hash:materialHash('b'),operational_heads_hash:materialHash('c'),manufacturing_hash:materialHash('d')},
+ coverage:{orders_complete:true,stock_complete:true,suppliers_complete:true,purchases_complete:true,manufacturing_complete:true,source_integrity_verified:true,provider_completeness:'NOT_PROVEN',basis:'SAVED_LOCAL_SOURCES_ONLY'},
+ orders:lines.map(row=>({source_key:row.unit_key,source_hash:materialHash('e'),line_source_hash:row.source_revision,commercial_quantity:row.quantity,group_revision:1,material_state:'RESERVED',components:[{variant_id:'shirt-black-M',quantity_per_unit:1,required_quantity:row.quantity,reserved_quantity:row.quantity,consumed_quantity:0,shortage_quantity:0}]}))
+};}
 function browser(responder,stored=[]){
  const drawing=[],downloads=[],timeouts=new Map();let timeoutId=0;
  class Element{
@@ -121,4 +127,42 @@ test('switching to manual mode during PNG rendering cancels the pending preview 
 
 test('a changed storage/account context during automatic PNG rendering cannot commit the previous account canvas',async()=>{
  const b=await automaticFixture();let release,entered;const started=new Promise(r=>entered=r);b.context.createImageBitmap=()=>{entered();return new Promise(r=>release=()=>r({width:4000,height:2001,close(){}}));};const drawing=b.runTimers();await started;b.context.mlsCommercialContext={changed:true};release();await drawing;assert.equal(b.el('Preview').children.length,0);assert.equal(b.el('Prepare').disabled,true);assert.equal(b.calls.some(c=>c.path==='production/batches'),false);b.workspace.stop();
+});
+
+test('physical selection uses only same-source reserved shirts and performs no stock, print or export writes',async()=>{
+ const blob=new Blob(['physical-selection-art'],{type:'image/png'}),sha256=Buffer.from(await webcrypto.subtle.digest('SHA-256',await blob.arrayBuffer())).toString('hex'),art={art_key:'vivaosanos80',sha256,pixel_width:4000,pixel_height:2001,blob};
+ const lines=[line({unit_key:materialHash('1'),source_revision:materialHash('4')}),line({unit_key:materialHash('2'),source_revision:materialHash('5'),order_id:'PEDIDO2'}),line({unit_key:materialHash('3'),source_revision:materialHash('6'),order_id:'PEDIDO3'})],materials=materialWorkspace(lines);
+ materials.orders[1].material_state='AVAILABLE_TO_RESERVE';materials.orders[1].components[0].reserved_quantity=0;materials.orders[2].line_source_hash=materialHash('7');
+ const b=browser(async()=>snapshot(lines),[art]);b.context.brazaProductionMaterials={async refresh(){return true;},getSnapshot:()=>vm.runInContext('JSON.parse',b.context)(JSON.stringify(materials))};await b.workspace.start({api:b.api});
+ assert.equal(b.el('SelectMaterials').disabled,false);assert.equal(await b.el('SelectMaterials').onclick(),true);assert.equal(b.el('SelectedCount').textContent,'1');assert.deepEqual(b.calls.map(row=>row.path),['production']);assert.equal(b.el('AutoLayout').checked,false);assert.match(b.el('Queue').children[0].children[1].children.at(-1).textContent,/Camisetas: Reservadas/);assert.match(b.el('Status').textContent,/nenhuma nova reserva física ou impressão/);
+ b.workspace.stop();
+});
+
+test('physical reservations never override DTF cancellation, previous print, art or reservation guards',async()=>{
+ const blob=new Blob(['physical-guards-art'],{type:'image/png'}),sha256=Buffer.from(await webcrypto.subtle.digest('SHA-256',await blob.arrayBuffer())).toString('hex'),art={art_key:'vivaosanos80',sha256,pixel_width:4000,pixel_height:2001,blob};
+ const lines=Array.from({length:5},(_,index)=>line({unit_key:materialHash(String(index+1)),source_revision:materialHash('9'),order_id:'PEDIDO'+index}));
+ lines[1].production_state='BLOCKED';lines[2].production_state='RESERVED';lines[3].requires_print_review=true;lines[4].sku='missing-art-27';
+ const materials=materialWorkspace(lines),b=browser(async()=>snapshot(lines),[art]);b.context.brazaProductionMaterials={async refresh(){return true;},getSnapshot:()=>vm.runInContext('JSON.parse',b.context)(JSON.stringify(materials))};await b.workspace.start({api:b.api});await b.el('SelectMaterials').onclick();assert.equal(b.el('SelectedCount').textContent,'1');assert.deepEqual(b.calls.map(row=>row.path),['production']);b.workspace.stop();
+});
+
+test('changed physical scope blocks the selected physical preview and explicit source opening removes stale selection',async()=>{
+ const blob=new Blob(['physical-change-art'],{type:'image/png'}),sha256=Buffer.from(await webcrypto.subtle.digest('SHA-256',await blob.arrayBuffer())).toString('hex'),art={art_key:'vivaosanos80',sha256,pixel_width:4000,pixel_height:2001,blob};
+ const lines=[line({unit_key:materialHash('1'),source_revision:materialHash('4')})];let materials=materialWorkspace(lines),opens=0;
+ const b=browser(async()=>snapshot(lines),[art]);b.context.brazaProductionMaterials={async refresh(){return true;},getSnapshot:()=>vm.runInContext('JSON.parse',b.context)(JSON.stringify(materials)),async open(){opens++;return true;}};await b.workspace.start({api:b.api});await b.el('SelectMaterials').onclick();assert.equal(b.el('SelectedCount').textContent,'1');
+ materials={...materials,scope:{...materials.scope,store_id:'different-store'}};await b.el('PreviewButton').onclick();assert.equal(b.el('Prepare').disabled,true);assert.match(b.el('PlanInfo').textContent,/fonte física mudou|fonte física/);assert.equal(b.drawing.length,0);assert.deepEqual(b.calls.map(row=>row.path),['production']);
+ await b.el('MaterialCheck').onclick();assert.equal(opens,1);assert.equal(b.el('SelectedCount').textContent,'0');assert.equal(b.el('SelectMaterials').disabled,true);assert.match(b.el('MaterialStatus').textContent,/não conferida/);b.workspace.stop();
+});
+
+test('a source change during the explicit material refresh cannot select the previously available order',async()=>{
+ const blob=new Blob(['material-refresh-art'],{type:'image/png'}),sha256=Buffer.from(await webcrypto.subtle.digest('SHA-256',await blob.arrayBuffer())).toString('hex'),art={art_key:'vivaosanos80',sha256,pixel_width:4000,pixel_height:2001,blob};
+ const lines=[line({unit_key:materialHash('1'),source_revision:materialHash('4')})];let materials=materialWorkspace(lines),finish,refreshes=0;
+ const b=browser(async()=>snapshot(lines),[art]);b.context.brazaProductionMaterials={refresh(){refreshes++;return new Promise(resolve=>finish=resolve);},getSnapshot:()=>vm.runInContext('JSON.parse',b.context)(JSON.stringify(materials))};await b.workspace.start({api:b.api});
+ const pending=b.el('SelectMaterials').onclick();await Promise.resolve();assert.equal(refreshes,1);assert.equal(b.el('SelectMaterials').disabled,true);materials.orders[0].commercial_quantity=2;finish(true);assert.equal(await pending,false);assert.equal(b.el('SelectedCount').textContent,'0');assert.deepEqual(b.calls.map(row=>row.path),['production']);b.workspace.stop();
+});
+
+test('preparing a physically selected DTF batch rereads materials and refuses a newly released reservation',async()=>{
+ const blob=new Blob(['material-prepare-art'],{type:'image/png'}),sha256=Buffer.from(await webcrypto.subtle.digest('SHA-256',await blob.arrayBuffer())).toString('hex'),art={art_key:'vivaosanos80',sha256,pixel_width:4000,pixel_height:2001,blob};
+ const lines=[line({unit_key:materialHash('1'),source_revision:materialHash('4')})];let materials=materialWorkspace(lines),refreshes=0;
+ const b=browser(async()=>snapshot(lines),[art]);b.context.brazaProductionMaterials={async refresh(){refreshes++;if(refreshes>1){materials.orders[0].material_state='AVAILABLE_TO_RESERVE';materials.orders[0].components[0].reserved_quantity=0;}return true;},getSnapshot:()=>vm.runInContext('JSON.parse',b.context)(JSON.stringify(materials))};await b.workspace.start({api:b.api});
+ assert.equal(await b.el('SelectMaterials').onclick(),true);await b.el('PreviewButton').onclick();assert.equal(b.el('Prepare').disabled,false);await b.el('Prepare').onclick();assert.equal(refreshes,2);assert.deepEqual(b.calls.map(row=>row.path),['production'],'no DTF preparation or stock mutation follows a changed physical source');assert.match(b.el('Status').textContent,/fonte física mudou/);b.workspace.stop();
 });

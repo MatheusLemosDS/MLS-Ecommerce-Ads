@@ -1,3 +1,8 @@
+PR134 — continuação vigente
+Entrega pública na worktree /workspace/work/mls-order-materials-final-20261121, branch local fix/material-commercial-policy-20261121, branch remota feature/order-materials-dtf-chain-20261121. O candidato59b e sua primeira suíte estão preservados na worktree anterior. Consultar PR134 no HEAD atual e o único checkpoint; as correções são incrementais, sem reset, descarte, Live ou dados financeiros reais. PR133/132 já integradas na mainDE0; não repetir esses merges.
+
+MATERIAIS — ponto atual em21/11/2026: PR133 integrada main426b1de; PR132 integrada mainde0bb72 após5.061Node/67Python e4/4checks. Novo incremento funcional emfeature/order-materials-dtf-chain-20261121, testes focados aprovados e CI final pendente. Não publicarLive nem criar fatos reais. Fonte única de estado: docs/MLS_COMMERCE_OS_CHECKPOINT.json; uso/evidências: docs/MLS_ORDER_MATERIALS_DTF_2026_11_21.md. Continuar da main atual sem repetir fases/merges; próximo é congelar fontes/artifacts e validar a nova PR exata.
+
 INTEGRAÇÃO VIGENTE — 21/11/2026
 PR133 integrada na main em 426b1de037b075afa066ace4742e3cf398294bbf, HEAD validado 1a2e1e76, 4/4 checks, 4.963 Node e 67 Python. A PR132 está sendo reconciliada preservando pagamentos semanais, estoque físico e a correção histórica. A união precisa de nova CI no SHA exato antes da integração. Os registros de validação anteriores abaixo mantêm seu escopo original; não comprovam esta combinação. Live 17.3 preservada; não publicar nem criar fatos físicos/financeiros reais. Checkpoint único: docs/MLS_COMMERCE_OS_CHECKPOINT.json. Próximo incremento após integração validada: pedidos → necessidade por tamanho/cor → reservas → faltas/compras → fila DTF → fabricação → fechamento, sem dupla dedução.
 

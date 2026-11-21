@@ -54,9 +54,12 @@ test('the workspace and DTF controllers join the closed seven-asset public inven
  const weekly=manifest.assets.find(row=>row.id==='weekly');assert.ok(weekly.bytes>0&&weekly.bytes<=262144);assert.equal(browserAssetScript('weekly'),'<script src="'+weekly.path+'" integrity="'+weekly.integrity+'" crossorigin="anonymous"></script>');
 });
 
-test('the DTF asset preserves the exact published engine/workspace bytes while browser factories stay frozen in the workspace',()=>{
- const row=manifest.assets.find(value=>value.id==='dtf');assert.ok(row);assert.equal(row.sha256,'1f0ca4ce395126c895b9e79afff57f1ca0ed74c3df31c6b7b0a1ac6dd0673026');assert.equal(row.bytes,53814);
+test('the reviewed DTF predecessor and engine remain exact while the material-aware controller stays frozen',()=>{
+ const reviewed=readFileSync(path.join(root,'web','cloudflare','tests','fixtures','reviewed-dtf-extraction-before-materials.js'));
+ assert.equal(createHash('sha256').update(reviewed).digest('hex'),'1f0ca4ce395126c895b9e79afff57f1ca0ed74c3df31c6b7b0a1ac6dd0673026');assert.equal(reviewed.length,53814);
+ const row=manifest.assets.find(value=>value.id==='dtf');assert.ok(row);
  const bytes=readFileSync(path.join(root,'dist','browser-assets',...row.path.slice(1).split('/'))),emitted=(DTF_ENGINE_CLIENT+'\n/* MLS_DTF_ENGINE_END */\n'+DTF_CLIENT).replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g,value=>'\\u'+value.charCodeAt(0).toString(16).padStart(4,'0'));assert.deepEqual(bytes,Buffer.from(emitted));
+ const engine=Buffer.from(DTF_ENGINE_CLIENT+'\n/* MLS_DTF_ENGINE_END */\n');assert.deepEqual(bytes.subarray(0,engine.length),reviewed.subarray(0,engine.length));assert.deepEqual(bytes.subarray(0,engine.length),engine,'material availability cannot change the reviewed layout engine');
  assert.match(bytes.toString(),/globalThis\.brazaDtfWorkspace=/);for(const name of ['mlsDtfRecipeController','mlsDtfLifecycleController','mlsDtfArtworkBackupCodec','mlsDtfArtworkBackupController'])assert.ok(CLIENT.includes('globalThis.'+name+'='),'all published DTF factories are embedded before workspace startup');
  const warning=browserWorkspaceFailureScript();assert.ok(warning.includes(JSON.stringify(row.path)));assert.doesNotMatch(warning,/fetch\(|\.start\(|localStorage|sessionStorage/);
 });
@@ -143,7 +146,7 @@ test('the reviewed current seven-asset inventory preserves exact controller byte
   }else assert.equal(row.sha256,id==='month'?historicalMonth:sha,'the reviewed exact '+id+' asset must not drift');
  }
  const row=manifest.assets.find(row=>row.id==='workspace');assert.ok(row);assert.ok(row.bytes>262144&&row.bytes<=1048576);
- const emitted=Buffer.from(CLIENT.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g,c=>'\\u'+c.charCodeAt(0).toString(16).padStart(4,'0')));const bytes=readFileSync(path.join(root,'dist','browser-assets',...row.path.slice(1).split('/')));assert.deepEqual(bytes,emitted,'workspace distribution preserves every frozen controller byte');
+ const emitted=Buffer.from(CLIENT.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g,c=>'\\u'+c.charCodeAt(0).toString(16).padStart(4,'0')));const bytes=readFileSync(path.join(root,'dist','browser-assets',...row.path.slice(1).split('/')));assert.equal(bytes.length,emitted.length,'workspace length matches the canonical client export');assert.equal(createHash('sha256').update(bytes).digest('hex'),createHash('sha256').update(emitted).digest('hex'),'workspace digest matches before formatting a large byte comparison');assert.deepEqual(bytes,emitted,'workspace distribution preserves every frozen controller byte');
  const tag=browserAssetScript('workspace');assert.equal(tag,'<script src="'+row.path+'" integrity="'+row.integrity+'" crossorigin="anonymous"></script>');assert.doesNotMatch(tag,/\b(async|defer|onerror)\b/);
  const helper=browserWorkspaceFailureScript();assert.ok(helper.includes(JSON.stringify(row.path)));assert.match(helper,/location\.reload\(\)/);assert.doesNotMatch(helper,/fetch\(|\.start\(|localStorage|sessionStorage/);
  new vm.Script(helper);

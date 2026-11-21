@@ -52,6 +52,7 @@
     "fix/dated-cost-history-20261119",
     "fix/finance-completion-20261120",
     "fix/historical-profit-20261121",
-    "feature/weekly-payments-physical-shirts-20261120"
+    "feature/weekly-payments-physical-shirts-20261120",
+    "feature/order-materials-dtf-chain-20261121"
   ]
 }

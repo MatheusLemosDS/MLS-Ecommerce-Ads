@@ -1,3 +1,12 @@
+PR134 — continuação vigente
+Entrega pública na worktree /workspace/work/mls-order-materials-final-20261121, branch local fix/material-commercial-policy-20261121, branch remota feature/order-materials-dtf-chain-20261121. O candidato59b e sua primeira suíte estão preservados na worktree anterior. Consultar PR134 no HEAD atual e o único checkpoint; as correções são incrementais, sem reset, descarte, Live ou dados financeiros reais. PR133/132 já integradas na mainDE0; não repetir esses merges.
+
+RETOMADA MAIS RECENTE — 21/11/2026
+PR133 integrada em426b1de ePR132 emde0bb72, com CI2 de5.061Node/67Python e4/4checks. Esta branch implementa necessidades, fornecedores/compras declaradas, reservas/recebimentos atômicos, DTF e leitura semanal compartilhada. Ler docs/MLS_ORDER_MATERIALS_DTF_2026_11_21.md e o único checkpoint. A integração desta nova função ainda depende da CI final no SHA exato. Live17.3 preservada; nenhuma compra/pagamento/fato físico ou financeiro real autorizado nesta tarefa. Registros antigos abaixo têm escopo histórico, não são próximos passos vigentes.
+
+MATERIAIS — execução atual em 21/11/2026
+A PR133 foi integrada na main426b1de. A PR132 está reconciliada no candidato1e857ea com CI completa em andamento; esta branch separada prepara a ligação operacional e não altera aquele candidato. Conferir/atualizar a base real após a integração132 antes da CI final. O proprietário autorizou integrações Git e implementação operacional, mas vedou Live e ações financeiras/externas reais. Não presumir estoque, composição, prazo, fornecedor ou custo. Preservar V4.1, seis agentes, histórico v6, DTF e fechamentos; compras/pagamentos internos declarados não executam transações. Ler o único checkpoint canônico para o estado corrente. Os registros abaixo mantêm seu escopo/data.
+
 INTEGRAÇÃO VIGENTE — 21/11/2026
 PR133 integrada na main em 426b1de037b075afa066ace4742e3cf398294bbf, HEAD validado 1a2e1e76, 4/4 checks, 4.963 Node e 67 Python. A PR132 está sendo reconciliada preservando pagamentos semanais, estoque físico e a correção histórica. A união precisa de nova CI no SHA exato antes da integração. Os registros de validação anteriores abaixo mantêm seu escopo original; não comprovam esta combinação. Live 17.3 preservada; não publicar nem criar fatos físicos/financeiros reais. Checkpoint único: docs/MLS_COMMERCE_OS_CHECKPOINT.json. Próximo incremento após integração validada: pedidos → necessidade por tamanho/cor → reservas → faltas/compras → fila DTF → fabricação → fechamento, sem dupla dedução.
 

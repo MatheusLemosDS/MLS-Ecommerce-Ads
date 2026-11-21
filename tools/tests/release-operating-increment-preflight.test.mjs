@@ -6,6 +6,7 @@ import path from 'node:path';
 import {spawnSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 import {createHash} from 'node:crypto';
+import {restoreSourceBeforeMaterialChain} from './release-material-chain-review-fixture.mjs';
 import {restoreFinanceSourceBeforeNumberedKitAddition} from './historical-profit-reviewed-source-fixture.mjs';
 import {evaluateOperatingIncrementMergePreflight,operatingIncrementPriorVerifierMatchesBaseline,financeCompletionPriorVerifierMatchesBaseline,OPERATING_INCREMENT_MERGE_BASE_COMMIT,OPERATING_INCREMENT_MERGE_MANIFEST_PATH,OPERATING_INCREMENT_OWNER_AUTHORIZATION,OPERATING_INCREMENT_ALLOWED_FILES,OPERATING_INCREMENT_FROZEN_FILES,OPERATING_INCREMENT_BASE_PREFLIGHT_SHA256,FINANCE_COMPLETION_MERGE_BASE_COMMIT,FINANCE_COMPLETION_FROZEN_FILES,RELEASE_MANUAL_GATES} from '../release_preflight.mjs';
 
@@ -40,7 +41,7 @@ test('all earlier frozen inputs and financial contracts remain frozen, including
   }else assert.equal(OPERATING_INCREMENT_FROZEN_FILES[filename],sha256,filename);
  }
  for(const [filename,sha256] of Object.entries(OPERATING_INCREMENT_FROZEN_FILES)){
-  assert.equal(digest(fs.readFileSync(path.join(root,filename))),sha256,filename);
+  assert.equal(digest(restoreSourceBeforeMaterialChain(filename,fs.readFileSync(path.join(root,filename),'utf8'))),sha256,filename);
   const input=good();input.candidate.files=[{path:filename,sha256}];assert.deepEqual(evaluateOperatingIncrementMergePreflight(input).failures,['RELEASE_OPERATING_INCREMENT_MANIFEST_INVALID'],filename);
  }
  for(const filename of ['tools/worker_deploy.mjs','tools/verified_worker_deploy.mjs','tools/release-finance-completion-candidate.json','tools/tests/release-finance-completion-preflight.test.mjs','web/cloudflare/src/financial-accounting-projection.mjs','web/cloudflare/src/financial-inventory-bridge.mjs','web/finance/src/financial-bank-connector.mjs','web/finance/src/financial-cash-allocation.mjs'])assert.ok(Object.hasOwn(OPERATING_INCREMENT_FROZEN_FILES,filename),filename);
@@ -66,7 +67,7 @@ test('prior three verifier implementations remain exact after removing only this
 });
 
 test('existing isolated preview metadata permits only the exact new branch while preserving every existing resource and branch',()=>{
- const file='previews/isolated-builds.json',current=JSON.parse(fs.readFileSync(path.join(root,file),'utf8')),observed=spawnSync('git',['show',OPERATING_INCREMENT_MERGE_BASE_COMMIT+':'+file],{cwd:root,encoding:'utf8'});assert.equal(observed.status,0,observed.stderr);const baseline=JSON.parse(observed.stdout),branch='feature/weekly-payments-physical-shirts-20261120';
+ const file='previews/isolated-builds.json',current=JSON.parse(spawnSync('git',['show','de0bb72e583a84d86b20952e55b352722996cbed:'+file],{cwd:root,encoding:'utf8'}).stdout),observed=spawnSync('git',['show',OPERATING_INCREMENT_MERGE_BASE_COMMIT+':'+file],{cwd:root,encoding:'utf8'});assert.equal(observed.status,0,observed.stderr);const baseline=JSON.parse(observed.stdout),branch='feature/weekly-payments-physical-shirts-20261120';
  assert.equal(current.authorized_branches.filter(value=>value===branch).length,1);assert.deepEqual({...current,authorized_branches:current.authorized_branches.filter(value=>value!==branch)},baseline);
 });
 

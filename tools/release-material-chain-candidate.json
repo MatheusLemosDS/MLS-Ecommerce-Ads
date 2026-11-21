@@ -1,0 +1,233 @@
+{
+  "schema": "mls_material_chain_merge_candidate_v1",
+  "scope": "MERGE_ONLY",
+  "base_commit": "de0bb72e583a84d86b20952e55b352722996cbed",
+  "prepared_source_commit": "05f42eff189d2754fec32c12c15157cfd8453bc3",
+  "owner_authorization": "OWNER_REQUESTED_ORDER_MATERIALS_DTF_WITHOUT_EXTERNAL_PUBLICATION_2026_11_21",
+  "production_approved": false,
+  "live_authorization": false,
+  "commercial_writes_allowed": false,
+  "expected_hashes": {
+    "app": "8fa250fef04e577d116c9e46b700836a50a066b3450a11c42c330786a3c0be8b",
+    "auth": "be46381be7e8c100973a948fa7dceb31266a1455282d73fb7b99a0c2d860e8d4",
+    "finance": "012c0eaced495c53b3b143a6298ec8c7221a0a5198c67455eb538e16508c86a4"
+  },
+  "files": [
+    {
+      "path": "AGENTS.md",
+      "sha256": "49a1ea291a91339cb20ceee9cc9f40d7415a46b772fb90b61216094a6a2ea682"
+    },
+    {
+      "path": "NEXT_CHAT_HANDOFF.txt",
+      "sha256": "45f7119436e0b606933ef64d4e2e8611c5af41a830279bbe93e667f8021a2692"
+    },
+    {
+      "path": "docs/MLS_CODEX_HANDOFF_2026_10_28.md",
+      "sha256": "1bb5f9168e8fec3101d1e86f1420e9288a84e5075407ab23b3b6b52131b910bb"
+    },
+    {
+      "path": "docs/MLS_COMMERCE_OS_CHECKPOINT.json",
+      "sha256": "39d33a838e1d7903432fac73a30004d91a5be9e47ae501dad777d0f8a663a1b2"
+    },
+    {
+      "path": "docs/MLS_ORDER_MATERIALS_DTF_2026_11_21.md",
+      "sha256": "1b80a000aa688051ac5280efe5f2f583de0014e0b55d2ec73f2b0de96c86e752"
+    },
+    {
+      "path": "docs/ROADMAP_MLS_COMMERCE_OS.md",
+      "sha256": "6c638071badf52382912ceb2997c0b5d2c09718d5fae5941a1725ca205c65010"
+    },
+    {
+      "path": "docs/financial-automation/validation/order-materials-dtf-20261121.json",
+      "sha256": "e87850ba3974657f5f9c75095bd50c539125410f6df9418abdad3bb37bdcd879"
+    },
+    {
+      "path": "previews/isolated-builds.json",
+      "sha256": "74c4c0c5bd00ab4f18ef8e65de454e126bd134899eb33dd6607504cc7699cf2c"
+    },
+    {
+      "path": "tools/release_preflight.mjs",
+      "sha256": "cbddb55eb16f024f8aecfa893bc605b6732f34df8c205c3287720d02d3634873"
+    },
+    {
+      "path": "tools/tests/operating-integration-gates.test.mjs",
+      "sha256": "9c6c6f6e78d8d39c8c71be950ae50c80650df7f5078d796942946d36ec4dfc0d"
+    },
+    {
+      "path": "tools/tests/release-finance-completion-preflight.test.mjs",
+      "sha256": "49fd51b00f23c9d1e9cf355f3b2a176884e2c2eff2c2d2a46a0e447c45372fb9"
+    },
+    {
+      "path": "tools/tests/release-historical-profit-preflight.test.mjs",
+      "sha256": "ff66370e0604f8fffb4230c39698159f948148213bde9bb858323e614bdae120"
+    },
+    {
+      "path": "tools/tests/release-material-chain-preflight.test.mjs",
+      "sha256": "5d5afbc51cd8dc0dbf8178f497237fc8bca23c082f0299760ff5fef780eb7462"
+    },
+    {
+      "path": "tools/tests/release-material-chain-preview.test.mjs",
+      "sha256": "e0347c400224a82c17574b7c5cd900bf2e0f6a561418c66c7055e2e2e78d562e"
+    },
+    {
+      "path": "tools/tests/release-material-chain-review-fixture.mjs",
+      "sha256": "8e4c095e9ff56a23b832cd11235701bf6d989c4c01218bf921891e220456433f"
+    },
+    {
+      "path": "tools/tests/release-material-chain-reviewed-source.test.mjs",
+      "sha256": "f37770fdb30f3737da598ddb3167678041abaa1c6e31669e0fecb39d776a612e"
+    },
+    {
+      "path": "tools/tests/release-operating-increment-preflight.test.mjs",
+      "sha256": "a8fbc996c689ea6013f87f33335dd7f81c4803652c8b15bdd13819ef9d9243e9"
+    },
+    {
+      "path": "tools/worker_project.mjs",
+      "sha256": "18d8e9dce3ffff05ff3b1981f91c10b028421c0722929eefed7128b338e1da38"
+    },
+    {
+      "path": "web/cloudflare/build.py",
+      "sha256": "1e631bf6132262284f3b1e915ea47b421d22f143d67ecc95e0455b0dc808ca8f"
+    },
+    {
+      "path": "web/cloudflare/src/admin-client.mjs",
+      "sha256": "fd127f8621d599eede6b64fe2b8dfa02b1af873983947eeb4a5538489009b3c7"
+    },
+    {
+      "path": "web/cloudflare/src/admin.mjs",
+      "sha256": "352e57c8f65878813093a92efabbbb6b8925605e5d93497d176197b37a0d7595"
+    },
+    {
+      "path": "web/cloudflare/src/agent-registry-view.mjs",
+      "sha256": "4ae14e26b60ac7915ed81f70e8ef7e5faa07a31bd0a7414ed61ced798f4b9882"
+    },
+    {
+      "path": "web/cloudflare/src/agent-registry.mjs",
+      "sha256": "da33ad262687999d0e175d89f1b8568c53ca295c52dc92c748fbe34913446353"
+    },
+    {
+      "path": "web/cloudflare/src/app-release-view.mjs",
+      "sha256": "5d7b067046899dcdcd4ab2048bb79757b6738b591f38e47198cb70a421c5bf53"
+    },
+    {
+      "path": "web/cloudflare/src/app-release.mjs",
+      "sha256": "5176bf8b8019153baee752db8d0de3919806d73cc7007c5fa89cbe7ed76701e2"
+    },
+    {
+      "path": "web/cloudflare/src/browser-assets-manifest.mjs",
+      "sha256": "d778927e7c0106521e8550aee629e6e05f419827bc783a0eacc4728748bf6473"
+    },
+    {
+      "path": "web/cloudflare/src/commercial-route-policy.mjs",
+      "sha256": "4a42ee7ae2ab8dafd31d6504f14dcaf4eb4903199add4960bb99506963b02a13"
+    },
+    {
+      "path": "web/cloudflare/src/dtf-view.mjs",
+      "sha256": "801249ffd4e337db62f8fd84da409a6bf6626583e2ad4cf90b6354bf753e9ebb"
+    },
+    {
+      "path": "web/cloudflare/src/incurred-production.mjs",
+      "sha256": "4fdf5086a068f2b5f6141b1cb68a3ef2482d0b38a197e226234b37902c4792de"
+    },
+    {
+      "path": "web/cloudflare/src/operational-journal.mjs",
+      "sha256": "8ea96fb6a10fe4bf2466a3fdb1e18afc0f50511e7834010915baa1fb3f2fb247"
+    },
+    {
+      "path": "web/cloudflare/src/physical-shirt-purchase-needs.mjs",
+      "sha256": "bf0f8e965ea4b33fdba36e41d374946890f0588ffa752b7c9be4ee71093b4a0c"
+    },
+    {
+      "path": "web/cloudflare/src/production-material-availability.mjs",
+      "sha256": "e79555a1886a9f9ed96f4fb79d35235a5cdf68377f886c8f4a28879a36d1119d"
+    },
+    {
+      "path": "web/cloudflare/src/production-material-view.mjs",
+      "sha256": "2e9b7babbec4bf4e1895b8c45496079b2f015b79f63e8a623b3a675162702af7"
+    },
+    {
+      "path": "web/cloudflare/src/production-material-week-view.mjs",
+      "sha256": "a9a3096aa8205277c23eae9663d839db578675e137a588bd1c757809e15b2b00"
+    },
+    {
+      "path": "web/cloudflare/src/production-material-week.mjs",
+      "sha256": "9ad5537a44b00ca82545f81ca6a49f81f7a683b1f4cf7559856d0e0fb7cd03a2"
+    },
+    {
+      "path": "web/cloudflare/src/production-material-workspace.mjs",
+      "sha256": "c603e75b986c14cf23b86ad0de515f31fc6955e609639279fd2f27217a44b6fb"
+    },
+    {
+      "path": "web/cloudflare/src/production-weekly-payments.mjs",
+      "sha256": "6bb09bc8303d686e80652c6b22ad4348194c4c6314eb28ed16f31665874b04a9"
+    },
+    {
+      "path": "web/cloudflare/tests/app-release-discovery-chrome.test.mjs",
+      "sha256": "69e9c3b5f49518f9eebe1192f19e625847ffdd60e1b8fd8f87249ef2569f004b"
+    },
+    {
+      "path": "web/cloudflare/tests/app-release.test.mjs",
+      "sha256": "8a65e9f3d4e391b5c2a448d6ebb2ec5fc60a6a2af85b8413ab066e484fd959a0"
+    },
+    {
+      "path": "web/cloudflare/tests/browser-assets.test.mjs",
+      "sha256": "ab46e2201b813cc1de1a264f5405d8a9ef24cfbd7a45df8552b139f8a817e081"
+    },
+    {
+      "path": "web/cloudflare/tests/commercial-route-policy.test.mjs",
+      "sha256": "5e7505a22df9cbd2b6917f43f5b11ed9f9898155d7aae9279303e8e23f63528c"
+    },
+    {
+      "path": "web/cloudflare/tests/dtf-ui.test.mjs",
+      "sha256": "3d7f2af8c03258a1d32e294fa80be14af33a54a697ae98bd81db29d94a69fd6f"
+    },
+    {
+      "path": "web/cloudflare/tests/fixtures/reviewed-dtf-extraction-before-materials.js",
+      "sha256": "1f0ca4ce395126c895b9e79afff57f1ca0ed74c3df31c6b7b0a1ac6dd0673026"
+    },
+    {
+      "path": "web/cloudflare/tests/operational-journal-groups.test.mjs",
+      "sha256": "f9c84b14a664e4c2d554d8620f4838711fdf55606dfbd3cc5ba4c63578ef7249"
+    },
+    {
+      "path": "web/cloudflare/tests/physical-shirt-purchase-needs.test.mjs",
+      "sha256": "6ba704da9cf818892775d13c3b3f1a276bed95279e5f923c6970cf02867a8da2"
+    },
+    {
+      "path": "web/cloudflare/tests/production-closing-workspace-chrome.test.mjs",
+      "sha256": "551196566204985263d4f37a283a0934e5ea003c5e99e51d70f4603129a2c6b4"
+    },
+    {
+      "path": "web/cloudflare/tests/production-material-availability.test.mjs",
+      "sha256": "caa9c9b95de9d586b90354bba6cc3356afd4595fb5fbc405616e5334b568dc68"
+    },
+    {
+      "path": "web/cloudflare/tests/production-material-chrome.test.mjs",
+      "sha256": "e51dc87716f0c3cf3d3a20ed4e2ab5031933da48a39cb66e5cf63f8fa99cfef2"
+    },
+    {
+      "path": "web/cloudflare/tests/production-material-fixture.mjs",
+      "sha256": "514730f4e3bd8800074bc69d1719d1820dba19a71ebafc0da35239f9f404e38a"
+    },
+    {
+      "path": "web/cloudflare/tests/production-material-routes.test.mjs",
+      "sha256": "4a0607628d6ba0726846adff30b31cb427bd3e20b18668994339f6357c2842f7"
+    },
+    {
+      "path": "web/cloudflare/tests/production-material-view.test.mjs",
+      "sha256": "f9a78920fd817273c25a01f4feec20f099b3db4d42ee1836b7e8790fbc3009df"
+    },
+    {
+      "path": "web/cloudflare/tests/production-material-week.test.mjs",
+      "sha256": "29160748c76b9db57b3e3ec9bc3b8d62004a7fef60246784c0118ed7365deb69"
+    },
+    {
+      "path": "web/cloudflare/tests/production-material-workspace.test.mjs",
+      "sha256": "e45b512e4a6beb6255b15c42f2a2f856ffb51edc88f99e4bf310ba183ab073f9"
+    },
+    {
+      "path": "web/cloudflare/tests/reviewed-cost-source-invariants.mjs",
+      "sha256": "ab2139ee0983cbbfeef82b71cef7dbcc20c9bbbfd737df5477e7125f4f2e5d64"
+    }
+  ]
+}

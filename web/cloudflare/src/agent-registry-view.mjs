@@ -1,3 +1,4 @@
+import {projectProductionMaterialAvailability} from './production-material-availability.mjs';
 import {releaseOverviewBody} from './app-release-view.mjs';
 import {APP_RELEASE} from './app-release.mjs';
 import {projectMlsSettlementEvidence} from './mls-settlement-evidence.mjs';
@@ -91,6 +92,7 @@ export const AGENT_REGISTRY_CLIENT=String.raw`
  const projectReturnsInsights=(${createMlsReturnsInsights.toString()})().projectMlsReturnsInsights;
  const buildPendingIncomeAudit=${buildPendingIncomeAudit.toString()};
  const buildMlsAgentRegistry=${buildMlsAgentRegistry.toString()};
+ const projectProductionMaterialAvailability=${projectProductionMaterialAvailability.toString()};
  const projectMonthlyProfitPresentationValue=${projectMonthlyProfitPresentationValue.toString()};
  const projectMonthlyPresentation=projectMonthlyProfitPresentationValue;
  const buildMissionMonthlyReading=${buildMissionMonthlyReading.toString()};
@@ -103,9 +105,9 @@ export const AGENT_REGISTRY_CLIENT=String.raw`
  const shortDay=value=>typeof value==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(value)?value.slice(8)+'/'+value.slice(5,7):'—';
  const count=value=>Number.isSafeInteger(value)?new Intl.NumberFormat('pt-BR').format(value):'—';
  const statusLabel={HEALTHY:'Saudável',WORKING:'Trabalhando',ATTENTION:'Atenção',BLOCKED:'Bloqueado'};
- let lastKey='',observer=null,queued=false,registry=null,pendingDetailLoaded=false,sourcePriorityBusy=false;
+ let lastKey='',observer=null,queued=false,registry=null,pendingDetailLoaded=false,sourcePriorityBusy=false,materialEvents=false;
  function read(){
-  let day=null,month=null,reconciliation=null,releases=null,incomeOverview=null,incomeDetail=null,catalog=null,productionPeriod=null,dtfQueue=null;
+  let day=null,month=null,reconciliation=null,releases=null,incomeOverview=null,incomeDetail=null,catalog=null,productionPeriod=null,dtfQueue=null,materials=null,materialScope=null;
   try{day=globalThis.brazaDayDashboard?.getSnapshot?.()??null;}catch{}
   try{month=globalThis.brazaMonthDashboard?.getSnapshot?.()??null;}catch{}
   try{reconciliation=globalThis.brazaReconciliation?.getSnapshot?.()??null;}catch{}
@@ -115,8 +117,9 @@ export const AGENT_REGISTRY_CLIENT=String.raw`
   try{catalog=globalThis.brazaSavedCatalog?.getSnapshot?.()??null;}catch{}
   try{productionPeriod=globalThis.brazaProductionCostPeriods?.getSnapshot?.()??null;}catch{}
   try{dtfQueue=globalThis.brazaDtfWorkspace?.getSnapshot?.()??null;}catch{}
+  try{materials=globalThis.brazaProductionMaterials?.getSnapshot?.()??null;const context=globalThis.mlsCommercialWorkspace?.getContext?.();if(context)materialScope={organization_id:context.organizationId,store_id:context.storeId};else if(globalThis.mlsCommercialContext)materials=null;}catch{}
   const pendingAudit=buildPendingIncomeAudit({overview:incomeOverview,detail:incomeDetail,detailLoaded:pendingDetailLoaded});
-  return buildMlsAgentRegistry({day,month,reconciliation,releases,incomeOverview,pendingAudit,catalog,productionPeriod,dtfQueue},{projectSettlementEvidence,projectReturnsInsights,projectMonthlyPresentation});
+  return buildMlsAgentRegistry({day,month,reconciliation,releases,incomeOverview,pendingAudit,catalog,productionPeriod,dtfQueue,materials,materialScope},{projectSettlementEvidence,projectReturnsInsights,projectMonthlyPresentation,projectMaterials:projectProductionMaterialAvailability});
  }
  function renderPending(){
   try{if(globalThis.brazaIncomeOverview?.renderDetail?.())return;}catch{}
@@ -346,6 +349,7 @@ export const AGENT_REGISTRY_CLIENT=String.raw`
  }
  function queue(){if(queued)return;queued=true;Promise.resolve().then(()=>{queued=false;render();});}
  function start(){
+  if(!materialEvents&&typeof globalThis.addEventListener==='function'){globalThis.addEventListener('mls:production-materials-updated',queue);materialEvents=true;}
   render();
   const period=document.getElementById('mlsOverviewPeriod'),periodDate=document.getElementById('mlsOverviewDate');
   if(period&&periodDate){
@@ -425,7 +429,7 @@ export const AGENT_REGISTRY_CLIENT=String.raw`
   if(typeof globalThis.MutationObserver==='function'){observer=new globalThis.MutationObserver(records=>{if(records.some(record=>{if(record.target?.isConnected===false)return false;const target=record.target?.nodeType===1?record.target:record.target?.parentElement;return !target?.closest?.('#missionTrendsFinance');}))queue();});for(const id of ['businessDay','businessMonth','savedCatalogList','costPeriodsMonthly','dtfQueue']){const target=document.getElementById(id);if(target)observer.observe(target,{subtree:true,childList:true,characterData:true,attributes:true});}}
   return true;
  }
- function stop(){try{observer?.disconnect?.();}catch{}observer=null;lastKey='';registry=null;pendingDetailLoaded=false;overviewMonthBusy=false;}
+ function stop(){if(materialEvents){globalThis.removeEventListener?.('mls:production-materials-updated',queue);materialEvents=false;}try{observer?.disconnect?.();}catch{}observer=null;lastKey='';registry=null;pendingDetailLoaded=false;overviewMonthBusy=false;}
  globalThis.mlsAgentRegistry=Object.freeze({start,stop,refresh:render,notify:queue,getSnapshot:()=>registry??render()});
  start();
 })();

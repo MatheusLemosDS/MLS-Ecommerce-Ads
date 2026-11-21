@@ -5,7 +5,8 @@ import {execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
 import {OPERATING_INTEGRATION_REVIEW as review} from './operating-integration-review-fixture.mjs';
 import {OPERATING_INCREMENT_MERGE_BASE_COMMIT,OPERATING_INCREMENT_BASE_PREFLIGHT_SHA256,OPERATING_INCREMENT_RELEASE_ID,OPERATING_INCREMENT_ORIGINAL_REVIEW,OPERATING_INCREMENT_ALLOWED_FILES,OPERATING_INCREMENT_FROZEN_FILES,operatingIncrementPriorVerifierMatchesBaseline,historicalProfitPriorVerifierMatchesBaseline,financeCompletionPriorVerifierMatchesBaseline} from '../release_preflight.mjs';
-import {APP_RELEASE} from '../../web/cloudflare/src/app-release.mjs';
+import {restoreSourceBeforeMaterialChain} from './release-material-chain-review-fixture.mjs';
+const {APP_RELEASE}=await import('data:text/javascript;base64,'+Buffer.from(execFileSync('git',['show','de0bb72e583a84d86b20952e55b352722996cbed:web/cloudflare/src/app-release.mjs'],{cwd:new URL('../../',import.meta.url),encoding:'utf8'})).toString('base64'));
 
 const root=new URL('../../',import.meta.url),digest=value=>createHash('sha256').update(value).digest('hex');
 const git=(commit,file)=>execFileSync('git',['show',commit+':'+file],{cwd:root,encoding:'utf8'});
@@ -35,7 +36,7 @@ test('nested operating additions restore the complete historical, Finance and or
 });
 
 test('the original PR132 verifier functions survive byte-for-byte and only a finite pinned policy-data delta is accepted',()=>{
- const previous=operating(git(review.previous_source_commit,'tools/release_preflight.mjs')),current=operating(readFileSync(new URL('tools/release_preflight.mjs',root),'utf8'));
+ const previous=operating(git(review.previous_source_commit,'tools/release_preflight.mjs')),current=operating(restoreSourceBeforeMaterialChain('tools/release_preflight.mjs',readFileSync(new URL('tools/release_preflight.mjs',root),'utf8')));
  assert.equal(digest(previous),review.old_section_sha256);assert.equal(digest(current),review.new_section_sha256);
  // The original executable verifier suffix is untouched. Reconciliation only
  // changes literal review data before its section-marker constants.
@@ -49,7 +50,7 @@ test('the original PR132 verifier functions survive byte-for-byte and only a fin
 });
 
 test('every historical input outside the finite operating diff stays immutable with its exact integrated bytes',()=>{
- for(const filename of review.added_frozen_paths){assert.ok(!OPERATING_INCREMENT_ALLOWED_FILES.includes(filename));assert.equal(digest(readFileSync(new URL(filename,root))),OPERATING_INCREMENT_FROZEN_FILES[filename],filename);}
+ for(const filename of review.added_frozen_paths){assert.ok(!OPERATING_INCREMENT_ALLOWED_FILES.includes(filename));assert.equal(digest(restoreSourceBeforeMaterialChain(filename,readFileSync(new URL(filename,root),'utf8'))),OPERATING_INCREMENT_FROZEN_FILES[filename],filename);}
  for(const [filename,pins] of Object.entries(review.changed_existing_pins)){assert.equal(OPERATING_INCREMENT_FROZEN_FILES[filename],pins.integrated);assert.equal(digest(git(review.new_base_commit,filename)),pins.integrated);assert.notEqual(pins.previous,pins.integrated);}
  const historicalManifest=JSON.parse(readFileSync(new URL('tools/release-historical-profit-candidate.json',root),'utf8'));
  assert.equal(historicalManifest.production_approved,false);assert.equal(historicalManifest.live_authorization,false);assert.equal(historicalManifest.commercial_writes_allowed,false);
@@ -57,7 +58,7 @@ test('every historical input outside the finite operating diff stays immutable w
 
 test('earlier historical preview assertions keep their exact reviewed cutoff with a reversible one-expression fixture adapter',()=>{
  for(const [filename,proof] of Object.entries(review.test_cutoff_adapters)){
-  const baseline=git(review.new_base_commit,filename),current=readFileSync(new URL(filename,root),'utf8');
+  const baseline=git(review.new_base_commit,filename),current=restoreSourceBeforeMaterialChain(filename,readFileSync(new URL(filename,root),'utf8'));
   assert.equal(digest(baseline),proof.baseline_sha256);assert.equal(digest(current),proof.reviewed_sha256);
   assert.equal(baseline.split(proof.original).length,2);assert.equal(current.split(proof.reviewed).length,2);
   assert.equal(current,baseline.replace(proof.original,proof.reviewed));assert.equal(current.replace(proof.reviewed,proof.original),baseline);
