@@ -3,6 +3,7 @@ import {execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
 import {readFileSync} from 'node:fs';
 import {REVIEWED_BUSINESS_MONTH_SOURCE_ADAPTER,normalizeReviewedBusinessMonthSource} from './reviewed-business-month-source-adapter.mjs';
+import {HISTORICAL_PROFIT_REVIEWED_SOURCE_ADDITIONS,HISTORICAL_PROFIT_REVIEWED_KIT_HELPER,restoreFinanceSourceBeforeNumberedKitAddition} from '../../../tools/tests/historical-profit-reviewed-source-fixture.mjs';
 
 const baselineCommit='bd01f64d7e290abb259e9c9dc2646496494a87f0';
 const digest=value=>createHash('sha256').update(value).digest('hex');
@@ -57,8 +58,10 @@ function normalizeCommercialSource(name,current){
  return source;
 }
 function from(source,marker){assert.equal(source.split(marker).length,2,'unique financial source boundary '+marker);return source.slice(source.indexOf(marker));}
-// These sections are compared directly, before any adapter normalization.
-// They cover rule evaluation/precedence, production validators/reference math,
+// These sections are compared directly before commercial/source-lifecycle
+// normalization. The finite numbered-kit addition is separately pinned and
+// reversed before entry. These guards retain rule evaluation/precedence,
+// production validators/reference math,
 // monthly calculations/DTOs and physical production projectors.
 function assertFinancialSections(name,current,baseline){
  const same=(left,right,label)=>assert.equal(left,right,'legacy financial formulas/DTOs unchanged: '+name+' '+label);
@@ -73,9 +76,22 @@ function assertFinancialSections(name,current,baseline){
  }
  if(name==='incurred-production.mjs')same(current.slice(current.indexOf('export function projectIncurredProduction('),current.indexOf('const ready=')),baseline.slice(baseline.indexOf('export function projectIncurredProduction('),baseline.indexOf('const ready=')),'physical facts, range and periods');
 }
+// A later, separately reviewed current-catalogue recognizer adds only the
+// finite literal source delta proved by this test-only fixture. Reverse that
+// exact candidate first; the original pin lists, direct formula guards and
+// complete commercial-to-legacy comparisons below remain authoritative.
+export function normalizeReviewedNumberedKitCostSource(name,observed){
+ const filename='web/cloudflare/src/'+name,proof=HISTORICAL_PROFIT_REVIEWED_SOURCE_ADDITIONS[filename];
+ if(!proof||typeof observed!=='string'||digest(observed)!==proof.reviewed_sha256)return observed;
+ const helper=HISTORICAL_PROFIT_REVIEWED_KIT_HELPER;
+ assert.equal(digest(readFileSync(new URL('../../../'+helper.path,import.meta.url))),helper.sha256,'only exact reviewed numbered-kit helper bytes');
+ const original=restoreFinanceSourceBeforeNumberedKitAddition(filename,observed);
+ assert.equal(typeof original,'string','exact reviewed numbered-kit delta must restore original source: '+name);
+ assert.equal(digest(original),proof.baseline_sha256,'original commercial source remains pinned: '+name);return original;
+}
 export function assertReviewedCostSources({readSource=name=>readFileSync(new URL('../src/'+name,import.meta.url),'utf8')}={}){
  for(const [name,pins] of Object.entries(REVIEWED_COST_SOURCE_PINS)){
-  const baseline=execFileSync('git',['show',baselineCommit+':web/cloudflare/src/'+name],{cwd:new URL('../../../',import.meta.url),encoding:'utf8'}),observed=readSource(name);
+  const baseline=execFileSync('git',['show',baselineCommit+':web/cloudflare/src/'+name],{cwd:new URL('../../../',import.meta.url),encoding:'utf8'}),observed=normalizeReviewedNumberedKitCostSource(name,readSource(name));
   // The separately reviewed source-lifecycle adapter checks direct financial
   // sections before reversing twelve exact hunks to the original commercial
   // bytes. Every existing pin and the complete commercial-to-legacy comparison

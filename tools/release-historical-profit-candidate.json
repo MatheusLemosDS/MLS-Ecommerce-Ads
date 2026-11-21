@@ -1,0 +1,16 @@
+{
+  "schema": "mls_historical_profit_merge_candidate_v1",
+  "scope": "MERGE_ONLY",
+  "base_commit": "dc784188e72c1a35dc014155e23c474b95b17cfe",
+  "prepared_source_commit": null,
+  "owner_authorization": "OWNER_REQUESTED_HISTORICAL_PROFIT_RECOVERY_PR_WITHOUT_LIVE_2026_11_21",
+  "production_approved": false,
+  "live_authorization": false,
+  "commercial_writes_allowed": false,
+  "expected_hashes": {
+    "app": null,
+    "auth": null,
+    "finance": null
+  },
+  "files": []
+}

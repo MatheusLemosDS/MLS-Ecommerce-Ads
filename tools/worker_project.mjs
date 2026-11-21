@@ -5,6 +5,8 @@ import path from 'node:path';
 export const PROJECT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 export const TARGETS = Object.freeze({
   app: Object.freeze({name: 'brazacommerce-app', main: '../../dist/app-worker.mjs', baselineHashes: [
+    // Historical daily costs and numbered financial kits; exact local build, full CI/Live gates remain required.
+    '0fefd0902e36d346c1b420c8349bce873550d07e543b5f50e87ec4346446ab87',
     // Final dependency-resumption and consent guard; exact compiled artifact, full CI and Live gates remain required.
     '01bca972e621e43278914685a5935b754a66a6ee1339e749e5884921256ec9fc',
     // Reviewed Finance repair and published-operation parity; exact compiled bytes, CI and Live gates remain required.
@@ -254,6 +256,8 @@ export const TARGETS = Object.freeze({
     'ed24e42b04378086f66e61a85415fbaea8e793d0dd329fdfa39ab28abd0a678c',
   ]}),
   auth: Object.freeze({name: 'brazacommerce-auth', main: '../../dist/auth-worker.mjs', baselineHashes: [
+    // Historical daily costs and numbered financial kits; exact local build only, CI/Live gates remain mandatory.
+    '08c21816776036fc43fbcbfc4d5c59a0fe509bd85d24390a2df8a2b1378c20e2',
     // Reviewed Finance repair and published-operation parity; exact compiled bytes, CI and Live gates remain required.
     'b0470c5f7d43381fb5ee168012ced82895d7c42bcf84c813d4584a2bb5d80dbe',
     // Source completion-clock correction and matching shared release identity; exact reviewed compiled artifact.

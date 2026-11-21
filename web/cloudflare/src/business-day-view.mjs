@@ -1,5 +1,6 @@
 import {createMlsFinancialBars} from './mls-financial-bars.mjs';
 import {projectDailyBusinessSummary} from './business-daily-summary.mjs';
+import {projectHistoricalDailyBusinessSummary} from './business-daily-history.mjs';
 import {projectDailyProfitPresentation} from './daily-profit-presentation.mjs';
 import {projectProductionDailyFinance} from './production-daily-finance-view.mjs';
 export const BUSINESS_DAY_CSS=String.raw`
@@ -18,7 +19,8 @@ export function businessDayBody(){return `<section id="businessDay" class="busin
 export function projectMissionDailyTrend(summary, selected){
  const safe=value=>Number.isSafeInteger(value)&&!Object.is(value,-0);
  const validDate=value=>typeof value==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(value);
- if(!summary||summary.schema!=='business_daily_summary_v1'||!validDate(selected)||selected.slice(0,7)!==summary.month||!Array.isArray(summary.days))return null;
+ if(!summary||!['business_daily_summary_v1','business_daily_historical_summary_v1'].includes(summary.schema)||!validDate(selected)||selected.slice(0,7)!==summary.month||!Array.isArray(summary.days))return null;
+ const historical=summary.schema==='business_daily_historical_summary_v1';
  const forbidden=new Set(['SOURCE_UNAVAILABLE','ARITHMETIC_UNSAFE','FINANCIAL_SOURCE_STALE','PAYMENT_INCOMPLETE','ADS_SOURCE_STALE']);
  const all=summary.days.filter(row=>validDate(row?.date)&&row.date<=selected).slice(-14);
  if(!all.length)return null;
@@ -26,9 +28,9 @@ export function projectMissionDailyTrend(summary, selected){
   // The validated financial daily projector emits PROVISIONAL, while the
   // read-only chart contract names the equivalent available state OPERATIONAL.
   // Without this translation, real days are incorrectly rendered as missing.
-  const state=row.state==='PROVISIONAL'||row.state==='OPERATIONAL'?'OPERATIONAL':row.state==='PARTIAL_COSTS'?'PARTIAL_COSTS':'UNAVAILABLE';
+  const state=row.state==='PROVISIONAL'||row.state==='OPERATIONAL'?'OPERATIONAL':row.state==='PARTIAL_COSTS'||historical&&row.reason===null&&row.coverage!==null&&row.pending?.includes('PRODUCTION_COST_INCOMPLETE')?'PARTIAL_COSTS':'UNAVAILABLE';
   const partial=Boolean(row.day_partial),basis=state==='PARTIAL_COSTS'?'KNOWN_COSTS':state==='OPERATIONAL'?'ESTIMATE':null;
-  const unknown=state==='UNAVAILABLE',net=unknown?null:state==='PARTIAL_COSTS'?row.known_estimate_cents:row.estimate_cents;
+  const unknown=state==='UNAVAILABLE',net=unknown||historical&&state==='PARTIAL_COSTS'?null:state==='PARTIAL_COSTS'?row.known_estimate_cents:row.estimate_cents;
   const pending=Array.isArray(row.pending)?row.pending:[];
   const comparable=!partial&&state==='OPERATIONAL'&&!pending.some(code=>forbidden.has(code));
   return Object.freeze({
@@ -46,6 +48,7 @@ export function projectMissionDailyTrend(summary, selected){
 export const BUSINESS_DAY_CLIENT=String.raw`
 (()=>{
  ${projectDailyBusinessSummary.toString()}
+ ${projectHistoricalDailyBusinessSummary.toString()}
  const financialBars=(${createMlsFinancialBars.toString()})(document);
  const projectDailyProfitPresentation=${projectDailyProfitPresentation.toString()};
  const projectMissionDailyTrend=${projectMissionDailyTrend.toString()};
@@ -60,7 +63,7 @@ export const BUSINESS_DAY_CLIENT=String.raw`
  function previousDay(){const value=new Date(today()+'T12:00:00Z');value.setUTCDate(value.getUTCDate()-1);return value.toISOString().slice(0,10);}
  const failures={TIMEOUT:'A consulta demorou mais que o esperado. Tente novamente.',NETWORK:'Não foi possível conectar ao painel. Verifique sua conexão e tente novamente.',SESSION:'Sua sessão expirou. Entre novamente.',QUOTA:'O painel está indisponível porque o limite diário do banco de dados foi atingido. A cota é renovada todos os dias às 21h (horário de Brasília).',UNAVAILABLE:'O painel está temporariamente indisponível. Tente novamente em alguns instantes.',INVALID:'Não foi possível abrir o painel. Tente novamente.'};
  const pendingMessages={DAILY_HISTORY_PENDING:'Os pedidos salvos ainda precisam do detalhamento por data de criação.',CREATION_DATE_INCOMPLETE:'Faltam datas de criação em parte dos pedidos; esses valores não foram distribuídos entre os dias.',PAYMENT_INCOMPLETE:'Há pedidos sem todos os valores de repasse.',PRODUCTION_COST_INCOMPLETE:'Ainda faltam custos de produção. O subtotal conhecido pode diminuir.',ADS_UNAVAILABLE:'O consumo de anúncios desta data ainda não está disponível.',ADS_SOURCE_STALE:'A leitura de anúncios precisa ser atualizada.',EXTERNAL_EXPENSES_REQUIRED:'Confirme as despesas do mês para incluir a parcela diária.',TAX_POLICY_REQUIRED:'A regra do DAS mensal ainda precisa ser confirmada.',RECHARGE_TREATMENT_REQUIRED:'Um ajuste de anúncios ainda precisa ser classificado como recarga ou suporte.',ADJUSTMENT_UNAVAILABLE:'Falta conferir o tratamento de um ajuste de anúncios.',ADJUSTMENTS_PENDING:'O cálculo usa o repasse base informado; os ajustes ainda estão em conferência.',ADJUSTMENT_CONFLICT:'Os valores de ajuste do repasse não são compatíveis e precisam de conferência.',STATUS_REVIEW_REQUIRED:'Pedidos com situação em revisão ficam fora dos valores pagos.',RETURNS_NOT_RECONCILED:'Devoluções e reembolsos ainda podem alterar esta estimativa.',FINANCIAL_SOURCE_STALE:'A leitura financeira precisa ser atualizada; os horários originais foram preservados.',SOURCE_UNAVAILABLE:'Parte dos dados financeiros ainda não está disponível.',ARITHMETIC_UNSAFE:'Um valor não pôde ser calculado com segurança.'};
- let prepared=false,active=false,stopped=false,phase='LOADING',failureKind='INVALID',selected='',followToday=false,contextMonth='',loadedMonth=null,summary=null,pendingMonth=null,pendingRequest=null,invalidSummary=false,selectionFailed=false;
+ let prepared=false,active=false,stopped=false,phase='LOADING',failureKind='INVALID',selected='',followToday=false,contextMonth='',loadedMonth=null,summary=null,legacySummary=null,historicalRequired=false,pendingMonth=null,pendingRequest=null,invalidSummary=false,selectionFailed=false;
  function status(message,error=false){el('Status').textContent=message;el('Status').dataset.error=String(error);}
  function controls(){el('Date').max=today();el('Date').value=selected;for(const name of ['Date','Today','Yesterday'])el(name).disabled=!active||stopped;el('Today').setAttribute('aria-pressed',String(selected===today()));el('Yesterday').setAttribute('aria-pressed',String(selected===previousDay()));}
  function saveSelection(){try{if(!globalThis.location?.href||typeof globalThis.history?.replaceState!=='function')return;const url=new URL(globalThis.location.href);if(followToday)url.searchParams.delete('date');else url.searchParams.set('date',selected);url.searchParams.set('month',selected.slice(0,7));globalThis.history.replaceState(globalThis.history.state??{},'',url.pathname+url.search+url.hash);}catch{}}
@@ -76,14 +79,15 @@ export const BUSINESS_DAY_CLIENT=String.raw`
   }
   const item=summary.days.find(row=>row.date===selected);
   if(!item){el('Help').textContent='A coleta salva ainda não cobre esta data. Nenhum valor foi tratado como zero.';status('Leitura disponível até '+day(summary.end_date)+'. A data escolhida aguarda os dados da coleta.');return;}
-  const partial=item.state==='PARTIAL_COSTS',presentation=projectDailyProfitPresentation(item),monthlyPartial=presentation?.state==='BEFORE_MONTHLY_COSTS',amount=monthlyPartial?presentation.amount_cents:partial?item.known_estimate_cents:item.estimate_cents,known=Number.isSafeInteger(amount);
+  const historical=summary.schema==='business_daily_historical_summary_v1',partial=item.state==='PARTIAL_COSTS',presentation=projectDailyProfitPresentation(item),monthlyPartial=presentation?.state==='BEFORE_MONTHLY_COSTS',amount=monthlyPartial?presentation.amount_cents:partial?item.known_estimate_cents:item.estimate_cents,known=Number.isSafeInteger(amount);
   const monthlyLabel=monthlyPartial?presentation.basis==='BEFORE_UNCONFIRMED_EXPENSES'?'Saldo parcial antes das despesas mensais':presentation.basis==='BEFORE_UNCONFIRMED_DAS'?'Saldo parcial antes do DAS mensal':'Saldo parcial antes do DAS e das despesas mensais':null;
-  el('Result').dataset.state=monthlyPartial?'partial':known?'available':'waiting';el('Result').dataset.negative=String(known&&amount<0);el('Net').textContent=known?money(amount):'Em apuração';el('NetLabel').textContent=monthlyPartial?monthlyLabel:partial?'Saldo após custos conhecidos':item.payout_basis==='BASE_REPASS'?'Estimativa com repasse base informado':'Estimativa após os custos do dia.';
+  el('Result').dataset.state=historical&&partial?'waiting':monthlyPartial?'partial':known?'available':'waiting';el('Result').dataset.negative=String(known&&!(historical&&partial)&&amount<0);el('Net').textContent=known&&!(historical&&partial)?money(amount):'Em apuração';el('NetLabel').textContent=historical&&partial?'Lucro em apuração · custos históricos pendentes':monthlyPartial?monthlyLabel:partial?'Saldo após custos conhecidos':item.payout_basis==='BASE_REPASS'?'Estimativa com repasse base informado':'Estimativa após os custos do dia.';
   el('Badge').textContent=monthlyPartial?'Custos mensais pendentes':partial?'Custos incompletos':!known?'Em apuração':item.pending.length?'Em conferência':item.day_partial?'Leitura parcial do dia':'Estimativa';
   if(monthlyPartial)el('Help').textContent='Produção e anúncios considerados.'+(presentation.das_included?' A parcela diária do DAS já foi descontada.':'')+(presentation.expenses_included?' A parcela diária das despesas já foi descontada.':'')+' '+presentation.monthly_costs_missing.map(code=>pendingMessages[code]).join(' ')+' Este subtotal pode diminuir e não representa o lucro completo do dia.';
-  else if(partial)el('Help').textContent=(Number.isSafeInteger(item.production_coverage.pending_units)?'Falta identificar o custo de '+item.production_coverage.pending_units+' unidade(s). ':'Há custos de produção pendentes. ')+'Este subtotal pode diminuir e não representa o lucro completo do dia.';
-  else if(known)el('Help').textContent='Produção, anúncios e parcela diária de DAS e despesas mensais considerados.'+(item.day_partial?' A leitura cobre somente parte deste dia.':'');
+  else if(partial)el('Help').textContent=(Number.isSafeInteger(item.production_coverage.pending_units)?'Falta identificar o custo de '+item.production_coverage.pending_units+' unidade(s). ':'Há custos de produção pendentes. ')+'Este subtotal pode diminuir e não representa o lucro completo do dia.'+(historical?' O saldo com os custos comprovados está no detalhamento; o lucro aguarda os custos restantes.':'');
+  else if(known)el('Help').textContent='Produção, anúncios e parcela diária de DAS e despesas mensais considerados.'+(historical?' Os custos seguem a revisão auditada anterior ao dia da venda; mudanças atuais não substituem essa referência.':'')+(item.day_partial?' A leitura cobre somente parte deste dia.':'');
   else el('Help').textContent=item.reason==='DAILY_HISTORY_PENDING'?'Os pedidos salvos ainda não têm detalhamento por dia. A próxima coleta compatível preencherá esta seção.':item.reason==='CREATION_DATE_INCOMPLETE'?'A origem não trouxe a data de criação de todos os pedidos. O resultado diário aguarda essa informação.':item.pending.map(code=>pendingMessages[code]).filter(Boolean).slice(0,2).join(' ')||'Ainda faltam valores para calcular esta data.';
+  if(historical&&summary.cost_history?.state==='UNAVAILABLE')el('Help').textContent='Os custos históricos desta data ainda não têm evidência suficiente. As vendas e os anúncios disponíveis foram preservados; o lucro permanece em apuração.';
   const returnsNotice=[];
   if(item.coverage){const c=item.coverage;returnsNotice.push(c.returns?c.returns+' pedido(s) com devolução informada nesta leitura.':c.returns_unknown?'':'Nenhuma devolução informada nesta leitura.');if(c.returns_unknown)returnsNotice.push('A leitura de devoluções está pendente em '+c.returns_unknown+' pedido(s).');}
   else returnsNotice.push('Aguardando a leitura de devoluções do dia.');
@@ -101,6 +105,7 @@ export const BUSINESS_DAY_CLIENT=String.raw`
   for(const code of item.pending)el('Pending').append(node('li',pendingMessages[code]||'Parte dos dados ainda precisa de conferência.'));
   el('Pending').append(node('li','Os anúncios seguem a data informada pela Shopee, cujo fuso ainda não foi confirmado. O gasto não identifica quais pedidos foram atribuídos aos anúncios.'));
   const times=item.source_checked_at,empty=item.coverage?.orders===0;el('Sources').textContent=(empty?'Nenhum pedido nesta data. Corte da consulta: '+time(item.source_cutoff_at)+'.':'Financeiro consultado de '+time(times.finance_oldest_at)+' a '+time(times.finance_latest_at)+'. Corte original dos pedidos: '+time(item.source_cutoff_at)+'.')+' Anúncios consultados em '+time(times.ads_at)+'.';
+  if(historical){const evidence=summary.cost_history?.day_evidence?.find(row=>row.date===selected);if(evidence)el('Sources').textContent+=' Custos históricos: revisão '+(evidence.costs_revision??'pendente')+' · regras '+(evidence.cost_rules_revision??'pendente')+' · vínculos '+(evidence.bindings_revision??'pendente')+'.';}
   status((item.day_partial?'Leitura parcial. ':'')+(item.pending.includes('FINANCIAL_SOURCE_STALE')?'A fonte financeira precisa de atualização. ':item.pending.includes('ADS_SOURCE_STALE')?'A fonte de anúncios precisa de atualização. ':'')+(empty?'Nenhum pedido nesta data. Corte da consulta: '+time(item.source_cutoff_at)+'.':'Dados financeiros: '+time(times.finance_latest_at)+'.')+' Estimativa, sem confirmar recebimento em banco.');
  }
  function prepare(){
@@ -135,19 +140,20 @@ export const BUSINESS_DAY_CLIENT=String.raw`
   if(pendingRequest!==null&&month!==pendingRequest.month||pendingRequest===null&&month!==contextMonth)return false;
   if(selected.slice(0,7)!==month){followToday=month===today().slice(0,7);selected=followToday?today():month+'-01';saveSelection();}
   contextMonth=month;loadedMonth=month;pendingMonth=null;selectionFailed=false;let checked=null;try{checked=value===null?null:projectDailyBusinessSummary(value,context.monthly,context.scope);}catch{}
-  summary=checked;invalidSummary=value!==null&&checked===null;render();return checked!==null;
+  legacySummary=checked;historicalRequired=context.requireHistorical===true;if(historicalRequired){try{checked=checked&&projectHistoricalDailyBusinessSummary(context.historicalDailySummary,checked);}catch{checked=null;}}
+  summary=checked;invalidSummary=(value!==null||historicalRequired)&&checked===null;render();return checked!==null;
  }
  function reset(options={}){
-  if(stopped||!prepare())return false;const month=options.month;if(validMonth(month)){if(pendingRequest!==null&&pendingRequest.month!==month){pendingMonth=null;pendingRequest=null;}contextMonth=month;if(selected.slice(0,7)!==month){followToday=month===today().slice(0,7);selected=followToday?today():month+'-01';saveSelection();}}loadedMonth=null;summary=null;invalidSummary=false;selectionFailed=false;render();return true;
+  if(stopped||!prepare())return false;const month=options.month;if(validMonth(month)){if(pendingRequest!==null&&pendingRequest.month!==month){pendingMonth=null;pendingRequest=null;}contextMonth=month;if(selected.slice(0,7)!==month){followToday=month===today().slice(0,7);selected=followToday?today():month+'-01';saveSelection();}}loadedMonth=null;summary=null;legacySummary=null;historicalRequired=false;invalidSummary=false;selectionFailed=false;render();return true;
  }
  function snapshot(){
   if(!prepared)prepare();syncTodaySelection();const item=summary?.days?.find?.(row=>row.date===selected)??null;
   if(!item)return Object.freeze({schema:'mls_day_snapshot_v1',date:selected,state:'PENDING',net_cents:null,net_basis:null,sales_cents:null,ads_spend_cents:null,paid_orders:null,pending:[],presentation:null});
-  const partial=item.state==='PARTIAL_COSTS',amount=partial?item.known_estimate_cents:item.estimate_cents,coverage=item.coverage,production=item.production_coverage;
+  const partial=item.state==='PARTIAL_COSTS',historical=summary.schema==='business_daily_historical_summary_v1',amount=historical&&partial?null:partial?item.known_estimate_cents:item.estimate_cents,coverage=item.coverage,production=item.production_coverage;
   const presentation=projectDailyProfitPresentation(item),safePresentation=presentation?Object.freeze({...presentation,monthly_costs_missing:Object.freeze([...presentation.monthly_costs_missing])}):null;
   return Object.freeze({schema:'mls_day_snapshot_v1',date:selected,state:item.state,net_cents:Number.isSafeInteger(amount)?amount:null,net_basis:Number.isSafeInteger(amount)?partial?'KNOWN_COSTS':'ESTIMATE':null,sales_cents:Number.isSafeInteger(item.sales_cents)?item.sales_cents:null,ads_spend_cents:Number.isSafeInteger(item.ads_spend_cents)?item.ads_spend_cents:null,paid_orders:Number.isSafeInteger(coverage?.paid)?coverage.paid:null,pending:Array.isArray(item.pending)?[...item.pending]:[],presentation:safePresentation,production_coverage:production?Object.freeze({known_units:Number.isSafeInteger(production.known_units)?production.known_units:null,total_units:Number.isSafeInteger(production.total_units)?production.total_units:null,pending_units:Number.isSafeInteger(production.pending_units)?production.pending_units:null}):null});
  }
- function stop(){stopped=true;active=false;summary=null;pendingMonth=null;pendingRequest=null;loadedMonth=null;render();}
- globalThis.brazaDayDashboard=Object.freeze({prepare,bootstrapState,setContext,reset,stop,selectDate,getSelection:()=>{if(!prepared)prepare();syncTodaySelection();return selected;},getSnapshot:snapshot,getMonthAnalytics:()=>active&&!stopped&&!pendingRequest&&!selectionFailed&&summary?.month===contextMonth?projectProductionDailyFinance(summary,{month:contextMonth,selected_date:selected}):null,getTrend:()=>{syncTodaySelection();return projectMissionDailyTrend(summary,selected);}});
+ function stop(){stopped=true;active=false;summary=null;legacySummary=null;historicalRequired=false;pendingMonth=null;pendingRequest=null;loadedMonth=null;render();}
+ globalThis.brazaDayDashboard=Object.freeze({prepare,bootstrapState,setContext,reset,stop,selectDate,getSelection:()=>{if(!prepared)prepare();syncTodaySelection();return selected;},getSnapshot:snapshot,getMonthAnalytics:()=>active&&!stopped&&!pendingRequest&&!selectionFailed&&legacySummary?.month===contextMonth?projectProductionDailyFinance(legacySummary,{month:contextMonth,selected_date:selected}):null,getTrend:()=>{syncTodaySelection();return projectMissionDailyTrend(summary,selected);}});
 })();
 `;

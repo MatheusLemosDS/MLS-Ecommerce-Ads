@@ -13,7 +13,7 @@ export function createAdminApiClient(options={}){
   if(typeof path!=='string'||path.length>4096||!/^([a-z][a-z0-9-]*)(\/[a-z0-9-]+)*(\?[^\s#]*)?$/.test(path)||path.includes('..')||path.includes('://')||/[\u0000-\u001f\u007f]/.test(path)||!dataKeys(requestOptions,['timeoutMs','monthlyViewContract']))throw error('ADMIN_API_RESPONSE_INVALID');
   const post=body!==undefined,timeoutMs=requestOptions.timeoutMs??(post?90000:45000);
   const viewPath=path==='finance/business-month-view'||path.startsWith('finance/business-month-view?');
-  if(Object.hasOwn(requestOptions,'monthlyViewContract')&&(!viewPath||post||!['business-month-view-v4','business-month-view-v5'].includes(requestOptions.monthlyViewContract)))throw error('ADMIN_API_RESPONSE_INVALID');
+  if(Object.hasOwn(requestOptions,'monthlyViewContract')&&(!viewPath||post||!['business-month-view-v4','business-month-view-v5','business-month-view-v6'].includes(requestOptions.monthlyViewContract)))throw error('ADMIN_API_RESPONSE_INVALID');
   if(!Number.isInteger(timeoutMs)||timeoutMs<5||timeoutMs>120000)throw error('ADMIN_API_RESPONSE_INVALID');
   let serialized,csrf;
   try{
