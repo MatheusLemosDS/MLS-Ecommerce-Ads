@@ -1,0 +1,16 @@
+{
+  "schema": "mls_material_chain_merge_candidate_v1",
+  "scope": "MERGE_ONLY",
+  "base_commit": "de0bb72e583a84d86b20952e55b352722996cbed",
+  "prepared_source_commit": null,
+  "owner_authorization": "OWNER_REQUESTED_ORDER_MATERIALS_DTF_WITHOUT_EXTERNAL_PUBLICATION_2026_11_21",
+  "production_approved": false,
+  "live_authorization": false,
+  "commercial_writes_allowed": false,
+  "expected_hashes": {
+    "app": null,
+    "auth": null,
+    "finance": null
+  },
+  "files": []
+}

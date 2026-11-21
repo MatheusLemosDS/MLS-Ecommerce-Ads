@@ -1,0 +1,52 @@
+{
+  "schema": "mls_order_materials_dtf_validation_v1",
+  "recorded_at": "2026-11-21T11:16:15.465879+00:00",
+  "release_id": "2026-11-21.4",
+  "implementation": "IMPLEMENTED",
+  "testing": "FOCUSED_PASS_GENERATED_FINAL_QA_AND_FULL_CI_PENDING",
+  "integration": "NOT_INTEGRATED",
+  "publication": "NOT_PUBLISHED",
+  "company_real_data_validation": "NOT_PERFORMED",
+  "main_integrated_pr133": "426b1de037b075afa066ace4742e3cf398294bbf",
+  "main_integrated_pr132": "de0bb72e583a84d86b20952e55b352722996cbed",
+  "pr132_remote_ci": {
+    "head": "99f8d9ae9f13424cdfd127539b13063ebeff4bdb",
+    "run": 44896599372,
+    "node_pass": 5061,
+    "python_pass": 67,
+    "required_checks_pass": 4
+  },
+  "focused": {
+    "backend": 112,
+    "ui": 22,
+    "agent_dtf": 67,
+    "weekly_and_routes": 11,
+    "previous_and_source_gates": 91
+  },
+  "external_purchase_actions": 0,
+  "financial_movements": 0,
+  "real_operational_facts_created": 0,
+  "live_publications": 0,
+  "historical_acceptance": "PARTIAL",
+  "m2_closed": false,
+  "m22_closed": false,
+  "real_inputs_required": [
+    "Actual initial counts by physical variant",
+    "Approved physical composition for each selling variant",
+    "Supplier quotes and confirmed delivery references",
+    "Actual receipts, manufacturing and already-made payment evidence"
+  ],
+  "limits": {
+    "saved_order_rows": 500,
+    "operational_entities": 1000,
+    "partial_coverage_preserved": true,
+    "max_native_d1_calls": 50,
+    "consumption_budget_regression_units": 20
+  },
+  "prior_local_planner_commit": "bac0d8c88acf07bad905fa28172dbc37fa4d541a",
+  "source_documents": [
+    "https://developers.cloudflare.com/d1/worker-api/d1-database/#batch",
+    "https://developers.cloudflare.com/d1/platform/limits/"
+  ],
+  "next_action": "Reconcile to main DE0, freeze final artifacts, complete exact-head CI and prepare review PR without Live publication"
+}

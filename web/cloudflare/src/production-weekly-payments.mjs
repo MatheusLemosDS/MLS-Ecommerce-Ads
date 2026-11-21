@@ -50,6 +50,12 @@ function selected(value,revision){
  const payments=value.payments.map(r=>({payment_id:r.payment_id,amount_cents:r.amount_cents,paid_on:r.paid_on,reference:r.reference,allocations:clone(r.allocations),status:r.status,reason:r.reason}));
  return {provider_id:value.provider_id,revision,name:value.name,obligations,payments,declared_amount_cents:sum(obligations.filter(r=>r.status!=='CANCELLED').map(r=>r.amount_cents)),outstanding_cents:sum(obligations.map(r=>r.remaining_cents))};
 }
+// Reuse the same validated ledger projection in operational weekly reads.
+// This exposes no new command, money movement, or accounting calculation.
+export function projectProductionWeeklyPaymentLedger(value,revision){
+ if(!integer(revision,1))fail('REVISION_INVALID');
+ return selected(value,revision);
+}
 function validateQuery(query){
  if(!exact(query,['provider_id','cursor','history_cursor'])||query.provider_id!==null&&!uuid(query.provider_id)||[query.cursor,query.history_cursor].some(c=>c!==null&&(typeof c!=='string'||c.length<1||c.length>2048))||query.provider_id===null&&query.history_cursor!==null)fail('REQUEST_INVALID');return query;
 }

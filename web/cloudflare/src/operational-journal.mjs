@@ -145,3 +145,130 @@ export async function mutateOperationalEntity(env,input,options={}){
  await access(env,options,true,{db,key,context});
  return {schema:'operational_entity_v1',scope,kind:input.kind,entity_id:input.entity_id,revision,payload:JSON.parse(payloadText),hash:payloadHash,previous_hash:observed.hash,actor:options.actor,created_at:stamp,replayed:false};
 }
+
+// A group is one explicit operational command, recorded under its own entity.
+// Member revisions and the group's request receipt commit in the same D1 batch.
+// This does not create a financial posting or an external action.
+function groupConfiguration(options){
+ const keys=['readCapability','writeCapability','actor','now','assertAuthorized','transitionGroup'];
+ if(!plain(options)||Reflect.ownKeys(options).some(key=>!keys.includes(key)||!Object.hasOwn(Object.getOwnPropertyDescriptor(options,key)||{},'value'))||typeof options.transitionGroup!=='function')fail('CONFIGURATION_INVALID',503);
+ const {transitionGroup,...rest}=options;
+ return {...configuration({...rest,transition:()=>null},true),transitionGroup};
+}
+function groupList(value,max){
+ return Array.isArray(value)&&Object.getPrototypeOf(value)===Array.prototype&&value.length<=max&&Reflect.ownKeys(value).length===value.length+1&&Array.from({length:value.length},(_,i)=>Object.hasOwn(Object.getOwnPropertyDescriptor(value,String(i))||{},'value')).every(Boolean);
+}
+function groupGuard(value){
+ if(!exact(value,['sql','bindings'])||typeof value.sql!=='string'||value.sql.length>65536||!/^SELECT\b/i.test(value.sql)||/[;]|--|\/\*/.test(value.sql)||/\b(?:INSERT|UPDATE|DELETE|CREATE|DROP|ALTER|PRAGMA|ATTACH|DETACH|REPLACE|VACUUM)\b/i.test(value.sql)||!groupList(value.bindings,100)||value.bindings.some(v=>v!==null&&typeof v!=='string'&&!Number.isSafeInteger(v)))fail('GROUP_GUARD_INVALID',503);
+ if(value.bindings.some(v=>typeof v==='string'&&encoder.encode(v).byteLength>1048576))fail('GROUP_GUARD_INVALID',503);
+ return {sql:value.sql,bindings:[...value.bindings]};
+}
+function groupRuntime(env,expected,options,write=false){
+ if(env.ADMIN_DB!==expected.db||env.COMMERCIAL_CONTEXT!==expected.context)fail('SCOPE_CHANGED',403);
+ if(expected.context){assertCommercialCapability(expected.context,options.readCapability);if(write)assertCommercialCapability(expected.context,options.writeCapability);}
+}
+// One native D1 batch observes every group member. The same three checks used
+// by the original single-entity reader remain mandatory for each member; only
+// their transport is consolidated, so kit size does not consume a binding call
+// per garment/production link.
+async function currentGroupMembers(db,key,scope,inputs){
+ if(inputs.length===0)return [];
+ const statements=[];
+ for(const input of inputs)statements.push(
+  db.prepare('SELECT revision FROM operational_entity_heads WHERE scope_key=? AND kind=? AND entity_id=?').bind(key,input.kind,input.entity_id),
+  db.prepare('SELECT r.* FROM operational_entity_revisions r JOIN operational_entity_heads h ON h.scope_key=r.scope_key AND h.kind=r.kind AND h.entity_id=r.entity_id AND h.revision=r.revision WHERE r.scope_key=? AND r.kind=? AND r.entity_id=?').bind(key,input.kind,input.entity_id),
+  db.prepare('SELECT MAX(revision) AS latest_revision FROM operational_entity_revisions WHERE scope_key=? AND kind=? AND entity_id=?').bind(key,input.kind,input.entity_id),
+ );
+ const results=await db.batch(statements);
+ if(!Array.isArray(results)||results.length!==inputs.length*3||results.some(r=>r?.success===false||!Array.isArray(r.results)||r.results.length>1))fail('STORAGE_INVALID',503);
+ const values=[];
+ for(let i=0;i<inputs.length;i++){
+  const head=results[i*3].results,row=results[i*3+1].results,latest=results[i*3+2].results;
+  if(!!head.length!==!!row.length)fail('STORAGE_INVALID',503);
+  const value=row[0]?await saved(row[0],scope):empty(scope,inputs[i]);
+  if(value.revision!==(head[0]?.revision??0)||value.revision!==(latest[0]?.latest_revision??0))fail('STORAGE_INVALID',503);
+  values.push(value);
+ }
+ return values;
+}
+export async function mutateOperationalGroup(env,input,options={}){
+ if(!exact(input,['kind','entity_id','expected_revision','request_id','command'])||!kind(input.kind)||!token(input.entity_id)||!integer(input.expected_revision)||!uuid(input.request_id)||!plain(input.command))fail('REQUEST_INVALID');
+ options=groupConfiguration(options);input=JSON.parse(canonical(input));const commandText=canonical(input.command,16384),observedAccess=await access(env,options,true),{db,scope,key,context}=observedAccess,stamp=clock(options);
+ const requestHash=await financialDigest(['operational-group-request-v1',scope,input.kind,input.entity_id,input.expected_revision,options.actor,input.command]);
+ await access(env,options,true,observedAccess);await ensure(db);
+ const prior=await replay(db,key,scope,input,requestHash);if(prior){await access(env,options,true,observedAccess);return prior;}
+ const observed=await current(db,key,scope,input);if(observed.revision!==input.expected_revision)fail('REVISION_CONFLICT',409);
+ const next=await options.transitionGroup(JSON.parse(JSON.stringify(observed.payload)),JSON.parse(commandText),{now:stamp,actor:options.actor,scope:Object.freeze({...scope})});
+ if(!exact(next,['payload','mutations','guards'])||!plain(next.payload)||!groupList(next.mutations,30)||!groupList(next.guards,20))fail('GROUP_TRANSITION_INVALID',503);
+ const guards=next.guards.map(groupGuard),mutations=next.mutations.map(raw=>{
+  if(!exact(raw,['kind','entity_id','expected_revision','payload','command'])||!kind(raw.kind)||!token(raw.entity_id)||!integer(raw.expected_revision)||!plain(raw.payload)||!plain(raw.command))fail('GROUP_MUTATION_INVALID',503);
+  return JSON.parse(canonical(raw));
+ }),groupPayload=JSON.parse(canonical(next.payload)),members=[],seen=new Set([JSON.stringify([input.kind,input.entity_id])]);
+ // Validate identities before reading, then observe every target in one native
+ // batch and fence the resulting snapshots together in the write transaction.
+ for(const mutation of mutations){
+  const identity=JSON.stringify([mutation.kind,mutation.entity_id]);
+  if(seen.has(identity))fail('GROUP_MUTATION_DUPLICATE',503);seen.add(identity);
+ }
+ const observations=await currentGroupMembers(db,key,scope,mutations);
+ for(let i=0;i<mutations.length;i++){const before=observations[i],mutation=mutations[i];if(before.revision!==mutation.expected_revision)fail('REVISION_CONFLICT',409);members.push({...mutation,before});}
+ members.push({kind:input.kind,entity_id:input.entity_id,expected_revision:input.expected_revision,payload:groupPayload,command:input.command,before:observed});
+ const guard=(condition,args)=>db.prepare('INSERT INTO operational_entity_guard(id,ok) SELECT 1,0 WHERE NOT ('+condition+')').bind(...args),statements=[];
+ for(const selected of guards)statements.push(guard('EXISTS('+selected.sql+')',selected.bindings));
+ for(const member of members){
+  const revision=member.expected_revision+1;if(!integer(revision,1))fail('REVISION_LIMIT',409);
+  const payloadText=canonical(member.payload),payloadHash=await financialDigest(member.payload),memberCommand=canonical(member.command,16384);
+  Object.assign(member,{revision,payloadText,payloadHash});
+  statements.push(guard('COALESCE((SELECT revision FROM operational_entity_heads WHERE scope_key=? AND kind=? AND entity_id=?),0)=?',[key,member.kind,member.entity_id,member.expected_revision]));
+  statements.push(db.prepare('INSERT INTO operational_entity_revisions(scope_key,kind,entity_id,revision,payload,payload_hash,previous_hash,command,actor,created_at) VALUES(?,?,?,?,?,?,?,?,?,?)').bind(key,member.kind,member.entity_id,revision,payloadText,payloadHash,member.before.hash,memberCommand,options.actor,stamp));
+  statements.push(db.prepare('INSERT INTO operational_entity_heads(scope_key,kind,entity_id,revision) VALUES(?,?,?,?) ON CONFLICT(scope_key,kind,entity_id) DO UPDATE SET revision=excluded.revision').bind(key,member.kind,member.entity_id,revision));
+ }
+ const group=members.at(-1);
+ statements.push(db.prepare('INSERT INTO operational_entity_requests(scope_key,request_id,request_hash,kind,entity_id,revision) VALUES(?,?,?,?,?,?)').bind(key,input.request_id,requestHash,input.kind,input.entity_id,group.revision));
+ for(const member of members)statements.push(guard('EXISTS(SELECT 1 FROM operational_entity_heads WHERE scope_key=? AND kind=? AND entity_id=? AND revision=?) AND EXISTS(SELECT 1 FROM operational_entity_revisions WHERE scope_key=? AND kind=? AND entity_id=? AND revision=? AND payload_hash=?)',[key,member.kind,member.entity_id,member.revision,key,member.kind,member.entity_id,member.revision,member.payloadHash]));
+ statements.push(guard('EXISTS(SELECT 1 FROM operational_entity_requests WHERE scope_key=? AND request_id=? AND request_hash=? AND kind=? AND entity_id=? AND revision=?)',[key,input.request_id,requestHash,input.kind,input.entity_id,group.revision]));
+ try{await access(env,options,true,observedAccess);await db.batch(statements);}catch(error){
+  if(error?.status===403)throw error;
+  await access(env,options,true,observedAccess);
+  const raced=await replay(db,key,scope,input,requestHash);if(raced){await access(env,options,true,observedAccess);return raced;}
+  const afterFailure=await currentGroupMembers(db,key,scope,members);
+  if(afterFailure.some((value,index)=>value.revision!==members[index].expected_revision))fail('REVISION_CONFLICT',409);
+  for(const selected of guards)if(!await db.prepare(selected.sql).bind(...selected.bindings).first())fail('SOURCE_CHANGED',409);
+  fail('STORAGE_WRITE_FAILED',503,{cause:error});
+ }
+ await access(env,options,true,observedAccess);
+ return {schema:'operational_entity_v1',scope,kind:input.kind,entity_id:input.entity_id,revision:group.revision,payload:JSON.parse(group.payloadText),hash:group.payloadHash,previous_hash:observed.hash,actor:options.actor,created_at:stamp,replayed:false};
+}
+
+// Bounded, explicitly complete-or-partial snapshot of existing scoped kinds.
+// No global revision is invented. A caller can retain the heads and use a
+// COUNT/NOT EXISTS guard to reject creations or changes before its own batch.
+export async function readOperationalCollectionSnapshot(env,input,options={}){
+ if(!exact(input,['kinds'])||!groupList(input.kinds,20)||input.kinds.length===0||input.kinds.some(value=>!kind(value))||new Set(input.kinds).size!==input.kinds.length)fail('REQUEST_INVALID');
+ input={kinds:[...input.kinds].sort()};options=configuration(options);const expected=await access(env,options),{db,scope,key}=expected,selected=JSON.stringify(input.kinds),hasTable=await present(db);
+ const clause='scope_key=? AND kind IN(SELECT value FROM json_each(?))';
+ const headsSql='SELECT kind,entity_id,revision FROM operational_entity_heads WHERE '+clause+' ORDER BY kind,entity_id LIMIT 1001';
+ const statsSql='SELECT COUNT(*) AS entity_count,COALESCE(SUM(revision),0) AS revision_sum FROM operational_entity_heads WHERE '+clause;
+ const orphanSql='SELECT COUNT(*) AS orphan_count FROM operational_entity_revisions r LEFT JOIN operational_entity_heads h ON h.scope_key=r.scope_key AND h.kind=r.kind AND h.entity_id=r.entity_id WHERE r.scope_key=? AND r.kind IN(SELECT value FROM json_each(?)) AND (h.revision IS NULL OR r.revision>h.revision)';
+ let records=[],heads=[],stats={entity_count:0,revision_sum:0};
+ if(hasTable){
+  const rowsSql='SELECT h.kind AS head_kind,h.entity_id AS head_entity_id,h.revision AS head_revision,r.*,(SELECT MAX(v.revision) FROM operational_entity_revisions v WHERE v.scope_key=h.scope_key AND v.kind=h.kind AND v.entity_id=h.entity_id) AS latest_revision FROM operational_entity_heads h LEFT JOIN operational_entity_revisions r ON r.scope_key=h.scope_key AND r.kind=h.kind AND r.entity_id=h.entity_id AND r.revision=h.revision WHERE h.scope_key=? AND h.kind IN(SELECT value FROM json_each(?)) ORDER BY h.kind,h.entity_id LIMIT 1001';
+  const parts=await db.batch([db.prepare(rowsSql).bind(key,selected),db.prepare(statsSql).bind(key,selected),db.prepare(orphanSql).bind(key,selected)]);
+  if(!Array.isArray(parts)||parts.length!==3||parts.some(p=>p?.success===false||!Array.isArray(p?.results))||parts[0].results.length>1001||parts[1].results.length!==1||parts[2].results.length!==1||parts[2].results[0].orphan_count!==0)fail('STORAGE_INVALID',503);
+  stats=parts[1].results[0];if(!exact(stats,['entity_count','revision_sum'])||!Number.isSafeInteger(stats.entity_count)||stats.entity_count<0||!Number.isSafeInteger(stats.revision_sum)||stats.revision_sum<0||parts[0].results.length!==Math.min(stats.entity_count,1001))fail('STORAGE_INVALID',503);
+  for(const raw of parts[0].results){
+   if(raw.head_kind!==raw.kind||raw.head_entity_id!==raw.entity_id||raw.head_revision!==raw.revision||raw.latest_revision!==raw.revision)fail('STORAGE_INVALID',503);
+   const record=await saved(raw,scope);heads.push({kind:record.kind,entity_id:record.entity_id,revision:record.revision,hash:record.hash});records.push(record);
+  }
+ }
+ const complete=stats.entity_count<=1000,returnedRecords=records.slice(0,1000),returnedHeads=heads.slice(0,1000),fenceHash=await financialDigest(['operational-collection-v1',scope,input.kinds,stats,returnedHeads]);
+ await access(env,options,false,expected);
+ if(await present(db)!==hasTable)fail('SOURCE_CHANGED',409);
+ if(hasTable){
+  const final=await db.batch([db.prepare(headsSql).bind(key,selected),db.prepare(statsSql).bind(key,selected),db.prepare(orphanSql).bind(key,selected)]);
+  if(!Array.isArray(final)||final.length!==3||final.some(p=>p?.success===false||!Array.isArray(p?.results))||final[1].results.length!==1||final[2].results.length!==1||final[2].results[0].orphan_count!==0)fail('STORAGE_INVALID',503);
+  if(canonical(final[1].results[0])!==canonical(stats)||canonical(final[0].results)!==canonical(heads.map(({hash,...head})=>head)))fail('SOURCE_CHANGED',409);
+ }
+ groupRuntime(env,expected,options);
+ return {schema:'operational_collection_snapshot_v1',scope,kinds:input.kinds,records:returnedRecords,heads:returnedHeads,fence_hash:fenceHash,complete,total_count:stats.entity_count};
+}

@@ -6,6 +6,7 @@ import path from 'node:path';
 import {spawnSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 import {createHash} from 'node:crypto';
+import {restoreSourceBeforeMaterialChain} from './release-material-chain-review-fixture.mjs';
 import {HISTORICAL_PROFIT_REVIEWED_SOURCE_ADDITIONS,restoreFinanceSourceBeforeNumberedKitAddition} from './historical-profit-reviewed-source-fixture.mjs';
 import {evaluateFinanceCompletionMergePreflight,financeCompletionPriorVerifierMatchesBaseline,FINANCE_COMPLETION_MERGE_BASE_COMMIT,FINANCE_COMPLETION_MERGE_MANIFEST_PATH,FINANCE_COMPLETION_OWNER_AUTHORIZATION,FINANCE_COMPLETION_ALLOWED_FILES,FINANCE_COMPLETION_FROZEN_FILES,FINANCE_COMPLETION_BASE_PREFLIGHT_SHA256,RELEASE_MANUAL_GATES} from '../release_preflight.mjs';
 
@@ -61,7 +62,7 @@ test('both previous verifier implementations remain byte-identical after removin
  // The prior runtime verifier and every pinned baseline hash stay untouched;
  // reverse only the exact additions before checking their original bytes.
  for(const [filename,expected] of Object.entries(FINANCE_COMPLETION_FROZEN_FILES)){
-  const source=fs.readFileSync(path.join(root,filename),'utf8');
+  const source=restoreSourceBeforeMaterialChain(filename,fs.readFileSync(path.join(root,filename),'utf8'));
   const original=Object.hasOwn(HISTORICAL_PROFIT_REVIEWED_SOURCE_ADDITIONS,filename)?restoreFinanceSourceBeforeNumberedKitAddition(filename,source):source;
   assert.equal(typeof original,'string','unreviewed source delta: '+filename);assert.equal(digest(original),expected,filename);
  }

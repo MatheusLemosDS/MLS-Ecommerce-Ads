@@ -6,6 +6,7 @@ import path from 'node:path';
 import {spawnSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 import {createHash} from 'node:crypto';
+import {restoreSourceBeforeMaterialChain} from './release-material-chain-review-fixture.mjs';
 import {evaluateHistoricalProfitMergePreflight,historicalProfitPriorVerifierMatchesBaseline,financeCompletionPriorVerifierMatchesBaseline,HISTORICAL_PROFIT_MERGE_BASE_COMMIT,HISTORICAL_PROFIT_MERGE_MANIFEST_PATH,HISTORICAL_PROFIT_OWNER_AUTHORIZATION,HISTORICAL_PROFIT_ALLOWED_FILES,HISTORICAL_PROFIT_FROZEN_FILES,HISTORICAL_PROFIT_BASE_PREFLIGHT_SHA256,FINANCE_COMPLETION_MERGE_BASE_COMMIT,FINANCE_COMPLETION_FROZEN_FILES,RELEASE_MANUAL_GATES} from '../release_preflight.mjs';
 
 const root=fileURLToPath(new URL('../../',import.meta.url)),digest=value=>createHash('sha256').update(value).digest('hex');
@@ -33,7 +34,7 @@ test('all prior deployment inputs stay frozen while only the two exact reviewed 
  assert.deepEqual(Object.keys(FINANCE_COMPLETION_FROZEN_FILES).filter(filename=>HISTORICAL_PROFIT_ALLOWED_FILES.includes(filename)).sort(),['web/cloudflare/src/cost-rules.mjs','web/cloudflare/src/production-costs.mjs']);
  for(const [filename,sha256] of Object.entries(FINANCE_COMPLETION_FROZEN_FILES))if(!HISTORICAL_PROFIT_ALLOWED_FILES.includes(filename))assert.equal(HISTORICAL_PROFIT_FROZEN_FILES[filename],sha256,filename);
  for(const [filename,sha256] of Object.entries(HISTORICAL_PROFIT_FROZEN_FILES)){
-  assert.equal(digest(fs.readFileSync(path.join(root,filename))),sha256,filename);
+  assert.equal(digest(restoreSourceBeforeMaterialChain(filename,fs.readFileSync(path.join(root,filename),'utf8'))),sha256,filename);
   const input=good();input.candidate.files=[{path:filename,sha256}];assert.deepEqual(evaluateHistoricalProfitMergePreflight(input).failures,['RELEASE_HISTORICAL_PROFIT_MANIFEST_INVALID'],filename);
  }
  for(const filename of ['tools/worker_deploy.mjs','tools/verified_worker_deploy.mjs','tools/release-finance-completion-candidate.json','web/cloudflare/src/financial-accounting-projection.mjs','web/cloudflare/src/financial-inventory-bridge.mjs','web/finance/src/financial-bank-connector.mjs','web/finance/src/financial-cash-allocation.mjs'])assert.ok(Object.hasOwn(HISTORICAL_PROFIT_FROZEN_FILES,filename),filename);

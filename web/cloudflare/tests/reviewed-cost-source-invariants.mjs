@@ -3,6 +3,7 @@ import {execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
 import {readFileSync} from 'node:fs';
 import {REVIEWED_BUSINESS_MONTH_SOURCE_ADAPTER,normalizeReviewedBusinessMonthSource} from './reviewed-business-month-source-adapter.mjs';
+import {restoreSourceBeforeMaterialChain} from '../../../tools/tests/release-material-chain-review-fixture.mjs';
 import {HISTORICAL_PROFIT_REVIEWED_SOURCE_ADDITIONS,HISTORICAL_PROFIT_REVIEWED_KIT_HELPER,restoreFinanceSourceBeforeNumberedKitAddition} from '../../../tools/tests/historical-profit-reviewed-source-fixture.mjs';
 
 const baselineCommit='bd01f64d7e290abb259e9c9dc2646496494a87f0';
@@ -89,9 +90,12 @@ export function normalizeReviewedNumberedKitCostSource(name,observed){
  assert.equal(typeof original,'string','exact reviewed numbered-kit delta must restore original source: '+name);
  assert.equal(digest(original),proof.baseline_sha256,'original commercial source remains pinned: '+name);return original;
 }
+// Reverse only the exact material-link error mapping before all existing
+// source hashes, direct formula guards and commercial-to-legacy comparisons.
+export function normalizeReviewedMaterialChainCostSource(name,observed){return restoreSourceBeforeMaterialChain('web/cloudflare/src/'+name,observed)??observed;}
 export function assertReviewedCostSources({readSource=name=>readFileSync(new URL('../src/'+name,import.meta.url),'utf8')}={}){
  for(const [name,pins] of Object.entries(REVIEWED_COST_SOURCE_PINS)){
-  const baseline=execFileSync('git',['show',baselineCommit+':web/cloudflare/src/'+name],{cwd:new URL('../../../',import.meta.url),encoding:'utf8'}),observed=normalizeReviewedNumberedKitCostSource(name,readSource(name));
+  const baseline=execFileSync('git',['show',baselineCommit+':web/cloudflare/src/'+name],{cwd:new URL('../../../',import.meta.url),encoding:'utf8'}),observed=normalizeReviewedNumberedKitCostSource(name,normalizeReviewedMaterialChainCostSource(name,readSource(name)));
   // The separately reviewed source-lifecycle adapter checks direct financial
   // sections before reversing twelve exact hunks to the original commercial
   // bytes. Every existing pin and the complete commercial-to-legacy comparison
