@@ -2,7 +2,7 @@
   "schema": "mls_commerce_os_checkpoint_v1",
   "canonical_roadmap": "docs/ROADMAP_MLS_COMMERCE_OS.md",
   "legacy_roadmap": "docs/ROADMAP_BRAZACOMMERCE.md",
-  "updated_at": "2026-11-21T10:37:21.324140+00:00",
+  "updated_at": "2026-11-21T10:55:09.606416+00:00",
   "product": {
     "name": "MLS Commerce OS",
     "supervisor": "MLS Hermes",
@@ -31,7 +31,7 @@
   },
   "current_phase": "M2_FINANCE_RETURNS_RECONCILIATION",
   "working_branch": "feature/weekly-payments-physical-shirts-20261120",
-  "current_status": "PR133_MERGED_PR132_RECONCILED_FOCUSED_PASS_FULL_CI_PENDING",
+  "current_status": "PR133_MERGED_PR132_BROWSER_EXPECTATION_FIXED_NEW_CI_REQUIRED",
   "completed_this_phase": [
     "Conciliação de liberações por pedido com estados VERIFIED, LOCATED_UNVERIFIED, AMBIGUOUS e NOT_LOCATED",
     "Repasse-base, ajuste, repasse após ajuste e liberação exibidos sem dupla dedução",
@@ -152,7 +152,7 @@
     ],
     "implementation": "IMPLEMENTED",
     "validation": {
-      "state": "RECONCILED_FOCUSED_AND_BROWSER_PASS_FULL_REMOTE_CI_PENDING",
+      "state": "FOCUSED_AND_EIGHT_RELEASE_PROFILES_PASS_NEW_FULL_CI_REQUIRED",
       "prior_pr_head": "01ba4e3dfd92dc11c90386cbee7d2fce82d6db41",
       "prior_node_pass": 5003,
       "prior_python_pass": 67,
@@ -175,6 +175,29 @@
         "app": "b40e717dbe762330e1c3e5feaf6480a77c3e7185c4be35dc4c77062eab032409",
         "auth": "d582efcf139bac5327f8a745ec7a5ea2e1f77757d51c11a6d16b200bc93b9466",
         "finance": "012c0eaced495c53b3b143a6298ec8c7221a0a5198c67455eb538e16508c86a4"
+      },
+      "combined_first_remote_attempt": {
+        "head": "1e857ea76b5d5c650ca897b7c5ce7cb29788377e",
+        "run": 44895273590,
+        "job": 136819466142,
+        "node_tests": 5061,
+        "node_pass": 5053,
+        "node_fail": 8,
+        "node_skipped": 0,
+        "node_cancelled": 0,
+        "cause": "Eight browser profiles retained the earlier current-release link order; the combined current notes introduce Overview while retaining the Finance destination in the historical section",
+        "file": "web/cloudflare/tests/app-release-discovery-chrome.test.mjs",
+        "fix": "Explicit current href order reconciled and Finance destination assertion added; no assertion removed, runtime or financial module changed",
+        "python": "NOT_RUN_AFTER_NODE_FAILURE",
+        "isolated_builds_pass": 3
+      },
+      "release_discovery_corrected_profiles": {
+        "tests": 8,
+        "pass": 8,
+        "fail": 0,
+        "skipped": 0,
+        "runtime_changed": false,
+        "original_finance_destination_preserved": true
       }
     },
     "git_integration": "NOT_INTEGRATED",
@@ -8268,7 +8291,7 @@
     ],
     "implementation": "IMPLEMENTED",
     "validation": {
-      "state": "RECONCILED_FOCUSED_AND_BROWSER_PASS_FULL_REMOTE_CI_PENDING",
+      "state": "FOCUSED_AND_EIGHT_RELEASE_PROFILES_PASS_NEW_FULL_CI_REQUIRED",
       "prior_pr_head": "01ba4e3dfd92dc11c90386cbee7d2fce82d6db41",
       "prior_node_pass": 5003,
       "prior_python_pass": 67,
@@ -8291,6 +8314,29 @@
         "app": "b40e717dbe762330e1c3e5feaf6480a77c3e7185c4be35dc4c77062eab032409",
         "auth": "d582efcf139bac5327f8a745ec7a5ea2e1f77757d51c11a6d16b200bc93b9466",
         "finance": "012c0eaced495c53b3b143a6298ec8c7221a0a5198c67455eb538e16508c86a4"
+      },
+      "combined_first_remote_attempt": {
+        "head": "1e857ea76b5d5c650ca897b7c5ce7cb29788377e",
+        "run": 44895273590,
+        "job": 136819466142,
+        "node_tests": 5061,
+        "node_pass": 5053,
+        "node_fail": 8,
+        "node_skipped": 0,
+        "node_cancelled": 0,
+        "cause": "Eight browser profiles retained the earlier current-release link order; the combined current notes introduce Overview while retaining the Finance destination in the historical section",
+        "file": "web/cloudflare/tests/app-release-discovery-chrome.test.mjs",
+        "fix": "Explicit current href order reconciled and Finance destination assertion added; no assertion removed, runtime or financial module changed",
+        "python": "NOT_RUN_AFTER_NODE_FAILURE",
+        "isolated_builds_pass": 3
+      },
+      "release_discovery_corrected_profiles": {
+        "tests": 8,
+        "pass": 8,
+        "fail": 0,
+        "skipped": 0,
+        "runtime_changed": false,
+        "original_finance_destination_preserved": true
       }
     },
     "git_integration": "NOT_INTEGRATED",

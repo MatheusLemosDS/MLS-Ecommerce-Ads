@@ -23,7 +23,7 @@
       "fail": 0,
       "skipped": 0
     },
-    "full_combined_ci": "PENDING",
+    "full_combined_ci": "NEW_EXACT_HEAD_RUN_REQUIRED",
     "build_assets_and_browser": {
       "pass": 24,
       "fail": 0,
@@ -41,6 +41,28 @@
       "web/cloudflare/src/cost-rules.mjs": "a6db866f802e4c5b52964d023ada26c11c4767c6c357c74924ab2d21587e0f35",
       "web/cloudflare/src/numbered-adult-kit-costs.mjs": "803a83c4b095be0de7ac471e83466588e6eeff161d3dec5200c6862050284768",
       "web/cloudflare/src/business-daily-history.mjs": "10c260fe350a7da954f3a1e4530310e76711ea7868f8c4492a2d9f9021ab529c"
+    },
+    "combined_first_remote_attempt": {
+      "head": "1e857ea76b5d5c650ca897b7c5ce7cb29788377e",
+      "run": 44895273590,
+      "job": 136819466142,
+      "node_tests": 5061,
+      "node_pass": 5053,
+      "node_fail": 8,
+      "node_skipped": 0,
+      "node_cancelled": 0,
+      "cause": "Eight browser profiles retained the earlier current-release link order; the combined current notes introduce Overview while retaining the Finance destination in the historical section",
+      "file": "web/cloudflare/tests/app-release-discovery-chrome.test.mjs",
+      "fix": "Explicit current href order reconciled and Finance destination assertion added; no assertion removed, runtime or financial module changed",
+      "python": "NOT_RUN_AFTER_NODE_FAILURE",
+      "isolated_builds_pass": 3
+    },
+    "corrected_release_discovery": {
+      "pass": 8,
+      "fail": 0,
+      "skipped": 0,
+      "assertions_removed": 0,
+      "finance_destination_assertion_added": true
     }
   },
   "integrated_to_main": false,
