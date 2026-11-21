@@ -2,7 +2,7 @@
   "schema": "mls_operating_increment_merge_candidate_v1",
   "scope": "MERGE_ONLY",
   "base_commit": "dc784188e72c1a35dc014155e23c474b95b17cfe",
-  "prepared_source_commit": "b2690f414df596626da4fa765a617fc2ebb7a806",
+  "prepared_source_commit": "b042605f5374ac1a368f922b1d7d35e4fbfe2b30",
   "owner_authorization": "OWNER_REQUESTED_WEEKLY_PAYMENTS_AND_PHYSICAL_SHIRTS_WITHOUT_EXTERNAL_PUBLICATION_2026_11_20",
   "production_approved": false,
   "live_authorization": false,
@@ -27,7 +27,7 @@
     },
     {
       "path": "docs/MLS_COMMERCE_OS_CHECKPOINT.json",
-      "sha256": "831c486acc19217f19f153f69bb5862530eaf7e3db4f61192b0795e2347ffc11"
+      "sha256": "e9ba924937fe04a53f28f640e205d6863c2dc62c12f4845a544fa54b2cfde5b0"
     },
     {
       "path": "docs/MLS_OPERATING_INCREMENT_2026_11_20.md",
