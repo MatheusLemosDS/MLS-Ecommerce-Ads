@@ -9,7 +9,9 @@ Este incremento implementa pagamentos parciais de produção por semana/prestado
 e estoque físico de camisetas por tamanho/cor; compras, fila DTF e fechamento
 integrados vêm depois, conforme os serviços comprovados.
 
-O pedido atual não autoriza movimentação de dinheiro ou publicação externa.
+Em 21/11/2026 o proprietário autorizou o envio desta branch ao GitHub, abertura
+de PR, CI e prévias isoladas Cloudflare. A Live e movimentações de dinheiro
+continuam sem autorização neste incremento.
 Implementação local, testes, integração Git, publicação e aceite real têm estados
 separados. Não tratar merge como deploy, nem testes sintéticos como aceite da conta.
 

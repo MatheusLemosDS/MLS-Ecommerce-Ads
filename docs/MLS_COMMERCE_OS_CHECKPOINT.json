@@ -2,7 +2,7 @@
   "schema": "mls_commerce_os_checkpoint_v1",
   "canonical_roadmap": "docs/ROADMAP_MLS_COMMERCE_OS.md",
   "legacy_roadmap": "docs/ROADMAP_BRAZACOMMERCE.md",
-  "updated_at": "2026-11-21T00:22:47.100639+00:00",
+  "updated_at": "2026-11-21T00:29:47.547417+00:00",
   "product": {
     "name": "MLS Commerce OS",
     "supervisor": "MLS Hermes",
@@ -31,7 +31,7 @@
   },
   "current_phase": "M2_FINANCE_RETURNS_RECONCILIATION",
   "working_branch": "feature/weekly-payments-physical-shirts-20261120",
-  "current_status": "M2_M2_2_OPERATING_INCREMENT_IMPLEMENTED_TESTED_LOCAL_NOT_INTEGRATED_NOT_PUBLISHED",
+  "current_status": "M2_M2_2_OPERATING_INCREMENT_LOCAL_PASS_REMOTE_CI_AUTHORIZED_NO_LIVE_PUBLICATION",
   "completed_this_phase": [
     "Conciliação de liberações por pedido com estados VERIFIED, LOCATED_UNVERIFIED, AMBIGUOUS e NOT_LOCATED",
     "Repasse-base, ajuste, repasse após ajuste e liberação exibidos sem dupla dedução",
@@ -129,10 +129,9 @@
     }
   },
   "next_actions": [
-    "Review the local source, signed candidate and synthetic usage evidence",
-    "Continue the independent purchase-needs planner from explicit physical demand and stock, preserving UNKNOWN and no external ordering",
-    "After specific authorization, push the exact branch for PR/required CI and isolated Cloudflare Builds; do not publish the Live",
-    "Only integrate Git after exact-head remote CI; record publication and real-data acceptance separately"
+    "Push the exact reviewed candidate and open its PR for required CI and isolated Cloudflare previews",
+    "Require all checks at the exact current head; preserve Live and money-transfer restrictions",
+    "Continue independent purchase-needs planning, then link DTF and weekly closing"
   ],
   "m0_followup": [
     "Conferir visual autenticado em desktop e celular durante M1; corrigir apenas branding/layout sem renomear infraestrutura"
@@ -142,7 +141,7 @@
   ],
   "latest_increment": {
     "schema": "mls_operating_increment_v1",
-    "recorded_at": "2026-11-21T00:22:47.100639+00:00",
+    "recorded_at": "2026-11-21T00:29:47.547417+00:00",
     "base_commit": "dc784188e72c1a35dc014155e23c474b95b17cfe",
     "branch": "feature/weekly-payments-physical-shirts-20261120",
     "release_id": "2026-11-20.2",
@@ -186,10 +185,9 @@
       "Physical shirts by size/color with explicit initial count, receipts and protected reservations"
     ],
     "next_actions": [
-      "Review the local source, signed candidate and synthetic usage evidence",
-      "Continue the independent purchase-needs planner from explicit physical demand and stock, preserving UNKNOWN and no external ordering",
-      "After specific authorization, push the exact branch for PR/required CI and isolated Cloudflare Builds; do not publish the Live",
-      "Only integrate Git after exact-head remote CI; record publication and real-data acceptance separately"
+      "Push the exact reviewed candidate and open its PR for required CI and isolated Cloudflare previews",
+      "Require all checks at the exact current head; preserve Live and money-transfer restrictions",
+      "Continue independent purchase-needs planning, then link DTF and weekly closing"
     ],
     "subsequent_items": [
       "Purchase needs from confirmed physical demand and firm receipts",
@@ -198,12 +196,13 @@
     ],
     "evidence": "docs/MLS_OPERATING_INCREMENT_2026_11_20.md",
     "git_delivery": {
-      "state": "LOCAL_BRANCH_COMMITTED",
+      "state": "REMOTE_REVIEW_AND_CI_AUTHORIZED",
       "branch": "feature/weekly-payments-physical-shirts-20261120",
       "candidate_manifest": "tools/release-operating-increment-candidate.json",
       "source_commit_field": "prepared_source_commit",
-      "remote_push": false,
-      "github_ci": "NOT_RUN_FOR_THIS_INCREMENT"
+      "remote_push": "CONSULT_REMOTE_BRANCH",
+      "github_ci": "CONSULT_REQUIRED_CHECKS_AT_CURRENT_PR_HEAD",
+      "pull_request_lookup": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pulls?q=is%3Apr+head%3Afeature%2Fweekly-payments-physical-shirts-20261120"
     },
     "next_command": "git -C /workspace/work/mls-operating-increment-20261120 status --short",
     "pending_real_inputs": [
@@ -219,7 +218,22 @@
       "native_gets": 22,
       "exact_receipt_match": true,
       "evidence": "/workspace/work/pr130-ci-evidence/live-readonly-operating-increment-local-final-20261121-20261120.json"
-    }
+    },
+    "external_validation_authorization": {
+      "status": "OWNER_AUTHORIZED",
+      "recorded_at": "2026-11-21T00:29:47.547417+00:00",
+      "scope": [
+        "push exact branch",
+        "open pull request",
+        "run required CI",
+        "isolated Cloudflare previews"
+      ],
+      "live_publication": false,
+      "financial_transfers": false,
+      "source": "Owner replied Autorizo to the specific push/PR/CI/isolated-preview question"
+    },
+    "isolated_preview_publication_allowed": true,
+    "live_publication_allowed": false
   },
   "incident": {
     "id": "INCIDENT_2026_10_27_PANEL_AGENT_REGRESSION",
@@ -8017,7 +8031,7 @@
   },
   "operating_increment_20261120": {
     "schema": "mls_operating_increment_v1",
-    "recorded_at": "2026-11-21T00:22:47.100639+00:00",
+    "recorded_at": "2026-11-21T00:29:47.547417+00:00",
     "base_commit": "dc784188e72c1a35dc014155e23c474b95b17cfe",
     "branch": "feature/weekly-payments-physical-shirts-20261120",
     "release_id": "2026-11-20.2",
@@ -8061,10 +8075,9 @@
       "Physical shirts by size/color with explicit initial count, receipts and protected reservations"
     ],
     "next_actions": [
-      "Review the local source, signed candidate and synthetic usage evidence",
-      "Continue the independent purchase-needs planner from explicit physical demand and stock, preserving UNKNOWN and no external ordering",
-      "After specific authorization, push the exact branch for PR/required CI and isolated Cloudflare Builds; do not publish the Live",
-      "Only integrate Git after exact-head remote CI; record publication and real-data acceptance separately"
+      "Push the exact reviewed candidate and open its PR for required CI and isolated Cloudflare previews",
+      "Require all checks at the exact current head; preserve Live and money-transfer restrictions",
+      "Continue independent purchase-needs planning, then link DTF and weekly closing"
     ],
     "subsequent_items": [
       "Purchase needs from confirmed physical demand and firm receipts",
@@ -8073,12 +8086,13 @@
     ],
     "evidence": "docs/MLS_OPERATING_INCREMENT_2026_11_20.md",
     "git_delivery": {
-      "state": "LOCAL_BRANCH_COMMITTED",
+      "state": "REMOTE_REVIEW_AND_CI_AUTHORIZED",
       "branch": "feature/weekly-payments-physical-shirts-20261120",
       "candidate_manifest": "tools/release-operating-increment-candidate.json",
       "source_commit_field": "prepared_source_commit",
-      "remote_push": false,
-      "github_ci": "NOT_RUN_FOR_THIS_INCREMENT"
+      "remote_push": "CONSULT_REMOTE_BRANCH",
+      "github_ci": "CONSULT_REQUIRED_CHECKS_AT_CURRENT_PR_HEAD",
+      "pull_request_lookup": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pulls?q=is%3Apr+head%3Afeature%2Fweekly-payments-physical-shirts-20261120"
     },
     "next_command": "git -C /workspace/work/mls-operating-increment-20261120 status --short",
     "pending_real_inputs": [
@@ -8094,7 +8108,22 @@
       "native_gets": 22,
       "exact_receipt_match": true,
       "evidence": "/workspace/work/pr130-ci-evidence/live-readonly-operating-increment-local-final-20261121-20261120.json"
-    }
+    },
+    "external_validation_authorization": {
+      "status": "OWNER_AUTHORIZED",
+      "recorded_at": "2026-11-21T00:29:47.547417+00:00",
+      "scope": [
+        "push exact branch",
+        "open pull request",
+        "run required CI",
+        "isolated Cloudflare previews"
+      ],
+      "live_publication": false,
+      "financial_transfers": false,
+      "source": "Owner replied Autorizo to the specific push/PR/CI/isolated-preview question"
+    },
+    "isolated_preview_publication_allowed": true,
+    "live_publication_allowed": false
   },
   "previous_last_verified_live_release_before_operating_increment": {
     "status": "PUBLISHED_VERIFIED",

@@ -7,8 +7,9 @@ O estado atual fica somente em `MLS_COMMERCE_OS_CHECKPOINT.json`.
 
 Este incremento pertence aos subitens M2.2-WEEKLY-PRODUCTION-PAYMENTS e
 M2.2-PHYSICAL-SHIRT-STOCK. Não reinicia fases concluídas ou usa PR121 como base.
-O pedido atual autoriza implementação e testes; movimentações financeiras e
-publicações externas exigem autorização específica.
+Após a validação local, o proprietário autorizou em 21/11/2026 o envio da branch
+ao GitHub, abertura de PR, CI e prévias isoladas Cloudflare. Essa autorização
+não inclui publicação da Live ou movimentações financeiras.
 
 ## Pagamentos de produção
 
@@ -81,11 +82,12 @@ a fabricação e os fechamentos existentes conservaram 11 módulos byte-idêntic
 main. O setup legado continua com seus 114 comandos SQL e hash conferidos.
 Nenhuma suíte, verificação de segurança ou contrato válido foi removido.
 
-O código está na branch local indicada pelo checkpoint; o commit-fonte é fixado
-no manifesto `tools/release-operating-increment-candidate.json`. Não foi enviado
-ao GitHub nem integrado na main. O push pode acionar Builds isolados Cloudflare;
-esta etapa aguarda autorização específica, mantendo a Live bloqueada. A CI
-GitHub deste incremento ainda não foi executada.
+O commit-fonte está fixado no manifesto
+`tools/release-operating-increment-candidate.json`. O envio da branch, a PR, a CI e
+as prévias isoladas foram especificamente autorizados pelo proprietário em
+21/11/2026. O [estado atual da PR e seus checks](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pulls?q=is%3Apr+head%3Afeature%2Fweekly-payments-physical-shirts-20261120)
+é a fonte para o andamento remoto no SHA exato. A Live permanece bloqueada;
+integração Git, publicação e aceite real continuam sendo etapas separadas.
 
 Os caminhos de uso acima estarão disponíveis após integração e publicação
 especificamente autorizadas. O código, testes e capturas locais comprovam o
