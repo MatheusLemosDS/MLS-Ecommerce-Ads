@@ -212,7 +212,14 @@
       "Future mappings of orders/components to reservations, purchase needs and DTF"
     ],
     "no_money_moved": true,
-    "no_real_operational_facts_created": true
+    "no_real_operational_facts_created": true,
+    "last_live_readonly_verification": {
+      "at": "2026-11-21T00:23:48.828062+00:00",
+      "release_id": "2026-11-17.3",
+      "native_gets": 22,
+      "exact_receipt_match": true,
+      "evidence": "/workspace/work/pr130-ci-evidence/live-readonly-operating-increment-local-final-20261121-20261120.json"
+    }
   },
   "incident": {
     "id": "INCIDENT_2026_10_27_PANEL_AGENT_REGRESSION",
@@ -3574,32 +3581,128 @@
   },
   "last_verified_live_release": {
     "status": "PUBLISHED_VERIFIED",
-    "verification_scope": "TECHNICAL_PUBLIC_ONLY",
-    "release_id": "2026-11-13.3",
-    "release": "2026-11-13.3",
-    "source_commit": "f68525ea1d136350ece9942433352accdf97d992",
-    "prepared_source_commit": "3cf489e33071b32bc73e2efaf2aecfc62618d46a",
-    "ci_run": 43531882471,
-    "node_tests_pass": 4432,
-    "python_tests_pass": 67,
-    "receipt": "docs/financial-automation/publication-live-20261113.json",
-    "public_verification": "docs/financial-automation/publication-live-20261113.json",
-    "verified_at": "2026-11-14T00:22:15.598Z",
+    "verification_scope": "EXISTING_LIVE_17_3_BYTES_VERSIONS_AND_CONFIGURATION_RECONFIRMED_READ_ONLY_NOT_NEW_PUBLICATION",
+    "release_id": "2026-11-17.3",
+    "release": "2026-11-17.3",
+    "source_commit": null,
+    "prepared_source_commit": null,
+    "ci_run": null,
+    "node_tests_pass": null,
+    "python_tests_pass": null,
+    "receipt": "/workspace/work/pr130-ci-evidence/live-readonly-operating-increment-local-final-20261121-20261120.json",
+    "public_verification": "EXACT_THREE_WORKER_VERSIONS_BYTES_AND_CONFIGURATION_MATCH_EXISTING_RECEIPT",
+    "verified_at": "2026-11-21T00:23:48.828062+00:00",
     "published": true,
-    "pull_request": 121,
-    "owner_live_qa": "NOT_PERFORMED",
-    "account_financial_acceptance": false,
+    "pull_request": null,
+    "owner_live_qa": "NOT_PERFORMED_BY_THIS_INCREMENT",
+    "account_financial_acceptance": "NOT_PERFORMED",
     "m2_closed": false,
     "m22_closed": false,
-    "git_integration": "CHECK_PR121_CURRENT_STATE",
+    "git_integration": "NOT_INFERRED_FROM_NATIVE_WORKER_READ",
     "workers": {
-      "finance": "50b31451-c6cf-4456-bd09-be5d1956e0da",
-      "auth": "dfd2fc99-728f-4f29-96ee-a4b256c5640a",
-      "app": "9bfc21d6-dec9-4fa6-89d8-7ea1dec50993"
+      "app": {
+        "worker": "brazacommerce-app",
+        "active_version_id": "b09080a7-b93d-4c97-96e0-be14b1676084",
+        "latest_version_id": "b09080a7-b93d-4c97-96e0-be14b1676084",
+        "active_percentage": 100,
+        "deployment_id": "86c19dc5-8e09-4b8e-95f7-ef4744242380",
+        "active_latest_100": true,
+        "deployment_stable_during_capture": true,
+        "native_module_hashes": [
+          {
+            "sha256": "b0aa9cc1009d9d7ea276d406d0d87ecb90feda73ae3db77fe85ff64173e456e4",
+            "bytes": 3763421
+          }
+        ],
+        "retrieved_raw_sha256": "b0aa9cc1009d9d7ea276d406d0d87ecb90feda73ae3db77fe85ff64173e456e4",
+        "raw_bytes": 3763421,
+        "effective_config_sha256": "72c1ffdf88e61e4d2b1b7d78545c3d8d9a5b903cc32cf4ed83ee87d5c19a32b9",
+        "routing": {
+          "workers_dev": true,
+          "preview_urls": false,
+          "crons": [
+            "* * * * *"
+          ],
+          "domains": [
+            "app.brazacommerce.com.br"
+          ]
+        },
+        "owner_flags_preserved": true,
+        "matches_live17_3_receipt": {
+          "active_version": true,
+          "latest_version": true,
+          "source_exact": true,
+          "production_config": true
+        }
+      },
+      "auth": {
+        "worker": "brazacommerce-auth",
+        "active_version_id": "fb3925e2-ed08-4b92-8c77-7fa5e2af5b00",
+        "latest_version_id": "fb3925e2-ed08-4b92-8c77-7fa5e2af5b00",
+        "active_percentage": 100,
+        "deployment_id": "8e87806f-a8de-46c6-884d-490166e029c9",
+        "active_latest_100": true,
+        "deployment_stable_during_capture": true,
+        "native_module_hashes": [
+          {
+            "sha256": "e3b7aecfeda1109fbe98d9fa6f8ee1ab55dcc5a70ae32fc4a5bc70c48b286a5c",
+            "bytes": 579497
+          }
+        ],
+        "retrieved_raw_sha256": "e3b7aecfeda1109fbe98d9fa6f8ee1ab55dcc5a70ae32fc4a5bc70c48b286a5c",
+        "raw_bytes": 579497,
+        "effective_config_sha256": "304c9c4615acdfc3a8222e00449e5bceabcf2dd9bd574587538183a935003361",
+        "routing": {
+          "workers_dev": true,
+          "preview_urls": false,
+          "crons": [],
+          "domains": [
+            "auth.brazacommerce.com.br"
+          ]
+        },
+        "owner_flags_preserved": true,
+        "matches_live17_3_receipt": {
+          "active_version": true,
+          "latest_version": true,
+          "source_exact": true,
+          "production_config": true
+        }
+      },
+      "finance": {
+        "worker": "brazacommerce-finance",
+        "active_version_id": "d41571a9-0089-4b12-b774-e540fbd27f5c",
+        "latest_version_id": "d41571a9-0089-4b12-b774-e540fbd27f5c",
+        "active_percentage": 100,
+        "deployment_id": "5f31cc51-e234-415b-90e2-8e3c85ea2656",
+        "active_latest_100": true,
+        "deployment_stable_during_capture": true,
+        "native_module_hashes": [
+          {
+            "sha256": "f6c8a5daa307cdecb60c0c722c89aa2de02d3afe12940f315973446070561f33",
+            "bytes": 895531
+          }
+        ],
+        "retrieved_raw_sha256": "f6c8a5daa307cdecb60c0c722c89aa2de02d3afe12940f315973446070561f33",
+        "raw_bytes": 895531,
+        "effective_config_sha256": "1e5de4eba866ec7c8ca85fc37c7969d61dc513a26336879e2753e506c6711ab2",
+        "routing": {
+          "workers_dev": false,
+          "preview_urls": false,
+          "crons": [],
+          "domains": []
+        },
+        "owner_flags_preserved": true,
+        "matches_live17_3_receipt": {
+          "active_version": true,
+          "latest_version": true,
+          "source_exact": true,
+          "production_config": true
+        }
+      }
     },
-    "owner_live_authenticated_qa": "NOT_PERFORMED",
-    "natural_resume_observed_at": "2026-11-14T00:33:17.899767+00:00",
-    "natural_resume_scope": "ORIGINAL_NOVEMBER_ADS_LANE_ONLY"
+    "owner_live_authenticated_qa": "NOT_PERFORMED_BY_THIS_INCREMENT",
+    "natural_resume_observed_at": null,
+    "natural_resume_scope": null
   },
   "previous_next_actions_before_simplified_operations": [
     "Conferir os itens salvos do pedido e da solicitação em MLS Returns; manter unidades comerciais separadas das peças físicas, preservar UNKNOWN e validar a origem antes de integrar reaproveitamento ao lucro.",
@@ -7984,6 +8087,42 @@
       "Future mappings of orders/components to reservations, purchase needs and DTF"
     ],
     "no_money_moved": true,
-    "no_real_operational_facts_created": true
+    "no_real_operational_facts_created": true,
+    "last_live_readonly_verification": {
+      "at": "2026-11-21T00:23:48.828062+00:00",
+      "release_id": "2026-11-17.3",
+      "native_gets": 22,
+      "exact_receipt_match": true,
+      "evidence": "/workspace/work/pr130-ci-evidence/live-readonly-operating-increment-local-final-20261121-20261120.json"
+    }
+  },
+  "previous_last_verified_live_release_before_operating_increment": {
+    "status": "PUBLISHED_VERIFIED",
+    "verification_scope": "TECHNICAL_PUBLIC_ONLY",
+    "release_id": "2026-11-13.3",
+    "release": "2026-11-13.3",
+    "source_commit": "f68525ea1d136350ece9942433352accdf97d992",
+    "prepared_source_commit": "3cf489e33071b32bc73e2efaf2aecfc62618d46a",
+    "ci_run": 43531882471,
+    "node_tests_pass": 4432,
+    "python_tests_pass": 67,
+    "receipt": "docs/financial-automation/publication-live-20261113.json",
+    "public_verification": "docs/financial-automation/publication-live-20261113.json",
+    "verified_at": "2026-11-14T00:22:15.598Z",
+    "published": true,
+    "pull_request": 121,
+    "owner_live_qa": "NOT_PERFORMED",
+    "account_financial_acceptance": false,
+    "m2_closed": false,
+    "m22_closed": false,
+    "git_integration": "CHECK_PR121_CURRENT_STATE",
+    "workers": {
+      "finance": "50b31451-c6cf-4456-bd09-be5d1956e0da",
+      "auth": "dfd2fc99-728f-4f29-96ee-a4b256c5640a",
+      "app": "9bfc21d6-dec9-4fa6-89d8-7ea1dec50993"
+    },
+    "owner_live_authenticated_qa": "NOT_PERFORMED",
+    "natural_resume_observed_at": "2026-11-14T00:33:17.899767+00:00",
+    "natural_resume_scope": "ORIGINAL_NOVEMBER_ADS_LANE_ONLY"
   }
 }
