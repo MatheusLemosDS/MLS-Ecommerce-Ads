@@ -9,6 +9,8 @@ import {SCHEMA} from '../src/admin.mjs';
 import {businessMonth,readBusinessMonthDisplay} from '../src/business-month.mjs';
 import {readBusinessSyncState} from '../src/business-sync.mjs';
 import {buildBusinessMonthView} from '../src/business-month-view-state.mjs';
+import {readHistoricalDailyBusinessSummary} from '../src/business-daily-history.mjs';
+import {installSyntheticPreSaleCostHistory} from './business-daily-history-browser-fixture.mjs';
 import {MISSION_TRENDS_CLIENT,missionWorkspacesBody} from '../src/mission-control.mjs';
 import {buildAdsMeasurement} from '../src/ads-measurement.mjs';
 import {buildAdsCalendar} from '../src/ads-calendar.mjs';
@@ -90,7 +92,8 @@ async function collectedWorkspace(t){
  let frame=await f.invoke('start');for(let n=0;frame.status==='RUNNING'&&n<20;n++)frame=await f.invoke('step');assert.equal(frame.status,'COMPLETE');await f.invoke('ads');
  f.env.ADMIN_DB.db.prepare('DELETE FROM business_month_expenses WHERE month=?').run('2026-10');
  f.env.ADMIN_DB.db.prepare('DELETE FROM business_month_expenses_audit WHERE month=?').run('2026-10');
- const readView=async()=>buildBusinessMonthView(await readBusinessMonthDisplay(f.env,{month:'2026-10'},{now:f.now}),await readBusinessSyncState(f.env),{now:f.now,contract:'business-month-view-v3'});
+ installSyntheticPreSaleCostHistory(f);
+ const readView=async()=>{const observed=await readBusinessMonthDisplay(f.env,{month:'2026-10'},{now:f.now}),sync=await readBusinessSyncState(f.env),legacy=buildBusinessMonthView(observed,sync,{now:f.now,contract:'business-month-view-v5'}),historicalDailySummary=await readHistoricalDailyBusinessSummary(f.env,observed,legacy.daily_summary,{now:f.now});return buildBusinessMonthView(observed,sync,{now:f.now,contract:'business-month-view-v6',historicalDailySummary});};
  return {f,readView};
 }
 function ownerScript(html,token){const result=getOrderedBrowserScripts(html).find(script=>script.includes(token));assert.ok(result,'actual generated client missing: '+token);return result;}

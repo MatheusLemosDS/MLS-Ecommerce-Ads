@@ -125,7 +125,14 @@ test('the reviewed current seven-asset inventory preserves exact controller byte
  // Month was reviewed again after TEN-05 cleanup (sourceb91ff45049ab42b3a34182c970e066b336a2aa8cf84a66c79e2da9d4bed8083e).
  // Its previous61f017... hash predates private-cache/DOM teardown; this is a functional security change, not distribution drift.
  const reviewed={bank:'0d6250f5888258fa29664eac45b2cd821d3872b1c96ac47dda46bd7fd10e6a0c',month:'5203d255416bacb97cd44ddef29a2fc76b1432f0a1ea731fabacc4bb071fcd07',orders:'ec6397070416275d880f293d4abe8d7f531215af369d7e9a275c10f019a8c3c8',production:'549c2b0f6ae183249bed2472af894cf5211d4a6853fc33c0ce6c127aa3ebf034',weekly:'04ae3166780be18f31754212640b0887abe9e20830ac4309a6e31109398e4eeb'};
- for(const [id,sha]of Object.entries(reviewed))assert.equal(manifest.assets.find(row=>row.id===id).sha256,sha,'the reviewed exact '+id+' asset must not drift');
+ // The negotiated audited-cost daily view changes only the month asset.
+ // Preserve its prior exact bytes as retained compatibility, and pin the new
+ // controller independently after normal/minified generated-Worker QA.
+ const historicalMonth='bd8cd8239ee8e3fc172fba3e026b49b8ff326e7e64be41a6c28962f1efb9985b';
+ for(const [id,sha]of Object.entries(reviewed)){
+  if(id==='month')assert.equal(manifest.retained.find(row=>row.id==='month'&&row.sha256===sha)?.sha256,sha,'the previous exact month asset remains retained');
+  assert.equal(manifest.assets.find(row=>row.id===id).sha256,id==='month'?historicalMonth:sha,'the reviewed exact '+id+' asset must not drift');
+ }
  const row=manifest.assets.find(row=>row.id==='workspace');assert.ok(row);assert.ok(row.bytes>262144&&row.bytes<=1048576);
  const emitted=Buffer.from(CLIENT.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g,c=>'\\u'+c.charCodeAt(0).toString(16).padStart(4,'0')));const bytes=readFileSync(path.join(root,'dist','browser-assets',...row.path.slice(1).split('/')));assert.deepEqual(bytes,emitted,'workspace distribution preserves every frozen controller byte');
  const tag=browserAssetScript('workspace');assert.equal(tag,'<script src="'+row.path+'" integrity="'+row.integrity+'" crossorigin="anonymous"></script>');assert.doesNotMatch(tag,/\b(async|defer|onerror)\b/);

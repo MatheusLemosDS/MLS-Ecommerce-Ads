@@ -1,3 +1,5 @@
+Retomada 21/11/2026: correção do lucro diário em fix/historical-profit-20261121, baseada na main dc78418 (PR130/131 integradas). Consultar docs/MLS_COMMERCE_OS_CHECKPOINT.json e docs/MLS_HISTORICAL_DAILY_PROFIT_2026_11_21.md; Live 17.3 permanece preservada. PR132 é incremento independente e não foi integrada por esta correção. Não repetir fases/merges históricos.
+
 Atualização financeira de 20/11/2026: implementação na PR #131 (https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/131), branch fix/finance-completion-20261120, base 4cfdf465b2fda58dd27ae693126b7fe1625f69d6. Consultar os checks do HEAD da PR para validação completa e seu estado atual para integração Git. SEM PUBLICAÇÃO e SEM ACEITE FINANCEIRO REAL neste registro. Live 17.3 preservada às 21:53:45 UTC; paridade de catálogo/custos/DTF incorporada ao candidato. Uso, fontes e etapas separadas em docs/MLS_FINANCE_COMPLETION_2026_11_20.md e docs/financial-automation/validation/finance-completion-20261120.json. Custos desconhecidos, revisão humana e dependências externas permanecem explícitos.
 
 <!-- PR130_CI_REPAIR_CURRENT -->

@@ -3,6 +3,7 @@ import {projectBusinessMonth} from './business-month.mjs';
 import {projectBusinessPeriodFrame} from '../../finance/src/business-period-frame.mjs';
 import {buildDailyBusinessSummary,projectDailyBusinessSummary} from './business-daily-summary.mjs';
 import {projectExpenseSchedule} from './expense-schedule.mjs';
+import {projectHistoricalDailyBusinessSummary} from './business-daily-history.mjs';
 
 export class BusinessMonthViewError extends Error {
  constructor(code,status=503){super(code);this.status=status;}
@@ -33,14 +34,14 @@ export function projectBusinessMonthAuditScope(value){
 
 // The browser supplies its frozen projectors. No server state, clock,
 // database binding or source transport is captured by this function.
-export function projectBusinessMonthView(value,projectMonthlyFrame,projectAuditScope,projectDailySummary,projectExpenseScheduleFrame,projectVariantContributionsFrame){
+export function projectBusinessMonthView(value,projectMonthlyFrame,projectAuditScope,projectDailySummary,projectExpenseScheduleFrame,projectVariantContributionsFrame,projectHistoricalDailySummary){
  const plain=item=>item!==null&&typeof item==='object'&&[Object.prototype,null].includes(Object.getPrototypeOf(item));
  const exact=(item,keys)=>plain(item)&&Reflect.ownKeys(item).length===keys.length&&keys.every(key=>Object.hasOwn(Object.getOwnPropertyDescriptor(item,key)||{},'value'));
  const integer=(item,min=0,max=Number.MAX_SAFE_INTEGER)=>Number.isSafeInteger(item)&&!Object.is(item,-0)&&item>=min&&item<=max;
  const day=item=>typeof item==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(item)&&Number.isFinite(Date.parse(item+'T00:00:00Z'))&&new Date(item+'T00:00:00Z').toISOString().slice(0,10)===item;
  try{
-  const schema=Object.getOwnPropertyDescriptor(value||{},'schema')?.value,variantsAware=schema==='business_month_view_v5',expenseAware=variantsAware||schema==='business_month_view_v4',daily=expenseAware||schema==='business_month_view_v3',scoped=daily||schema==='business_month_view_v2';
-  if(typeof projectMonthlyFrame!=='function'||!exact(value,['schema','month','display','display_source','collection','automatic',...(scoped?['audit_scope']:[]),...(daily?['daily_summary']:[]),...(expenseAware?['expense_schedule']:[]),...(variantsAware?['variant_contributions']:[])])||!['business_month_view_v1','business_month_view_v2','business_month_view_v3','business_month_view_v4','business_month_view_v5'].includes(schema)||typeof value.month!=='string'||!/^\d{4}-(0[1-9]|1[0-2])$/.test(value.month)||!['PUBLISHED','ACTIVE'].includes(value.display_source))return null;
+  const schema=Object.getOwnPropertyDescriptor(value||{},'schema')?.value,historicalAware=schema==='business_month_view_v6',variantsAware=historicalAware||schema==='business_month_view_v5',expenseAware=variantsAware||schema==='business_month_view_v4',daily=expenseAware||schema==='business_month_view_v3',scoped=daily||schema==='business_month_view_v2';
+  if(typeof projectMonthlyFrame!=='function'||!exact(value,['schema','month','display','display_source','collection','automatic',...(scoped?['audit_scope']:[]),...(daily?['daily_summary']:[]),...(expenseAware?['expense_schedule']:[]),...(variantsAware?['variant_contributions']:[]),...(historicalAware?['historical_daily_summary']:[])])||!['business_month_view_v1','business_month_view_v2','business_month_view_v3','business_month_view_v4','business_month_view_v5','business_month_view_v6'].includes(schema)||typeof value.month!=='string'||!/^\d{4}-(0[1-9]|1[0-2])$/.test(value.month)||!['PUBLISHED','ACTIVE'].includes(value.display_source))return null;
   const display=projectMonthlyFrame(value.display),collection=value.collection,automatic=value.automatic;
   if(!display||display.month!==value.month||value.display_source==='PUBLISHED'&&display.status!=='COMPLETE'||!exact(collection,['status','start_date','end_date','checked_at','progress','coverage','source_checked_at','collection']))return null;
   let auditScope=null;
@@ -70,6 +71,14 @@ export function projectBusinessMonthView(value,projectMonthlyFrame,projectAuditS
     variantContributions=projectVariantContributionsFrame(value.variant_contributions,display,auditScope);if(!variantContributions)return null;
    }
   }
+  let historicalDailySummary=null;
+  if(historicalAware){
+   if(typeof projectHistoricalDailySummary!=='function')return null;
+   if(value.historical_daily_summary!==null){
+    if(value.display_source!=='PUBLISHED'||dailySummary===null)return null;
+    historicalDailySummary=projectHistoricalDailySummary(value.historical_daily_summary,dailySummary);if(!historicalDailySummary)return null;
+   }
+  }
   if(!['RUNNING','COMPLETE','LIMIT_REACHED'].includes(collection.status)||collection.start_date!==value.month+'-01'||!day(collection.start_date)||!day(collection.end_date)||collection.end_date.slice(0,7)!==value.month||!integer(collection.checked_at,1,9999999999)||collection.end_date<display.end_date)return null;
   const p=collection.progress,c=collection.coverage,capacityPresent=plain(p)&&Object.hasOwn(p,'order_capacity');
   const coverageKeys=['orders','paid','completed','ongoing','cancelled','cancel_pending','unpaid','other','unknown','payment_covered','payment_missing','returns','returns_unknown'];
@@ -87,24 +96,24 @@ export function projectBusinessMonthView(value,projectMonthlyFrame,projectAuditS
   }
   if(!exact(automatic,['enabled','applicable','status','next_run_at','last_attempt_at'])||typeof automatic.enabled!=='boolean'||typeof automatic.applicable!=='boolean'||!['IDLE','RUNNING','COMPLETE','PARTIAL','LIMIT_REACHED','ERROR','PAUSED'].includes(automatic.status)||!integer(automatic.next_run_at,0,9999999999)||automatic.last_attempt_at!==null&&!integer(automatic.last_attempt_at,1,9999999999))return null;
   if(value.display_source==='ACTIVE'&&(display.status!==collection.status||display.start_date!==collection.start_date||display.end_date!==collection.end_date||display.checked_at!==collection.checked_at||JSON.stringify(display.progress)!==JSON.stringify(p)||JSON.stringify(display.coverage)!==JSON.stringify(c)||JSON.stringify(display.source_checked_at??null)!==JSON.stringify(sources)||JSON.stringify(display.collection??null)!==JSON.stringify(wait)))return null;
-  return {schema,month:value.month,display,display_source:value.display_source,collection:{status:collection.status,start_date:collection.start_date,end_date:collection.end_date,checked_at:collection.checked_at,progress:{...p},coverage:{...c},source_checked_at:sources===null?null:{...sources},collection:wait===null?null:{...wait}},automatic:{...automatic},...(scoped?{audit_scope:auditScope}:{}),...(daily?{daily_summary:dailySummary}:{}),...(expenseAware?{expense_schedule:expenseSchedule}:{}),...(variantsAware?{variant_contributions:variantContributions}:{})};
+  return {schema,month:value.month,display,display_source:value.display_source,collection:{status:collection.status,start_date:collection.start_date,end_date:collection.end_date,checked_at:collection.checked_at,progress:{...p},coverage:{...c},source_checked_at:sources===null?null:{...sources},collection:wait===null?null:{...wait}},automatic:{...automatic},...(scoped?{audit_scope:auditScope}:{}),...(daily?{daily_summary:dailySummary}:{}),...(expenseAware?{expense_schedule:expenseSchedule}:{}),...(variantsAware?{variant_contributions:variantContributions}:{}),...(historicalAware?{historical_daily_summary:historicalDailySummary}:{})};
  }catch{return null;}
 }
 
-export function buildBusinessMonthView(observed,syncState,{now=()=>Date.now(),contract='business-month-view-v1'}={}){
- if(!['business-month-view-v1','business-month-view-v2','business-month-view-v3','business-month-view-v4','business-month-view-v5'].includes(contract))throw new BusinessMonthViewError('BUSINESS_MONTH_VIEW_CONTRACT_UNSUPPORTED',409);
+export function buildBusinessMonthView(observed,syncState,{now=()=>Date.now(),contract='business-month-view-v1',historicalDailySummary=null}={}){
+ if(!['business-month-view-v1','business-month-view-v2','business-month-view-v3','business-month-view-v4','business-month-view-v5','business-month-view-v6'].includes(contract))throw new BusinessMonthViewError('BUSINESS_MONTH_VIEW_CONTRACT_UNSUPPORTED',409);
  let stamp;try{const clock=now();if(!Number.isSafeInteger(clock)||clock<=0)throw Error();stamp=Math.floor(clock/1000);if(stamp>9999999999)throw Error();}catch{throw new BusinessMonthViewError('BUSINESS_MONTH_VIEW_CLOCK_INVALID');}
  const active=projectBusinessMonth(observed?.active),display=projectBusinessMonth(observed?.display);
  if(!active||!display||active.month!==display.month)throw new BusinessMonthViewError('BUSINESS_MONTH_VIEW_INVALID');
  const month=new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Sao_Paulo'}).format(new Date(stamp*1000)).slice(0,7);
- const variantsAware=contract==='business-month-view-v5',expenseAware=variantsAware||contract==='business-month-view-v4',daily=expenseAware||contract==='business-month-view-v3',scoped=daily||contract==='business-month-view-v2';
+ const historicalAware=contract==='business-month-view-v6',variantsAware=historicalAware||contract==='business-month-view-v5',expenseAware=variantsAware||contract==='business-month-view-v4',daily=expenseAware||contract==='business-month-view-v3',scoped=daily||contract==='business-month-view-v2';
  let dailySummary=null;
  // A new or legacy publication can lack daily evidence. Its monthly result
  // remains available, and no additional database or provider work is started.
  if(daily&&observed.display_source==='PUBLISHED'){
   try{dailySummary=buildDailyBusinessSummary(display,observed.source_frames,observed.audit_scope,{projectMonthly:projectBusinessMonth,projectFrame:projectBusinessPeriodFrame,projectScope:projectBusinessMonthAuditScope});}catch{}
  }
- const result=projectBusinessMonthView({schema:variantsAware?'business_month_view_v5':expenseAware?'business_month_view_v4':daily?'business_month_view_v3':scoped?'business_month_view_v2':'business_month_view_v1',month:active.month,display,display_source:observed.display_source,collection:{status:active.status,start_date:active.start_date,end_date:active.end_date,checked_at:active.checked_at,progress:active.progress,coverage:active.coverage,source_checked_at:active.source_checked_at??null,collection:active.collection??null},automatic:{enabled:syncState?.enabled,applicable:active.month===month,status:syncState?.status,next_run_at:syncState?.next_run_at,last_attempt_at:syncState?.last_attempt_at},...(scoped?{audit_scope:observed.audit_scope??null}:{}),...(daily?{daily_summary:dailySummary}:{}),...(expenseAware?{expense_schedule:observed.expense_schedule??null}:{}),...(variantsAware?{variant_contributions:observed.variant_contributions??null}:{})},projectBusinessMonth,projectBusinessMonthAuditScope,projectDailyBusinessSummary,projectExpenseSchedule,projectBusinessMonthVariantContributions);
+ const result=projectBusinessMonthView({schema:historicalAware?'business_month_view_v6':variantsAware?'business_month_view_v5':expenseAware?'business_month_view_v4':daily?'business_month_view_v3':scoped?'business_month_view_v2':'business_month_view_v1',month:active.month,display,display_source:observed.display_source,collection:{status:active.status,start_date:active.start_date,end_date:active.end_date,checked_at:active.checked_at,progress:active.progress,coverage:active.coverage,source_checked_at:active.source_checked_at??null,collection:active.collection??null},automatic:{enabled:syncState?.enabled,applicable:active.month===month,status:syncState?.status,next_run_at:syncState?.next_run_at,last_attempt_at:syncState?.last_attempt_at},...(scoped?{audit_scope:observed.audit_scope??null}:{}),...(daily?{daily_summary:dailySummary}:{}),...(expenseAware?{expense_schedule:observed.expense_schedule??null}:{}),...(variantsAware?{variant_contributions:observed.variant_contributions??null}:{}),...(historicalAware?{historical_daily_summary:historicalDailySummary}:{})},projectBusinessMonth,projectBusinessMonthAuditScope,projectDailyBusinessSummary,projectExpenseSchedule,projectBusinessMonthVariantContributions,projectHistoricalDailyBusinessSummary);
  if(!result)throw new BusinessMonthViewError('BUSINESS_MONTH_VIEW_INVALID');return result;
 }
 

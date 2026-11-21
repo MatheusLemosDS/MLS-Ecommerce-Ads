@@ -7,7 +7,8 @@ import {fileURLToPath} from 'node:url';
 import {D1} from './sqlite-d1.mjs';
 
 // Test fixture deliberately opts into the owner preview; production defaults OFF.
-export async function compiledOwnerReportPage(minify,{ownerPreview=true,flagValue,aiSalesPreview=false,aiSalesFlagValue,localReadSnapshot=false}={}){
+export async function compiledOwnerReportPage(minify,{ownerPreview=true,flagValue,aiSalesPreview=false,aiSalesFlagValue,localReadSnapshot=false,localReadSnapshotContract='business-month-view-v5'}={}){
+ assert.ok(['business-month-view-v1','business-month-view-v2','business-month-view-v3','business-month-view-v4','business-month-view-v5','business-month-view-v6'].includes(localReadSnapshotContract),'fixture snapshot requires a supported finite monthly-view contract');
  const compiled=await build({entryPoints:[fileURLToPath(new URL('../../../dist/app-worker.mjs',import.meta.url))],bundle:true,write:false,format:'esm',platform:'browser',target:'es2022',minify});
  const worker=(await import('data:text/javascript;base64,'+Buffer.from(compiled.outputFiles[0].text).toString('base64'))).default;
  const origin='https://owner-report.test',env={ADMIN_DB:new D1(),ADMIN_SESSION_SECRET:'owner-report-test-session-'+'s'.repeat(32),ADMIN_USERNAME:'owner-report',ADMIN_PASSWORD:'owner-report-fixture-password-123456',
@@ -24,7 +25,7 @@ export async function compiledOwnerReportPage(minify,{ownerPreview=true,flagValu
   const month=new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Sao_Paulo',year:'numeric',month:'2-digit'}).format(new Date()).slice(0,7);
   const requests=[{path:'/api/admin/bootstrap',headers:{}},
    {path:'/api/admin/state',headers:{}},
-   {path:'/api/admin/finance/business-month-view?month='+month,headers:{'X-Braza-Client-Contract':'business-month-view-v5'}}];
+   {path:'/api/admin/finance/business-month-view?month='+month,headers:{'X-Braza-Client-Contract':localReadSnapshotContract}}];
   const responses=[];
   for(const request of requests){
    const result=await worker.fetch(new Request(origin+request.path,{headers:{cookie,...request.headers}}),env);

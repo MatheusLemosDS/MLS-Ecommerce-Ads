@@ -123,6 +123,19 @@ test('variant view negotiation is explicit and never changes the default monthly
  await api('finance/business-month-view',undefined,{monthlyViewContract:'business-month-view-v4'});
  assert.deepEqual(calls.map(row=>row.options.headers['X-Braza-Client-Contract']),['business-month-view-v5','business-month-view-v4','business-month-view-v4']);
  assert.ok(calls.every(row=>row.options.method==='GET'&&row.options.credentials==='same-origin'&&row.options.cache==='no-store'&&row.options.body===undefined));
- for(const [path,body,contract] of [['state',undefined,'business-month-view-v5'],['finance/business-month-view/history',undefined,'business-month-view-v5'],['finance/business-month-view',{},'business-month-view-v5'],['finance/business-month-view',undefined,'business-month-view-v6']])await assert.rejects(api(path,body,{monthlyViewContract:contract}),safe('ADMIN_API_RESPONSE_INVALID'));
+ for(const [path,body,contract] of [['state',undefined,'business-month-view-v5'],['finance/business-month-view/history',undefined,'business-month-view-v5'],['finance/business-month-view',{},'business-month-view-v5'],['finance/business-month-view',undefined,'business-month-view-v7']])await assert.rejects(api(path,body,{monthlyViewContract:contract}),safe('ADMIN_API_RESPONSE_INVALID'));
  assert.equal(calls.length,3,'invalid negotiation never reaches a network capability');
+});
+
+
+test('historical daily v6 is an explicit read-only negotiation and never changes the default contract',async()=>{
+ const calls=[],api=createAdminApiClient({fetchImpl:async(path,options)=>{calls.push({path,options});return Response.json({schema:'synthetic'});}});
+ await api('finance/business-month-view?month=2026-11',undefined,{monthlyViewContract:'business-month-view-v6'});
+ await api('finance/business-month-view?month=2026-11');
+ assert.deepEqual(calls.map(row=>row.options.headers['X-Braza-Client-Contract']),['business-month-view-v6','business-month-view-v4']);
+ assert.ok(calls.every(row=>row.options.method==='GET'&&row.options.credentials==='same-origin'&&row.options.cache==='no-store'));
+ for(const [path,body] of [['state',undefined],['finance/business-month-view/history',undefined],['finance/business-month-view',{}]])await assert.rejects(api(path,body,{monthlyViewContract:'business-month-view-v6'}),safe('ADMIN_API_RESPONSE_INVALID'));
+ assert.equal(calls.length,2);
+ let reads=0;const accessor={};Object.defineProperty(accessor,'monthlyViewContract',{enumerable:true,get(){reads++;return 'business-month-view-v6';}});
+ await assert.rejects(api('finance/business-month-view',undefined,accessor),safe('ADMIN_API_RESPONSE_INVALID'));assert.equal(reads,0);
 });

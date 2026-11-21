@@ -13,6 +13,8 @@ import {SCHEMA} from '../src/admin.mjs';
 import {businessMonth,readBusinessMonthDisplay} from '../src/business-month.mjs';
 import {readBusinessSyncState} from '../src/business-sync.mjs';
 import {buildBusinessMonthView} from '../src/business-month-view-state.mjs';
+import {readHistoricalDailyBusinessSummary} from '../src/business-daily-history.mjs';
+import {installSyntheticPreSaleCostHistory} from './business-daily-history-browser-fixture.mjs';
 import {completeWorkspaceFrame} from './monthly-workspace-browser-fixture.mjs';
 import {buildAdsMeasurement} from '../src/ads-measurement.mjs';
 import {buildAdsCalendar} from '../src/ads-calendar.mjs';
@@ -38,7 +40,8 @@ for(const minify of [false,true])test(`owner daily subtotal opens the existing n
  const f=await collectionFixture({daily:true,windowCounts:[3,0],paymentDelayMs:0});t.after(()=>{f.env.ADMIN_DB.db.close();f.financeEnv.FINANCE_DB.db.close();});await f.env.ADMIN_DB.batch(SCHEMA.map(sql=>f.env.ADMIN_DB.prepare(sql)));
  let frame=await f.invoke('start');for(let n=0;frame.status==='RUNNING'&&n<20;n++)frame=await f.invoke('step');assert.equal(frame.status,'COMPLETE');await f.invoke('ads');
  assert.deepEqual([frame.coverage.orders,frame.coverage.paid,frame.coverage.cancelled,frame.coverage.unpaid],[3,1,1,1]);
- const readView=async()=>buildBusinessMonthView(await readBusinessMonthDisplay(f.env,{month:'2026-10'},{now:f.now}),await readBusinessSyncState(f.env),{now:f.now,contract:'business-month-view-v4'});
+ installSyntheticPreSaleCostHistory(f);
+ const readView=async()=>{const observed=await readBusinessMonthDisplay(f.env,{month:'2026-10'},{now:f.now}),sync=await readBusinessSyncState(f.env),legacy=buildBusinessMonthView(observed,sync,{now:f.now,contract:'business-month-view-v5'}),historicalDailySummary=await readHistoricalDailyBusinessSummary(f.env,observed,legacy.daily_summary,{now:f.now});return buildBusinessMonthView(observed,sync,{now:f.now,contract:'business-month-view-v6',historicalDailySummary});};
  const resetExpenses=()=>{f.env.ADMIN_DB.db.prepare('DELETE FROM business_month_expenses WHERE month=?').run('2026-10');f.env.ADMIN_DB.db.prepare('DELETE FROM business_month_expenses_audit WHERE month=?').run('2026-10');};resetExpenses();let view=await readView();
  const owner=await compiledOwnerReportPage(minify,{ownerPreview:false,localReadSnapshot:true}),local=new Map(owner.localReadSnapshot.responses.map(row=>[row.path,row])),requests=[],posts=[];let serverFailure=null;
  const html=owner.html.replace('<head>','<head><script>const TodayFixtureDate=Date;globalThis.Date=class extends TodayFixtureDate{constructor(...args){super(...(args.length?args:['+f.clock.time+']));}static now(){return '+f.clock.time+';}};globalThis.__todayErrors=[];addEventListener("error",e=>__todayErrors.push(String(e.message)));addEventListener("unhandledrejection",e=>__todayErrors.push(String(e.reason?.message||e.reason)));</script>');
@@ -46,7 +49,7 @@ for(const minify of [false,true])test(`owner daily subtotal opens the existing n
   try{
    if(!req.url.startsWith('/api/')){res.writeHead(200,{'content-type':'text/html; charset=utf-8','cache-control':'no-store'});res.end(html);return;}
    const route=new URL(req.url,'http://synthetic.invalid'),headers={'content-type':'application/json','cache-control':'no-store'};requests.push({method:req.method,path:req.url});let value=null;
-   if(req.method==='GET'&&route.pathname==='/api/admin/finance/business-month-view'&&route.searchParams.get('month')==='2026-10'){value=view;headers['x-braza-client-contract']='business-month-view-v4';}
+   if(req.method==='GET'&&route.pathname==='/api/admin/finance/business-month-view'&&route.searchParams.get('month')==='2026-10'){assert.equal(req.headers['x-braza-client-contract'],'business-month-view-v6');value=view;headers['x-braza-client-contract']='business-month-view-v6';}
    else if(req.method==='POST'&&route.pathname==='/api/admin/finance/business-month'){
     assert.ok(req.headers['x-csrf-token']===owner.session.csrf,'the real owner API client must attach this session’s CSRF token');let raw='';for await(const chunk of req)raw+=chunk;const body=JSON.parse(raw);assert.deepEqual(body,{operation:'expenses',month:'2026-10',revision:0,external_expenses_cents:0,recharge_treatment:'UNCONFIRMED'});posts.push(body);value=await businessMonth(f.env,body,f.services,{now:f.now,actor:'synthetic-owner-confirmed-zero'});view=await readView();
    }else{const entry=local.get(req.url);if(req.method==='GET'&&entry){value=entry.body;if(entry.contract)headers['x-braza-client-contract']=entry.contract;}}
