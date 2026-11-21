@@ -2,7 +2,7 @@
   "schema": "mls_operating_increment_merge_candidate_v1",
   "scope": "MERGE_ONLY",
   "base_commit": "426b1de037b075afa066ace4742e3cf398294bbf",
-  "prepared_source_commit": "008eefb24c8fe60245171de74628a30147ff25d3",
+  "prepared_source_commit": "85efc6e30ab84a06f7dcfba52598f3c04f718934",
   "owner_authorization": "OWNER_REQUESTED_WEEKLY_PAYMENTS_AND_PHYSICAL_SHIRTS_WITHOUT_EXTERNAL_PUBLICATION_2026_11_20",
   "production_approved": false,
   "live_authorization": false,
@@ -27,7 +27,7 @@
     },
     {
       "path": "docs/MLS_COMMERCE_OS_CHECKPOINT.json",
-      "sha256": "d39c9d1dd8977dce6ad081e2eaec33bd0fe03c18cdc77549dab7abd4556f5cbf"
+      "sha256": "900f99299639d5b7e99e3f5acc0d6dde23e2ce7c948c228e08e158abf7abdf92"
     },
     {
       "path": "docs/MLS_OPERATING_INCREMENT_2026_11_20.md",
@@ -35,7 +35,7 @@
     },
     {
       "path": "docs/MLS_OPERATING_INTEGRATION_2026_11_21.md",
-      "sha256": "a1e41c2e9ccd2c6790420c227e463b1615f403b96f5372dccd73117ac8ed8c5b"
+      "sha256": "6cec77b5ba6e226f507ae32fb31a5b48c54b77d620507da6af937f4146b61fab"
     },
     {
       "path": "docs/ROADMAP_MLS_COMMERCE_OS.md",
@@ -43,7 +43,7 @@
     },
     {
       "path": "docs/financial-automation/validation/operating-integration-20261121.json",
-      "sha256": "0bfaa5e6bea4ceef6c6665c9331450a2974a2a7e20ab1a80d83cfe3c7e514e47"
+      "sha256": "e5c9e24efbd9cffe38708eb028e576a161ee4cc7ce39d13d5f4e104591392a52"
     },
     {
       "path": "docs/history/AGENTS_before_operating_increment_20261120.md",
@@ -135,7 +135,7 @@
     },
     {
       "path": "web/cloudflare/tests/app-release-discovery-chrome.test.mjs",
-      "sha256": "98addc12bf974368c9db4796b1910866d5a3883c5a1fdea90e4343faf6249b2b"
+      "sha256": "35e14428ac5271a1bc76cbf371bed415f35d7939bc84d189c75bf159e11acbd0"
     },
     {
       "path": "web/cloudflare/tests/app-release.test.mjs",
