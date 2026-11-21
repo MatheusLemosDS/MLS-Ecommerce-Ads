@@ -5,6 +5,8 @@ import path from 'node:path';
 export const PROJECT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 export const TARGETS = Object.freeze({
   app: Object.freeze({name: 'brazacommerce-app', main: '../../dist/app-worker.mjs', baselineHashes: [
+    // Exact material workflow candidate; recognition does not authorize Live publication.
+    '6404abe0282c03dcffb376f43bde7f69f0f67d4193076f3298a46fff40eea966',
     // Exact combined historical/operating candidate; merge validation only, no Live authorization.
     'b40e717dbe762330e1c3e5feaf6480a77c3e7185c4be35dc4c77062eab032409',
     // Exact operating candidate; local recognition grants no production publication authority.
@@ -260,6 +262,8 @@ export const TARGETS = Object.freeze({
     'ed24e42b04378086f66e61a85415fbaea8e793d0dd329fdfa39ab28abd0a678c',
   ]}),
   auth: Object.freeze({name: 'brazacommerce-auth', main: '../../dist/auth-worker.mjs', baselineHashes: [
+    // Human release identity for the exact material workflow candidate.
+    'be46381be7e8c100973a948fa7dceb31266a1455282d73fb7b99a0c2d860e8d4',
     // Exact combined historical/operating candidate; merge validation only, no Live authorization.
     'd582efcf139bac5327f8a745ec7a5ea2e1f77757d51c11a6d16b200bc93b9466',
     // Exact operating candidate; local recognition grants no production publication authority.

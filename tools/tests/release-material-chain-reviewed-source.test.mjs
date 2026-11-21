@@ -48,6 +48,7 @@ test('every separately reviewed UI/error/wrapper/test adapter reconstructs its e
   'web/cloudflare/src/agent-registry-view.mjs',
   'web/cloudflare/src/incurred-production.mjs',
   'web/cloudflare/src/production-weekly-payments.mjs',
+  'web/cloudflare/tests/browser-assets.test.mjs',
   'web/cloudflare/tests/production-closing-workspace-chrome.test.mjs',
   'web/cloudflare/tests/reviewed-cost-source-invariants.mjs',
  ].sort();
@@ -99,4 +100,15 @@ test('all previous financial frozen pins remain authoritative or have exactly on
  }
  const frozen132='tools/tests/operating-integration-review-fixture.mjs';assert.equal(digest(source(frozen132)),MATERIAL_CHAIN_FROZEN_FILES[frozen132]);
  for(const filename of ['web/cloudflare/src/cost-rules.mjs','web/cloudflare/src/production-costs.mjs','web/cloudflare/src/numbered-adult-kit-costs.mjs','web/cloudflare/src/physical-shirt-stock.mjs'])assert.equal(digest(source(filename)),MATERIAL_CHAIN_FROZEN_FILES[filename]);
+});
+
+// The historical digest belongs to the exact immutable extracted controller;
+// the current controller is checked against its current exports separately.
+test('the prior DTF controller hash and length stay pinned without replacing the current asset/export and engine assertions',()=>{
+ const fixture='web/cloudflare/tests/fixtures/reviewed-dtf-extraction-before-materials.js',bytes=readFileSync(new URL(fixture,root));
+ assert.ok(MATERIAL_CHAIN_ALLOWED_FILES.includes(fixture));assert.equal(digest(bytes),'1f0ca4ce395126c895b9e79afff57f1ca0ed74c3df31c6b7b0a1ac6dd0673026');assert.equal(bytes.length,53814);
+ const filename='web/cloudflare/tests/browser-assets.test.mjs',current=source(filename),prior=restore(filename,current);
+ assert.equal(prior,git(MATERIAL_CHAIN_MERGE_BASE_COMMIT,filename));
+ for(const assertion of ["assert.equal(row.sha256,'1f0ca4ce395126c895b9e79afff57f1ca0ed74c3df31c6b7b0a1ac6dd0673026')",'assert.equal(row.bytes,53814)','assert.deepEqual(bytes,Buffer.from(emitted))'])assert.ok(prior.includes(assertion));
+ for(const assertion of ['assert.deepEqual(bytes,Buffer.from(emitted))',"assert.deepEqual(bytes.subarray(0,engine.length),reviewed.subarray(0,engine.length))","assert.deepEqual(bytes.subarray(0,engine.length),engine"])assert.ok(current.includes(assertion));
 });

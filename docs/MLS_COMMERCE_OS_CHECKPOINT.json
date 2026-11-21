@@ -2,7 +2,7 @@
   "schema": "mls_commerce_os_checkpoint_v1",
   "canonical_roadmap": "docs/ROADMAP_MLS_COMMERCE_OS.md",
   "legacy_roadmap": "docs/ROADMAP_BRAZACOMMERCE.md",
-  "updated_at": "2026-11-21T11:18:58.010070+00:00",
+  "updated_at": "2026-11-21T11:34:04.062072+00:00",
   "product": {
     "name": "MLS Commerce OS",
     "supervisor": "MLS Hermes",
@@ -129,10 +129,9 @@
     }
   },
   "next_actions": [
-    "Implement server-backed material sources, needs, supplier and purchase declarations, atomic reservation/receipt and audited manufacturing links",
-    "Connect the shared read model to V4.1 material UI and Hermes/Finance/Products/Production/DTF",
-    "Run focused security, concurrency, source-integrity and generated Worker browser tests",
-    "Require complete Node/Python/build/preflight CI on exact new PR head; do not publish Live"
+    "Require complete exact-head Node/Python/build/preflight CI at the linked material-chain PR",
+    "Review physical counts, mappings, suppliers and receipts with the owner in a separately authorized publication",
+    "Keep real financial acceptance PARTIAL and preserve the original saved closings"
   ],
   "m0_followup": [
     "Conferir visual autenticado em desktop e celular durante M1; corrigir apenas branding/layout sem renomear infraestrutura"
@@ -148,7 +147,7 @@
     "main_last_verified": "de0bb72e583a84d86b20952e55b352722996cbed",
     "release_id": "2026-11-21.4",
     "implementation": "IMPLEMENTED",
-    "testing": "FOCUSED_PASS_GENERATED_FINAL_QA_AND_FULL_CI_PENDING",
+    "testing": "FOCUSED_PASS_FULL_VALIDATION_AT_CURRENT_PR_HEAD",
     "git_integration": "NOT_INTEGRATED",
     "publication": "NOT_PUBLISHED",
     "company_real_data_acceptance": "NOT_PERFORMED",
@@ -171,10 +170,9 @@
       "Reconcile branch to actual main after PR132 merge before final CI"
     ],
     "next_actions": [
-      "Implement server-backed material sources, needs, supplier and purchase declarations, atomic reservation/receipt and audited manufacturing links",
-      "Connect the shared read model to V4.1 material UI and Hermes/Finance/Products/Production/DTF",
-      "Run focused security, concurrency, source-integrity and generated Worker browser tests",
-      "Require complete Node/Python/build/preflight CI on exact new PR head; do not publish Live"
+      "Require complete exact-head Node/Python/build/preflight CI at the linked material-chain PR",
+      "Review physical counts, mappings, suppliers and receipts with the owner in a separately authorized publication",
+      "Keep real financial acceptance PARTIAL and preserve the original saved closings"
     ],
     "report": "docs/MLS_ORDER_MATERIALS_DTF_2026_11_21.md",
     "evidence": "docs/financial-automation/validation/order-materials-dtf-20261121.json",
@@ -183,7 +181,10 @@
       "ui": 22,
       "agent_dtf": 67,
       "weekly_and_routes": 11,
-      "previous_and_source_gates": 91
+      "previous_and_source_gates": 91,
+      "agent_dtf_real_d1_contract": 10,
+      "release_gates": 101,
+      "browser_assets": 14
     },
     "previous_integrations": {
       "pr133": "426b1de037b075afa066ace4742e3cf398294bbf",
@@ -197,7 +198,37 @@
         "all_four_checks_success": true
       }
     },
-    "base_main": "de0bb72e583a84d86b20952e55b352722996cbed"
+    "base_main": "de0bb72e583a84d86b20952e55b352722996cbed",
+    "git_delivery": {
+      "branch": "feature/order-materials-dtf-chain-20261121",
+      "state_source": "GITHUB_CURRENT_PULL_REQUEST_HEAD_CHECKS_AND_STATE",
+      "pull_request_lookup": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pulls?q=is%3Apr+head%3Afeature%2Forder-materials-dtf-chain-20261121",
+      "candidate_manifest": "tools/release-material-chain-candidate.json"
+    },
+    "generated_qa": {
+      "prior_functional_worker": "9e7d0f49fe9bfe67124a1fe25740473d7d053feaaf3f3da78450ef73cf2b060c",
+      "profiles": 4,
+      "screenshots": 32,
+      "normal_minified_mobile_desktop": true,
+      "new_final_worker": "6404abe0282c03dcffb376f43bde7f69f0f67d4193076f3298a46fff40eea966",
+      "final_full_pipeline_required": true,
+      "ui_status_completion_corrected_and_unit_tested": true,
+      "canonical_client_matches_workspace_asset": true
+    },
+    "workers": {
+      "app": {
+        "sha256": "6404abe0282c03dcffb376f43bde7f69f0f67d4193076f3298a46fff40eea966",
+        "bytes": 4077700
+      },
+      "auth": {
+        "sha256": "be46381be7e8c100973a948fa7dceb31266a1455282d73fb7b99a0c2d860e8d4",
+        "bytes": 592065
+      },
+      "finance": {
+        "sha256": "012c0eaced495c53b3b143a6298ec8c7221a0a5198c67455eb538e16508c86a4",
+        "bytes": 934262
+      }
+    }
   },
   "incident": {
     "id": "INCIDENT_2026_10_27_PANEL_AGENT_REGRESSION",
@@ -8514,7 +8545,7 @@
     "main_last_verified": "de0bb72e583a84d86b20952e55b352722996cbed",
     "release_id": "2026-11-21.4",
     "implementation": "IMPLEMENTED",
-    "testing": "FOCUSED_PASS_GENERATED_FINAL_QA_AND_FULL_CI_PENDING",
+    "testing": "FOCUSED_PASS_FULL_VALIDATION_AT_CURRENT_PR_HEAD",
     "git_integration": "NOT_INTEGRATED",
     "publication": "NOT_PUBLISHED",
     "company_real_data_acceptance": "NOT_PERFORMED",
@@ -8537,10 +8568,9 @@
       "Reconcile branch to actual main after PR132 merge before final CI"
     ],
     "next_actions": [
-      "Implement server-backed material sources, needs, supplier and purchase declarations, atomic reservation/receipt and audited manufacturing links",
-      "Connect the shared read model to V4.1 material UI and Hermes/Finance/Products/Production/DTF",
-      "Run focused security, concurrency, source-integrity and generated Worker browser tests",
-      "Require complete Node/Python/build/preflight CI on exact new PR head; do not publish Live"
+      "Require complete exact-head Node/Python/build/preflight CI at the linked material-chain PR",
+      "Review physical counts, mappings, suppliers and receipts with the owner in a separately authorized publication",
+      "Keep real financial acceptance PARTIAL and preserve the original saved closings"
     ],
     "report": "docs/MLS_ORDER_MATERIALS_DTF_2026_11_21.md",
     "evidence": "docs/financial-automation/validation/order-materials-dtf-20261121.json",
@@ -8549,7 +8579,10 @@
       "ui": 22,
       "agent_dtf": 67,
       "weekly_and_routes": 11,
-      "previous_and_source_gates": 91
+      "previous_and_source_gates": 91,
+      "agent_dtf_real_d1_contract": 10,
+      "release_gates": 101,
+      "browser_assets": 14
     },
     "previous_integrations": {
       "pr133": "426b1de037b075afa066ace4742e3cf398294bbf",
@@ -8563,6 +8596,36 @@
         "all_four_checks_success": true
       }
     },
-    "base_main": "de0bb72e583a84d86b20952e55b352722996cbed"
+    "base_main": "de0bb72e583a84d86b20952e55b352722996cbed",
+    "git_delivery": {
+      "branch": "feature/order-materials-dtf-chain-20261121",
+      "state_source": "GITHUB_CURRENT_PULL_REQUEST_HEAD_CHECKS_AND_STATE",
+      "pull_request_lookup": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pulls?q=is%3Apr+head%3Afeature%2Forder-materials-dtf-chain-20261121",
+      "candidate_manifest": "tools/release-material-chain-candidate.json"
+    },
+    "generated_qa": {
+      "prior_functional_worker": "9e7d0f49fe9bfe67124a1fe25740473d7d053feaaf3f3da78450ef73cf2b060c",
+      "profiles": 4,
+      "screenshots": 32,
+      "normal_minified_mobile_desktop": true,
+      "new_final_worker": "6404abe0282c03dcffb376f43bde7f69f0f67d4193076f3298a46fff40eea966",
+      "final_full_pipeline_required": true,
+      "ui_status_completion_corrected_and_unit_tested": true,
+      "canonical_client_matches_workspace_asset": true
+    },
+    "workers": {
+      "app": {
+        "sha256": "6404abe0282c03dcffb376f43bde7f69f0f67d4193076f3298a46fff40eea966",
+        "bytes": 4077700
+      },
+      "auth": {
+        "sha256": "be46381be7e8c100973a948fa7dceb31266a1455282d73fb7b99a0c2d860e8d4",
+        "bytes": 592065
+      },
+      "finance": {
+        "sha256": "012c0eaced495c53b3b143a6298ec8c7221a0a5198c67455eb538e16508c86a4",
+        "bytes": 934262
+      }
+    }
   }
 }

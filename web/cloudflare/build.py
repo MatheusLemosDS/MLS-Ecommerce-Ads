@@ -570,9 +570,9 @@ material_fragments=[row for row in browser_asset_sources if row.get('group')=='w
 if len(material_fragments)!=len(material_client_names) or {row['export_name'] for row in material_fragments}!=set(material_client_names):
     raise ValueError('Exact material browser client group is incomplete')
 material_by_name={row['export_name']:row['source'] for row in material_fragments}
-material_prefix='const MATERIAL_BROWSER_CLIENT=['+','.join('(()=>{\n'+material_by_name[name]+'\nreturn '+name+';\n})()' for name in material_client_names)+'].join("\\n");\n'
+material_prefix='\n'.join(material_by_name[name] for name in material_client_names)+'\n'
 browser_asset_sources=[row for row in browser_asset_sources if row.get('group')!='workspace-materials']
-workspace_source='const CLIENT=(()=>{\n'+material_prefix+financial_browser+'\n'+client+'\nreturn MATERIAL_BROWSER_CLIENT+"\\n"+CLIENT;\n})();\n'
+workspace_source=material_prefix+financial_browser+'\n'+client
 browser_asset_sources.append({'id':'workspace','export_name':'CLIENT','source':workspace_source})
 client="const CLIENT='';\n"
 asset_build=subprocess.run(['node',str(root.parent.parent/'tools'/'browser_assets.mjs'),str(root.parent.parent)],input=json.dumps({'schema':'mls_browser_assets_build_v1','entries':browser_asset_sources}),capture_output=True,text=True,timeout=30)

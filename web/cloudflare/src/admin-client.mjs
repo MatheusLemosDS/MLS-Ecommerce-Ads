@@ -10,7 +10,9 @@ import {createAgentPeriodController} from './agent-period-view.mjs';
 import {FINANCIAL_AUTOMATION_CLIENT} from './financial-automation-client.mjs';
 import {FINANCIAL_AUTOMATION_MARKUP_CLIENT} from './financial-automation-view.mjs';
 import {BUSINESS_COST_HISTORY_CLIENT} from './business-cost-history-client.mjs';
-export const CLIENT=String.raw`
+import {PRODUCTION_MATERIALS_CLIENT} from './production-material-view.mjs';
+import {PRODUCTION_MATERIAL_WEEK_CLIENT} from './production-material-week-view.mjs';
+export const CLIENT=PRODUCTION_MATERIALS_CLIENT+'\n'+PRODUCTION_MATERIAL_WEEK_CLIENT+'\n'+String.raw`
 globalThis.mlsDtfRecipeController=${createDtfRecipeController.toString()};
 /* MLS_DTF_RECIPE_END */
 globalThis.mlsDtfLifecycleController=${createDtfLifecycleController.toString()};

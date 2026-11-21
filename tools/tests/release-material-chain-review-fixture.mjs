@@ -257,16 +257,92 @@ const sources={
         "removed": ""
       }
     ]
+  },
+  "web/cloudflare/tests/browser-assets.test.mjs": {
+    "baseline_sha256": "77cacac953fb57e16ae95bd6292133b266543bd92fa723408f54833f4de66cd9",
+    "reviewed_sha256": "ab46e2201b813cc1de1a264f5405d8a9ef24cfbd7a45df8552b139f8a817e081",
+    "patches": [
+      {
+        "offset": 5327,
+        "added": "reviewed ",
+        "removed": ""
+      },
+      {
+        "offset": 5340,
+        "added": "predecessor and engine remain",
+        "removed": "asset preserves the"
+      },
+      {
+        "offset": 5376,
+        "added": "while the material-aware controller sta",
+        "removed": "published engine/workspace b"
+      },
+      {
+        "offset": 5416,
+        "added": "s",
+        "removed": "tes while browser factories stay"
+      },
+      {
+        "offset": 5424,
+        "added": "",
+        "removed": " in the workspace"
+      },
+      {
+        "offset": 5440,
+        "added": "e",
+        "removed": "ow=manifest.assets.find("
+      },
+      {
+        "offset": 5442,
+        "added": "iewed=readFileSync(path.join(root,'web','cloudflare','tests','fixtures','re",
+        "removed": "alue=>"
+      },
+      {
+        "offset": 5518,
+        "added": "iewed-dtf-extraction-before-materials.js'));\n ",
+        "removed": "alue.id==='dtf');assert.ok(row);"
+      },
+      {
+        "offset": 5577,
+        "added": "createHash('",
+        "removed": "row."
+      },
+      {
+        "offset": 5595,
+        "added": "').update(reviewed).digest('hex')",
+        "removed": ""
+      },
+      {
+        "offset": 5711,
+        "added": "eviewed.length",
+        "removed": "ow.bytes"
+      },
+      {
+        "offset": 5731,
+        "added": ");\n const row=manifest.assets.find(value=>value.id==='dtf');assert.ok(row",
+        "removed": ""
+      },
+      {
+        "offset": 6140,
+        "added": ");\n const engine=Buffer.from(DTF_ENGINE_CLIENT+'\\n/* MLS_DTF_ENGINE_END */\\n');assert.deepEqual(bytes.subarray(0,engine.length),reviewed.subarray(0,engine.length));assert.deepEqual(bytes.subarray(0,engine.length),engine,'material availability cannot change the reviewed layout engine'",
+        "removed": ""
+      },
+      {
+        "offset": 17742,
+        "added": "equal(bytes.length,emitted.length,'workspace length matches the canonical client export');assert.equal(createHash('sha256').update(bytes).digest('hex'),createHash('sha256').update(emitted).digest('hex'),'workspace digest matches before formatting a large byte comparison');assert.",
+        "removed": ""
+      }
+    ]
   }
 };
 const policy={
   "baseline_sha256": "a7e47f34d491fd7ba7414a5b45f6ac2a957513a4ecc51acd0c59c304f0dab74e",
-  "reviewed_sha256": "40cfbb3dcd038f7f910b1d44c1954557951496d9db9bd4b9fea260c8ecb0dba5",
+  "reviewed_sha256": "37b351f64dfdb430f87ec62465515478eb35b0db114704e87944a12b79cfe7a4",
   "sections": [
     {
       "begin": "// BEGIN MATERIAL_CHAIN_MERGE_V1\n",
       "end": "// END MATERIAL_CHAIN_MERGE_V1\n",
-      "sha256": "4a80dca87137deb1bc68c0a11afe6b4b9c8e5792730f8a1264b46fac194b273c"
+      "sha256": "f677fa228c1730f25acb5a2f2d7fbfdab9df706935e408327caa3208da5442d9"
     },
     {
       "begin": " // BEGIN MATERIAL_CHAIN_DISPATCH_V1\n",

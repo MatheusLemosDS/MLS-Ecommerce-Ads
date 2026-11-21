@@ -3,7 +3,7 @@
   "recorded_at": "2026-11-21T11:16:15.465879+00:00",
   "release_id": "2026-11-21.4",
   "implementation": "IMPLEMENTED",
-  "testing": "FOCUSED_PASS_GENERATED_FINAL_QA_AND_FULL_CI_PENDING",
+  "testing": "FOCUSED_PASS_FULL_VALIDATION_AT_CURRENT_PR_HEAD",
   "integration": "NOT_INTEGRATED",
   "publication": "NOT_PUBLISHED",
   "company_real_data_validation": "NOT_PERFORMED",
@@ -21,7 +21,10 @@
     "ui": 22,
     "agent_dtf": 67,
     "weekly_and_routes": 11,
-    "previous_and_source_gates": 91
+    "previous_and_source_gates": 91,
+    "agent_dtf_real_d1_contract": 10,
+    "release_gates": 101,
+    "browser_assets": 14
   },
   "external_purchase_actions": 0,
   "financial_movements": 0,
@@ -48,5 +51,44 @@
     "https://developers.cloudflare.com/d1/worker-api/d1-database/#batch",
     "https://developers.cloudflare.com/d1/platform/limits/"
   ],
-  "next_action": "Reconcile to main DE0, freeze final artifacts, complete exact-head CI and prepare review PR without Live publication"
+  "next_action": "Reconcile to main DE0, freeze final artifacts, complete exact-head CI and prepare review PR without Live publication",
+  "git_delivery": {
+    "branch": "feature/order-materials-dtf-chain-20261121",
+    "state_source": "GITHUB_CURRENT_PULL_REQUEST_HEAD_CHECKS_AND_STATE",
+    "pull_request_lookup": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pulls?q=is%3Apr+head%3Afeature%2Forder-materials-dtf-chain-20261121",
+    "candidate_manifest": "tools/release-material-chain-candidate.json"
+  },
+  "workers": {
+    "app": {
+      "sha256": "6404abe0282c03dcffb376f43bde7f69f0f67d4193076f3298a46fff40eea966",
+      "bytes": 4077700
+    },
+    "auth": {
+      "sha256": "be46381be7e8c100973a948fa7dceb31266a1455282d73fb7b99a0c2d860e8d4",
+      "bytes": 592065
+    },
+    "finance": {
+      "sha256": "012c0eaced495c53b3b143a6298ec8c7221a0a5198c67455eb538e16508c86a4",
+      "bytes": 934262
+    }
+  },
+  "generated_qa": {
+    "prior_functional_worker": "9e7d0f49fe9bfe67124a1fe25740473d7d053feaaf3f3da78450ef73cf2b060c",
+    "profiles": 4,
+    "screenshots": 32,
+    "normal_minified_mobile_desktop": true,
+    "new_final_worker": "6404abe0282c03dcffb376f43bde7f69f0f67d4193076f3298a46fff40eea966",
+    "final_full_pipeline_required": true,
+    "ui_status_completion_corrected_and_unit_tested": true,
+    "canonical_client_matches_workspace_asset": true
+  },
+  "workspace_asset_contract": {
+    "cause_fixed": "Canonical CLIENT originally omitted the two newly distributed client prefixes; exact export composition now matches the asset",
+    "old_dtf_sha256_preserved": "1f0ca4ce395126c895b9e79afff57f1ca0ed74c3df31c6b7b0a1ac6dd0673026",
+    "old_dtf_bytes": 53814,
+    "old_engine_preserved": true,
+    "large_assertions_retained": true,
+    "compact_length_digest_checks_added": true,
+    "asset_caps_increased": false
+  }
 }
